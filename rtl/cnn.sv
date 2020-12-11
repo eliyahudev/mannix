@@ -78,9 +78,9 @@ module cnn (
 
 
 
-  mem_intf_write           mem_intf_write;
-  mem_intf_read            mem_intf_read_pic;
-  mem_intf_read            mem_intf_read_wgt;
+  mem_intf_write.client_write           mem_intf_write;
+  mem_intf_read.client_read            mem_intf_read_pic;
+  mem_intf_read.client_read            mem_intf_read_wgt;
   
   //====================      
   // Software Interface

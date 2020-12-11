@@ -17,6 +17,4 @@ interface mem_intf_read
 	   modport memory_read (output mem_gnt, last, mem_data, mem_last_valid,
 	   					 input mem_req, mem_start_addr, mem_size_bytes);
 
-	   
-
 endinterface

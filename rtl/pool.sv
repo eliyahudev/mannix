@@ -41,8 +41,8 @@ module pool (
   //  Memory Interfaces
   //==================== 
 
-  mem_intf_write           mem_intf_write;
-  mem_intf_read            mem_intf_read_mx;
+  mem_intf_write.client_write           mem_intf_write;
+  mem_intf_read.client_read            mem_intf_read_mx;
 
   
   //====================      
