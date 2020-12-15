@@ -12,22 +12,6 @@ module cnn (
             clk,
             rst_n,
 
-            // pic_mem_start_addr, 
-            // pic_mem_bytes,   
-            // pic_mem_rd_req,
-            // pic_mem_data,
-            // pic_mem_data_vld,
-
-            // wgt_mem_start_addr, 
-            // wgt_mem_bytes ,
-            // wgt_mem_rd_req,
-            // wgt_mem_data, 
-            // wgt_mem_data_vld,
-
-            // out_mem_start_addr, 
-            // out_mem_bytes,
-            // out_mem_wr_req,
-            // out_mem_ack,
 
             mem_intf_write,
             mem_intf_read_pic,
