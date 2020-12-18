@@ -1,5 +1,29 @@
 module mannix #(
-	parameter ADDR_WIDTH=19)
+	parameter ADDR_WIDTH=19,
+  parameter X_ROWS_NUM=5,
+  parameter X_COLS_NUM=5,
+                     
+  parameter X_LOG2_ROWS_NUM =$clog2(X_ROWS_NUM),
+  parameter X_LOG2_COLS_NUM =$clog2(X_COLS_NUM), 
+  
+
+  parameter Y_ROWS_NUM=2,
+  parameter Y_COLS_NUM=2,
+                     
+  parameter Y_LOG2_ROWS_NUM =$clog2(Y_ROWS_NUM),
+  parameter Y_LOG2_COLS_NUM =$clog2(Y_COLS_NUM),
+
+  parameter DATA_ROWS_NUM=4,  
+  parameter DATA_COLS_NUM=4,  
+  parameter DATA_LOG2_ROWS_NUM = $clog2(DATA_ROWS_NUM),
+  parameter DATA_LOG2_COLS_NUM = $clog2(DATA_COLS_NUM),
+
+  parameter RES_ROWS_NUM=2,
+  parameter RES_COLS_NUM=2,
+  parameter OUT_LOG2_ROWS_NUM=$clog2(RES_ROWS_NUM),
+  parameter OUT_LOG2_COLS_NUM=$clog2(RES_COLS_NUM)
+
+		)
 	(
 	input clk,
 	input rst_n,
@@ -26,23 +50,25 @@ module mannix #(
   	output [31:0] ACTIV_ADDRZ,
   	output ACTIV_DONE,
   	//port for pool
-  	input [ADDR_WIDTH-1:0]            sw_cnn_pool_rd_addr,	//POOL Data matrix FIRST address
-  	input [ADDR_WIDTH-1:0]            sw_pool_wr_addr,	//POOL return address
-  	input                             sw_cnn_pool_rd_m,  	//POOLdata matrix num of rows
-  	input                             sw_cnn_pool_rd_n,	//POOL data matrix num of columns
-  	input                             sw_pool_m,	//POOL size - rows
-  	input                             sw_pool_n,	//POOL size - columns 
-  	output                            pool_sw_busy_ind,	//An output to the software - 1 – POOL unit is busy - 0 -POOL is available (Default) simhi to nitzan: cnn change to pool
+    input [ADDR_WIDTH-1:0]            sw_pool_rd_addr,	//POOL Data matrix FIRST address
+    input [ADDR_WIDTH-1:0]            sw_pool_wr_addr,	//POOL return address
+    input [DATA_LOG2_ROWS_NUM-1:0]    sw_pool_rd_m,  	//POOL data matrix num of rows
+    input [DATA_LOG2_COLS_NUM-1:0]    sw_pool_rd_n,	//POOL data matrix num of columns
+    input [OUT_LOG2_ROWS_NUM-1:0]     sw_pool_m,	//POOL size - rows
+    input [OUT_LOG2_COLS_NUM-1:0]     sw_pool_n,	//POOL size - columns 
+    output                            pool_sw_busy_ind,	//An output to the software - 1 – POOL unit is busy - 0 -POOL is available (Default)
   	//port for fcc
-  	input [ADDR_WIDTH-1:0]            sw_cnn_addr_x,	//CNN Data window FIRST address
-  	input [ADDR_WIDTH-1:0]            sw_cnn_addr_y,	//CNN  weights window FIRST address
-  	input [ADDR_WIDTH-1:0]            sw_cnn_addr_z,	//CNN return address
-  	input                             sw_cnn_x_m,  	//CNN data matrix num of rows
-  	input                             sw_cnn_x_n,	//CNN data matrix num of columns
-  	input                             sw_cnn_y_m,	//CNN weight matrix num of rows
-  	input                             sw_cnn_y_n,	//CNN weight matrix num of columns 
-  	output                            cnn_sw_busy_ind	//An output to the software - 1 – CNN unit is busy CNN is available (Default)
+    input [ADDR_WIDTH-1:0]            sw_cnn_addr_x,	// CNN Data window FIRST address
+    input [ADDR_WIDTH-1:0]            sw_cnn_addr_y,	// CNN  weights window FIRST address
+    input [ADDR_WIDTH-1:0]            sw_cnn_addr_z,	// CNN return address
+    input [X_LOG2_ROWS_NUM-1:0]       sw_cnn_x_m,  	// CNN data matrix num of rows
+    input [X_LOG2_COLS_NUM-1:0]       sw_cnn_x_n,	        // CNN data matrix num of columns
+    input [Y_LOG2_ROWS_NUM-1:0]       sw_cnn_y_m,	        // CNN weight matrix num of rows
+    input [Y_LOG2_COLS_NUM-1:0]       sw_cnn_y_n,	        // CNN weight matrix num of columns 
+    output reg                        cnn_sw_busy_ind	// An output to the software - 1 – CNN unit is busy CNN is available (Default)
   	);
+
+
   	mem_intf_read FC_READ();
   	mem_intf_write FC_WRITE();
   	mem_intf_read ACTIV_READ();
@@ -87,11 +113,11 @@ module mannix #(
        	.rst_n(rst_n),
         .mem_intf_write(mem_intf_write_pool),
         .mem_intf_read_mx(mem_intf_read_mx_pool),    
-        .cnn_sw_busy_ind(cnn_sw_busy_ind),
-        .sw_cnn_pool_rd_addr(sw_cnn_pool_rd_addr),
+        .pool_sw_busy_ind(pool_sw_busy_ind),
+        .sw_pool_rd_addr(sw_pool_rd_addr),
         .sw_pool_wr_addr(sw_pool_wr_addr),
-        .sw_cnn_pool_rd_m(sw_cnn_pool_rd_m),   
-        .sw_cnn_pool_rd_n(sw_cnn_pool_rd_n),
+        .sw_pool_rd_m(sw_pool_rd_m),   
+        .sw_pool_rd_n(sw_pool_rd_n),
         .sw_pool_m(sw_pool_m),   
         .sw_pool_n(sw_pool_n)
         );
