@@ -32,23 +32,17 @@ module mannix #(
 	input [31:0] write_addr_ddr,
 	input [4:0] client_priority,
 	//port for fcc
-	input [31:0] FC_ADDRX, 
-  	input [31:0] FC_ADDRY,
-  	input [31:0] FC_ADDRB,
-  	input [31:0] FC_XM,
-  	input [31:0] FC_YM,
-  	input [31:0] FC_YN,
-  	input [31:0] CNN_BN,
-  	input FC_GO,
-  	output [31:0] FC_ADDRZ,
-  	output FC_DONE,
-  	//port for active
-  	input [31:0] ACTIV_ADDRX, 
-  	input [31:0] ACTIV_XM,
-  	input [31:0] ACTIV_YM,
-  	input ACTIV_GO, 
-  	output [31:0] ACTIV_ADDRZ,
-  	output ACTIV_DONE,
+	input [31:0] 		fc_addrx, 
+  	input [31:0] 		fc_addry,
+  	input [31:0] 		fc_addrb,
+	input [31:0] 		fc_xm,
+        input [31:0] 		fc_ym,
+	input [31:0] 		fc_yn,
+  	input [31:0] 		cnn_bn,
+  	input 			fc_fc_go,
+  	output [31:0]		fc_addrz,
+  	output reg 		fc_done,
+	output reg 		fc_sw_busy_ind,
   	//port for pool
     input [ADDR_WIDTH-1:0]            sw_pool_rd_addr,	//POOL Data matrix FIRST address
     input [ADDR_WIDTH-1:0]            sw_pool_wr_addr,	//POOL return address
@@ -57,7 +51,7 @@ module mannix #(
     input [OUT_LOG2_ROWS_NUM-1:0]     sw_pool_m,	//POOL size - rows
     input [OUT_LOG2_COLS_NUM-1:0]     sw_pool_n,	//POOL size - columns 
     output                            pool_sw_busy_ind,	//An output to the software - 1 – POOL unit is busy - 0 -POOL is available (Default)
-  	//port for fcc
+  	//port for cnn
     input [ADDR_WIDTH-1:0]            sw_cnn_addr_x,	// CNN Data window FIRST address
     input [ADDR_WIDTH-1:0]            sw_cnn_addr_y,	// CNN  weights window FIRST address
     input [ADDR_WIDTH-1:0]            sw_cnn_addr_z,	// CNN return address
@@ -82,30 +76,22 @@ module mannix #(
 	mem_intf_write write_ddr_req ();
   	fcc i_fcc (
   	.clk(clk),
-  	.FC_ADDRX(FC_ADDRX),
-  	.FC_ADDRY(FC_ADDRY),
-  	.FC_ADDRB(FC_ADDRB),
-  	.FC_ADDRZ(FC_ADDRZ),
-  	.FC_XM(FC_XM),
-  	.FC_YM(FC_YM),
-  	.FC_YN(FC_YN),
-  	.CNN_BN(CNN_BN),
-  	.GO(FC_GO),
-  	.DONE(FC_DONE),
+  	.fc_addrx(fc_addrx),
+  	.fc_addry(fc_addry),
+  	.fc_addrb(fc_addrb),
+  	.fc_addrz(fc_addrz),
+  	.fc_xm(fc_xm),
+  	.fc_ym(fc_ym),
+  	.fc_yn(fc_yn),
+  	.cnn_bn(cnn_bn),
+  	.fc_go(fc_go),
+  	.fc_done(fc_done),
   	.READ(FC_READ),
-  	.WRITE(FC_WRITE)
-  	);
-
-  	active i_active (
-  	.READ(ACTIV_READ),
-  	.WRITE(ACTIV_WRITE),
-  	.clk(clk),
-  	.ACTIV_ADDRX(ACTIV_ADDRX),
-  	.ACTIV_XM(ACTIV_XM),
-  	.ACTIV_YM(ACTIV_YM),
-  	.GO(ACTIV_GO),
-  	.FC_ADDRZ(FC_ADDRZ),
-  	.DONE(ACTIV_DONE)
+  	.WRITE(FC_WRITE),
+	.mem_intf_write(mem_intf_write),
+	.mem_intf_read_pic(mem_intf_read_pic),
+        .mem_intf_read_wgt(mem_intf_read_wgt),        
+        .fc_sw_busy_ind(fc_sw_busy_ind)
   	);
 
   	pool i_pool (
@@ -139,13 +125,12 @@ module mannix #(
 	);
 
 	mannix_mem_farm i_mannix_mem_farm (
-	.fcc_r(FC_READ),
-	.active_r(ACTIV_READ),
+	.fcc_pic_r(mem_intf_read_pic),
+	.fcc_wgt_r(mem_intf_read_wgt),
 	.cnn_pic_r(mem_intf_read_pic_cnn),
 	.cnn_wgt_r(mem_intf_read_wgt_cnn),
 	.pool_r(mem_intf_read_mx_pool),
-	.fcc_w(FC_WRITE),
-	.active_w(ACTIV_WRITE),
+	.fcc_w(mem_intf_write),
 	.pool_w(mem_intf_write_pool),
 	.cnn_w(mem_intf_write_cnn),
 	.read_addr_ddr(read_addr_ddr),

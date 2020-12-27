@@ -191,7 +191,7 @@ always @(posedge clk or negedge rst_n)
       end    
   end
   
-  dot_product_parallel #(.DEPTH(DP_DEPTH)) dp_pll_ins(.a(cut_data_pic), .b(data_wgt), .res(dp_res));                     
+dot_product_parallel #(.DEPTH(DP_DEPTH)) dp_pll_ins(.a(cut_data_pic), .b(data_wgt), .res(dp_res));                     
 
 
   always @(posedge clk or negedge rst_n)
