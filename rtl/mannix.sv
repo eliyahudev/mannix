@@ -63,10 +63,9 @@ module mannix #(
   	);
 
 
-  	mem_intf_read FC_READ();
-  	mem_intf_write FC_WRITE();
-  	mem_intf_read ACTIV_READ();
-  	mem_intf_write ACTIV_WRITE();
+  	mem_intf_read mem_intf_read_wgt();
+	mem_intf_read mem_intf_read_pic();
+	mem_intf_write mem_intf_write();
   	mem_intf_write mem_intf_write_pool();
   	mem_intf_read mem_intf_read_mx_pool();
   	mem_intf_write mem_intf_write_cnn();
@@ -76,6 +75,7 @@ module mannix #(
 	mem_intf_write write_ddr_req ();
   	fcc i_fcc (
   	.clk(clk),
+	.rst_n(rst_n),
   	.fc_addrx(fc_addrx),
   	.fc_addry(fc_addry),
   	.fc_addrb(fc_addrb),
@@ -86,8 +86,6 @@ module mannix #(
   	.cnn_bn(cnn_bn),
   	.fc_go(fc_go),
   	.fc_done(fc_done),
-  	.READ(FC_READ),
-  	.WRITE(FC_WRITE),
 	.mem_intf_write(mem_intf_write),
 	.mem_intf_read_pic(mem_intf_read_pic),
         .mem_intf_read_wgt(mem_intf_read_wgt),        

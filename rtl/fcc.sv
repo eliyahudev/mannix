@@ -30,7 +30,7 @@ module fcc (
 		mem_intf_read_wgt,
 		mem_intf_read_pic,
 		mem_intf_write,
-		last
+		//last
 			);
 //======================================================================================================
 //
@@ -129,7 +129,7 @@ module fcc (
 //  -----Write-----
  mem_intf_write.client_write 	mem_intf_write  ;
 // -----last-------
-mem_intf_write.client_read 	last  ;
+//mem_intf_write.client_read 	last  ;
 
 	
 
@@ -174,7 +174,7 @@ reg [17:0] data_out_sum ;
 			end
 		end//IDLE
 	REQ: begin
-		   	if((read_w.gnt)&&(read_d.gnt))
+		   	if((mem_intf_read_pic.mem_gnt==1'b1) &&(mem_intf_read_wgt.mem_gnt==1'b1))
    				begin 
 					next_state = DP;
 				end
@@ -230,7 +230,7 @@ always @(posedge clk or negedge rst_n)
 			mem_intf_write.mem_req <= 1'b0;
 			mem_intf_write.mem_start_addr <= {ADDR_WIDTH{1'b0}};
 			mem_intf_write.mem_size_bytes <= 'd0; 			//NOT DETRMINED YET 
-			mem_intf_write.last<= 1'b0;
+			//mem_intf_write.last<= 1'b0;
 			mem_intf_write.mem_data <= 8'd0;			// Assuming each data is 8 bits
 			mem_intf_write.mem_last_valid<= 1'b0;
 			//------PIC-------
@@ -255,11 +255,11 @@ always @(posedge clk or negedge rst_n)
 			// initiallize weights
 			mem_intf_read_wgt.mem_req <=1'b1;
 			mem_intf_read_wgt.mem_start_addr <= fc_addrx;
-			mem_intf_read_wgt.mem_siSze_bytes <= DP_DEPTH;			
+			mem_intf_read_wgt.mem_size_bytes <= DP_DEPTH;			
 
 			//request data and weights
-			mem_data    <= mem_intf_read_pic.mem_req;
-			mem_wgt <= mem_intf_read_wgt.mem_req;
+			//mem_data    <= mem_intf_read_pic.mem_req;
+			//mem_wgt <= mem_intf_read_wgt.mem_req;
 	
 		end
 		
@@ -285,17 +285,17 @@ always @(posedge clk or negedge rst_n)
 			end	
         else if(state == ACT) 
 			begin	
-				if (last) begin
+				if (1) begin//last) begin
 					fc_done <= 1'b1;
-					mem_intf_write.data_out_sum ;
+					//mem_intf_write.data_out_sum ;
 					end
 				else if (data_out_sum > 32'd0) begin
-					mem_intf_write.data_out_sum ;//Not sure how to write out yet
+					//mem_intf_write.data_out_sum ;//Not sure how to write out yet
 					end
 
 				else begin
 					//?mem_data <= 32'd0;
-					mem_intf_write.data_out_sum ;//TODO - change to mem_data of zero ;
+					//mem_intf_write.data_out_sum ;//TODO - change to mem_data of zero ;
 				end
 
 			counter_32 <= {$clog2(32) - 1 ,1'd0};
