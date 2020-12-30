@@ -1,0 +1,14 @@
+//
+// File created by:  irun
+// Do not modify this file
+//
+/u/e2017/dabushn3/project_4th/mannix/rtl/active.sv
+/u/e2017/dabushn3/project_4th/mannix/rtl/cnn.sv
+/u/e2017/dabushn3/project_4th/mannix/rtl/dot_product_parallel.sv
+/u/e2017/dabushn3/project_4th/mannix/rtl/dot_product.sv
+/u/e2017/dabushn3/project_4th/mannix/rtl/fcc.sv
+/u/e2017/dabushn3/project_4th/mannix/rtl/mannix_mem_farm.sv
+/u/e2017/dabushn3/project_4th/mannix/rtl/mannix.sv
+/u/e2017/dabushn3/project_4th/mannix/rtl/mem_intf_read.sv
+/u/e2017/dabushn3/project_4th/mannix/rtl/mem_intf_write.sv
+/u/e2017/dabushn3/project_4th/mannix/rtl/pool.sv

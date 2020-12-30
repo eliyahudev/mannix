@@ -1,0 +1,10 @@
+1608130098 /u/e2017/dabushn3/project_4th/mannix/rtl/dot_product_parallel.sv
+1609335535 /u/e2017/dabushn3/project_4th/mannix/rtl/mannix.sv
+1608020053 /u/e2017/dabushn3/project_4th/mannix/rtl/mannix_mem_farm.sv
+1608020053 /u/e2017/dabushn3/project_4th/mannix/rtl/active.sv
+1608020053 /u/e2017/dabushn3/project_4th/mannix/rtl/fcc.sv
+1608020053 /u/e2017/dabushn3/project_4th/mannix/rtl/mem_intf_read.sv
+1609335840 /u/e2017/dabushn3/project_4th/mannix/rtl/pool.sv
+1609096133 /u/e2017/dabushn3/project_4th/mannix/rtl/cnn.sv
+1608020053 /u/e2017/dabushn3/project_4th/mannix/rtl/mem_intf_write.sv
+1608130069 /u/e2017/dabushn3/project_4th/mannix/rtl/dot_product.sv

@@ -1,0 +1,15 @@
+//
+// File created by:  irun
+// Do not modify this file
+//
+-sv
+active.sv
+cnn.sv
+dot_product_parallel.sv
+dot_product.sv
+fcc.sv
+mannix_mem_farm.sv
+mannix.sv
+mem_intf_read.sv
+mem_intf_write.sv
+pool.sv

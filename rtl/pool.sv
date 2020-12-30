@@ -26,7 +26,7 @@ module pool (
             );
   
   
-  parameter ADDR_WIDTH=12; //TODO: check width
+  parameter ADDR_WIDTH=19; //TODO: check width
   parameter MAX_BYTES_TO_RD=20;
   parameter LOG2_MAX_BYTES_TO_RD=$clog2(MAX_BYTES_TO_RD);  
   parameter MAX_BYTES_TO_WR=5;  
