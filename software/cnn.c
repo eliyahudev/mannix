@@ -51,7 +51,7 @@ int main(int argc, char const *argv[]) {
     // create matrix from exel file 
     int label;
     FILE *filePointer;
-    filePointer = fopen("r.csv", "r");
+    filePointer = fopen("source/data_set_256_fasion_emnist.csv", "r");
     while (!feof(filePointer))
         setMatrixValues(matrix_ptr, filePointer, &label);
     printf("label=%d\n",label);
