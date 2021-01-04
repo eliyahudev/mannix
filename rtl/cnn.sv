@@ -55,7 +55,8 @@ module cnn (
   parameter SHIFT=3'b011;
   parameter WRITE=3'b100;
   
-  parameter JUMP=1;
+  parameter JUMP_COL=1;
+  parameter JUMP_ROW=1;
   
   input  clk;	//clock
   input  rst_n;	//reset negative
@@ -83,6 +84,7 @@ module cnn (
   reg [7:0]                        cut_data_pic [DP_DEPTH-1:0] ;                   
   reg [7:0]                        data_wgt [DP_DEPTH-1:0] ;
   reg [ADDR_WIDTH-1:0]             current_read_addr;
+  reg [ADDR_WIDTH-1:0]             current_row_start_addr;
   wire [16:0]                       dp_res;
   
   reg [2:0]                         state;
@@ -90,7 +92,10 @@ module cnn (
 
   reg [7:0]                         counter_calc;
   reg                               last_byte_of_bus;
-
+  reg [3:0]                         calc_line; //Calculate the index of line out of the calculation of single window
+  reg [7:0]                         window_cols_index; //Index of window out of single matrix. used for multiplication of 'JUMP_COL'.
+  reg [7:0]                         window_rows_index; //Index of window out of single matrix. used for multiplication of 'JUMP_ROW'.
+  
 always @(*)
   begin
      if(!rst_n)
@@ -125,7 +130,8 @@ always @(*)
           end
       SHIFT:
         begin
-          if(counter_calc==8'd32)
+          //if(counter_calc==Y_ROWS_NUM*Y_COLS_NUM)
+          if(((window_cols_index%8)==8'd0)&&(calc_line==4'd0)) //8 is num of DW in data BUS
             begin
              nx_state = WRITE; 
             end
@@ -167,7 +173,7 @@ always @(posedge clk or negedge rst_n)
         mem_intf_write.mem_start_addr <= {ADDR_WIDTH{1'b0}};
         mem_intf_write.mem_size_bytes <= 'd0;  //TODO: change to num of bits
         mem_intf_write.last<= 1'b0;
-        mem_intf_write.mem_data <= 'd0;//TODO: change to num of bits
+     //   mem_intf_write.mem_data <= 'd0;//TODO: change to num of bits
         mem_intf_write.mem_last_valid<= 1'b0;
         
         mem_intf_read_pic.mem_req<=1'b0;
@@ -179,9 +185,20 @@ always @(posedge clk or negedge rst_n)
         mem_intf_read_wgt.mem_size_bytes<='d0; //TODO: change to num of bits
 
         counter_calc<=8'd0;
+        
         cut_data_pic[0]<= 8'd0;
         data_wgt[0]<= 8'd0;
+        cut_data_pic[1]<= 8'd0;
+        data_wgt[1]<= 8'd0;
+        cut_data_pic[2]<= 8'd0;
+        data_wgt[2]<= 8'd0;
+        cut_data_pic[3]<= 8'd0;
+        data_wgt[3]<= 8'd0;
+
+
+        
         last_byte_of_bus<=1'b0;
+        //calc_line<=4'd0;
         
       end
     else
@@ -225,6 +242,12 @@ always @(posedge clk or negedge rst_n)
             cut_data_pic[3]<= mem_intf_read_pic.mem_data[3];
             data_wgt[3]<= mem_intf_read_wgt.mem_data[7:0];
 
+            // if(calc_line==Y_COLS_NUM)
+            //   begin
+            //   calc_line <= 4'd0;
+            //   end
+            // else
+            //   calc_line <= calc_line+1'b1;
            // mem_intf_write.mem_data<=mem_intf_write.mem_data<<8;//-1'b1);
             
             if(counter_calc==1)//DP_DEPTH-1)
@@ -234,14 +257,18 @@ always @(posedge clk or negedge rst_n)
           end // if (state==CALC)
         else if (state==SHIFT)
           begin
-            mem_intf_write.mem_data[0]<=mem_intf_write.mem_data[0]+dp_res; //mem_intf_write.mem_data<=mem_intf_write.mem_data<<(counter_calc-1'b1);
+            // if(calc_line==Y_COLS_NUM)
+            //   mem_intf_write.mem_data <= mem_intf_write.mem_data<<32;
+            // else                           
+            // mem_intf_write.mem_data[0]<=mem_intf_write.mem_data[0]+dp_res; //mem_intf_write.mem_data<=mem_intf_write.mem_data<<(counter_calc-1'b1);
             end
         else if (state==WRITE)
           begin
             mem_intf_write.mem_start_addr <=sw_cnn_addr_z;
             mem_intf_write.mem_req<=1'b1;
             mem_intf_write.mem_size_bytes<=BYTES_TO_WRITE;
-            mem_intf_write.mem_data<=dp_res;
+            //mem_intf_write.mem_data
+            //mem_intf_write.mem_data<=dp_res;
             // if(mem_intf_write.mem_gnt==1'b1)
             //   begin
             //     mem_intf_read_pic.mem_start_addr <= mem_intf_read_pic.mem_start_addr + mem_intf_write.mem_size_bytes;
@@ -254,21 +281,59 @@ always @(posedge clk or negedge rst_n)
   dot_product_parallel #(.DEPTH(DP_DEPTH)) dp_pll_ins(.a(cut_data_pic), .b(data_wgt), .res(dp_res));                     
 
   always @(posedge clk or negedge rst_n)
+    begin
+      if(!rst_n)
+        begin
+          current_read_addr<={ADDR_WIDTH{1'b0}};
+          calc_line <= 4'd0;
+          window_cols_index<=8'd1;
+          window_rows_index<=8'd1;
+          current_row_start_addr<={ADDR_WIDTH{1'b0}};
+        end
+      else
+        begin
+          if(window_cols_index==X_COLS_NUM-2)
+            begin
+              current_row_start_addr<=X_ROWS_NUM*window_rows_index;
+              current_read_addr<=X_ROWS_NUM*window_rows_index;
+              window_rows_index<=window_rows_index+1'b1;
+              window_cols_index<=8'd1;
+              end           
+          else if(calc_line==Y_COLS_NUM)
+            begin
+              current_read_addr<=current_row_start_addr+JUMP_COL*window_cols_index;
+              calc_line <= 4'd0;
+              window_cols_index<=window_cols_index+1'b1;   ///TODO: zero when end of matrix
+            end
+          
+          else if((state==SHIFT && counter_calc==DP_DEPTH) || (state==READ && counter_calc==1))
+            begin
+              current_read_addr<=current_read_addr+sw_cnn_x_n;
+              calc_line <= calc_line+1'b1;
+            end
+
+          // if (state==WRITE)
+          //  window_cols_index<=8'd1; 
+        end
+    end
+
+
+  always @(posedge clk or negedge rst_n)
   begin
     if(!rst_n)
       begin
-        current_read_addr<={ADDR_WIDTH{1'b0}};
+       mem_intf_write.mem_data <= 'd0;//TODO: change to num of bits 
       end
     else
       begin
-         if((state==SHIFT && counter_calc==DP_DEPTH) || (state==READ && counter_calc==1))
-            current_read_addr<=current_read_addr+sw_cnn_x_n;
+        if((calc_line==Y_COLS_NUM) && (window_cols_index!=8'd8))
+          mem_intf_write.mem_data <= mem_intf_write.mem_data<<32;
+        else if (state==SHIFT)                          
+          mem_intf_write.mem_data[3:0]<=mem_intf_write.mem_data[3:0]+dp_res;
+        else if((state==WRITE) && (mem_intf_write.mem_gnt==1'b1))
+          mem_intf_write.mem_data <= 'd0;//TODO: change to num of bits
       end
   end
-
-
-
-
 
   
   always @(posedge clk or negedge rst_n)

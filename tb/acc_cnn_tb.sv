@@ -1,10 +1,10 @@
 //======================================================================================================
 //
-// Module: dot_product
+// Module: acc_cnn_tb
 //
-// Design Unit Owner : Dor Shilo & Nitzan Dabush
+// Design Unit Owner : Nitzan Dabush
 //                    
-// Original Author   : Dor Shilo & Nitzan Dabush
+// Original Author   : Nitzan Dabush
 // Original Date     : 22-Nov-2020
 //
 //======================================================================================================
@@ -74,6 +74,9 @@ module acc_cnn_tb ();
   reg [$clog2(NUM_WORDS_IN_LINE*WORD_WIDTH/8)-1:0] mem_intf_read_wgt_last;
   reg [31:0][7:0]                                  mem_intf_read_wgt_mem_data;
   reg                                              mem_intf_read_wgt_mem_last_valid;
+
+  reg [7:0] calc_row;
+  
   
 always #CLK_PERIOD  clk_config_tb    = !clk_config_tb;  // Configurable 
 
@@ -86,55 +89,7 @@ assign clk = clk_enable ? clk_config_tb : 1'b0;
       clk_config_tb   = 1'b0;
       RESET_VALUES();
       ASYNC_RESET();
-      TEST_32X32_4X4();
-      // wait (mem_intf_read_pic.mem_req==1'b1)
-      // @(posedge clk)
-      //  mem_intf_read_pic_mem_data[3:0]={8'd2,8'd2,8'd2,8'd2}; 
-      //  mem_intf_read_pic_mem_data[7:4]={8'd3,8'd3,8'd3,8'd3};
-      //  mem_intf_read_pic_mem_data[11:8]={8'd4,8'd4,8'd4,8'd4};
-      //  mem_intf_read_pic_mem_data[15:12]={8'd5,8'd5,8'd5,8'd5};
-      //  mem_intf_read_pic_mem_data[19:16]={8'd6,8'd6,8'd6,8'd6}; 
-      //  mem_intf_read_pic_mem_data[23:20]={8'd7,8'd7,8'd7,8'd7};
-      //  mem_intf_read_pic_mem_data[27:24]={8'd8,8'd8,8'd8,8'd8};
-      //  mem_intf_read_pic_mem_data[31:28]={8'd9,8'd9,8'd9,8'd9};
-      
-      //  mem_intf_read_pic_mem_gnt=1'b1;
-       
-      //  mem_intf_read_wgt_mem_data={8'd2,8'd2,8'd2,8'd2};  
-      //  mem_intf_read_wgt_mem_gnt=1'b1;
-
-      //  // mem_intf_read_pic_mem_data={8'd2,8'd2,8'd2,8'd2};  
-       
-      //  // mem_intf_read_wgt_mem_data={8'd2,8'd2,8'd2,8'd2};  
-       
-      // wait(mem_intf_write.mem_req)
-      //  mem_intf_write_mem_gnt=1'b1;
-      //   $display("done");
-      // #12.5;
-      //  mem_intf_read_pic_mem_data[3:0]={8'd10,8'd10,8'd10,8'd10}; 
-      //  mem_intf_read_pic_mem_data[7:4]={8'd11,8'd11,8'd11,8'd11};
-      //  mem_intf_read_pic_mem_data[11:8]={8'd12,8'd12,8'd12,8'd12};
-      //  mem_intf_read_pic_mem_data[15:12]={8'd13,8'd13,8'd13,8'd13};
-      //  mem_intf_read_pic_mem_data[19:16]={8'd14,8'd14,8'd14,8'd14}; 
-      //  mem_intf_read_pic_mem_data[23:20]={8'd15,8'd15,8'd15,8'd15};
-      //  mem_intf_read_pic_mem_data[27:24]={8'd16,8'd16,8'd16,8'd16};
-      //  mem_intf_read_pic_mem_data[31:28]={8'd17,8'd17,8'd17,8'd17};
-      
-      //  wait (mem_intf_read_pic.mem_req==1'b1)
-      // @(posedge clk)
-
- 
-      //  //mem_intf_read_pic_mem_data={8'd3,8'd3,8'd3,8'd3};  
-      //  mem_intf_read_pic_mem_gnt=1'b1;
-      //  mem_intf_read_pic_mem_data[1]={8'd3,8'd3,8'd3,8'd3}; 
-      //  mem_intf_read_wgt_mem_data={8'd3,8'd3,8'd3,8'd3};  
-      //  mem_intf_read_wgt_mem_gnt=1'b1;
- 
-       
-      // wait(mem_intf_write.mem_req && mem_intf_read_pic.mem_start_addr==mem_intf_read_pic.mem_size_bytes)
-      //  mem_intf_write_mem_gnt=1'b1;
-      //   $display("done");
-  
+      TEST_128X128_4X4();
       $stop;
     end
   
@@ -145,12 +100,7 @@ assign clk = clk_enable ? clk_config_tb : 1'b0;
   assign mem_intf_read_pic.last=mem_intf_read_pic_last;
   assign mem_intf_read_pic.mem_data=mem_intf_read_pic_mem_data;
   assign mem_intf_read_pic.mem_last_valid=mem_intf_read_pic_mem_last_valid;
-  
-  // mem_intf_read_pic.mem_req
-  // mem_intf_read_pic.mem_start_addr
-  // mem_intf_read_pic.mem_size_bytes   
-                 
- 
+   
 
   mem_intf_read mem_intf_read_wgt();
   
@@ -159,27 +109,36 @@ assign clk = clk_enable ? clk_config_tb : 1'b0;
   assign mem_intf_read_wgt.mem_data=mem_intf_read_wgt_mem_data;
   assign mem_intf_read_wgt.mem_last_valid=mem_intf_read_wgt_mem_last_valid;
   
-  // mem_intf_read_wgt.mem_req(),
-  // mem_intf_read_wgt.mem_start_addr(),
-  // mem_intf_read_wgt.mem_size_bytes() 
-                    
-
-
 
   mem_intf_write mem_intf_write();
-                              assign mem_intf_write.mem_gnt=mem_intf_write_mem_gnt;
-                 // //Outputs
-	   	 // .mem_req(),
-                 // .mem_start_addr(),
-                 // .mem_size_bytes(),
-                 // .last(),
-                 // .mem_data(),
-                 // .mem_last_valid()
-                 // ); 
-  
+                              assign mem_intf_write.mem_gnt=mem_intf_write_mem_gnt;  
 
   
-cnn cnn_ins(
+cnn #(
+
+  .JUMP(JUMP),
+  .ADDR_WIDTH(ADDR_WIDTH),
+                       
+  .MAX_BYTES_TO_RD(MAX_BYTES_TO_RD),
+  .LOG2_MAX_BYTES_TO_RD(LOG2_MAX_BYTES_TO_RD),  
+  .MAX_BYTES_TO_WR(MAX_BYTES_TO_WR),  
+  .LOG2_MAX_BYTES_TO_WR(LOG2_MAX_BYTES_TO_WR),
+  .MEM_DATA_BUS(MEM_DATA_BUS),
+
+  .X_ROWS_NUM(X_ROWS_NUM),
+  .X_COLS_NUM(X_COLS_NUM),
+                     
+  .X_LOG2_ROWS_NUM(X_LOG2_ROWS_NUM),
+  .X_LOG2_COLS_NUM(X_LOG2_COLS_NUM), 
+  
+
+  .Y_ROWS_NUM(Y_ROWS_NUM),
+  .Y_COLS_NUM(Y_COLS_NUM),
+                     
+  .Y_LOG2_ROWS_NUM(Y_LOG2_ROWS_NUM),
+  .Y_LOG2_COLS_NUM(Y_LOG2_COLS_NUM)
+
+      )cnn_ins(
             .clk(clk),
             .rst_n(rst_n),
 
@@ -220,7 +179,8 @@ cnn cnn_ins(
 task RESET_VALUES();
   begin
 
-
+    calc_row <=8'd0;
+    
    mem_intf_write_mem_gnt=1'b0;
   
    mem_intf_read_pic_mem_gnt=1'b0;
@@ -238,12 +198,8 @@ task RESET_VALUES();
      sw_cnn_addr_x={ADDR_WIDTH{1'b0}};	// CNN Data window FIRST address
      sw_cnn_addr_y={ADDR_WIDTH{1'b0}};	// CNN  weights window FIRST address
      sw_cnn_addr_z={ADDR_WIDTH{1'b0}};	// CNN return address
-    // sw_cnn_x_m={X_LOG2_ROWS_NUM{1'b0}};  	// CNN data matrix num of rows
-    // sw_cnn_x_n={X_LOG2_COLS_NUM{1'b0}};	        // CNN data matrix num of columns
-    // sw_cnn_y_m={Y_LOG2_ROWS_NUM{1'b0}};	        // CNN weight matrix num of rows
-    // sw_cnn_y_n={Y_LOG2_COLS_NUM{1'b0}};	        // CNN weight matrix num of columns
-    sw_cnn_x_m='d32;  	// CNN data matrix num of rows
-    sw_cnn_x_n='d32;	        // CNN data matrix num of columns
+    sw_cnn_x_m='d128;  	// CNN data matrix num of rows
+    sw_cnn_x_n='d128;	        // CNN data matrix num of columns
     sw_cnn_y_m='d4;	        // CNN weight matrix num of rows
     sw_cnn_y_n='d4;	        // CNN weight matrix num of columns
     
@@ -252,130 +208,156 @@ task RESET_VALUES();
     end
   endtask // ASYNC_RESET
 
+
+  task MEM_PIC_READ_REQ_FRST (input [ADDR_WIDTH-1:0] addr, input [7:0] data);
+  begin
+    wait ((mem_intf_read_pic.mem_req==1'b1)&&(mem_intf_read_pic.mem_start_addr==addr))
+      @(posedge clk)
+        mem_intf_read_pic_mem_data[3:0]={data,data,data,data}; 
+        mem_intf_read_pic_mem_last_valid=3'd3;
+    
+        mem_intf_read_pic_mem_gnt=1'b1;  
+  end
+endtask // MEM_PIC_READ_REQ_FRST
+
+  task MEM_PIC_READ_REQ (input [ADDR_WIDTH-1:0] addr, input [7:0] data);
+    begin
+      wait ((mem_intf_read_pic.mem_req==1'b1)&&(mem_intf_read_pic.mem_start_addr==addr))
+        @(posedge clk)
+
+      mem_intf_read_pic_mem_data[3:0]={data,data,data,data}; 
+
+      mem_intf_read_pic_mem_last_valid=3'd3;
+
+      mem_intf_read_pic_mem_gnt=1'b1;
+
+      repeat (2) begin
+        @ (posedge clk) ;
+      end
+
+      mem_intf_read_pic_mem_gnt=1'b0;   
+    end
+  endtask // MEM_PIC_READ_REQ
   
 
-  // task CREATE_MATRIX_SQUARE (input [7:0] size_d,input [7:0] size_w);
-  //     begin                       
-  //     int i,j;
-  //     reg [7:0] count_mx_d;
-  //     reg [7:0] count_mx_w;
-      
-  //     count_mx_d=8'd0;
-  //     for(i=0;i<(size_d*size_d);i++)
-  //       begin
-  //         matrix_data_pre[i]=count_mx_d;
-  //         count_mx_d=count_mx_d+1;
-  //                    end
-      
-
-  //     count_mx_w=8'd0;
-  //     for(j=0;j<(size_w*size_w);j++)
-  //       begin
-  //         matrix_weight_pre[j]=count_mx_w;
-  //         count_mx_w=count_mx_w+1;
-  //       end
-      
-  //   end
-  //   endtask
-
- task TEST_32X32_4X4();
+  task MEM_WGT_READ_REQ (input [ADDR_WIDTH-1:0] addr, input [7:0] data);
   begin
-    wait ((mem_intf_read_pic.mem_req==1'b1)&&(mem_intf_read_pic.mem_start_addr=={ADDR_WIDTH{1'b0}}))
-      @(posedge clk)
-        mem_intf_read_pic_mem_data[3:0]={8'd2,8'd2,8'd2,8'd2}; 
-    // mem_intf_read_pic_mem_data[7:4]={8'd3,8'd3,8'd3,8'd3};
-    // mem_intf_read_pic_mem_data[11:8]={8'd4,8'd4,8'd4,8'd4};
-    // mem_intf_read_pic_mem_data[15:12]={8'd5,8'd5,8'd5,8'd5};
-    mem_intf_read_pic_mem_last_valid=5'd15;
-    
-    mem_intf_read_pic_mem_gnt=1'b1;
-
     wait ((mem_intf_read_wgt.mem_req==1'b1)&&(mem_intf_read_wgt.mem_start_addr=={ADDR_WIDTH{1'b0}}))  
-      mem_intf_read_wgt_mem_data[3:0]={8'd2,8'd2,8'd2,8'd2};
-    // mem_intf_read_wgt_mem_data[7:4]={8'd2,8'd2,8'd2,8'd2};
-    // mem_intf_read_wgt_mem_data[11:8]={8'd2,8'd2,8'd2,8'd2};
-    // mem_intf_read_wgt_mem_data[15:12]={8'd2,8'd2,8'd2,8'd2};
-    mem_intf_read_wgt_mem_gnt=1'b1;
+      mem_intf_read_wgt_mem_data[3:0]={data,data,data,data};
+      mem_intf_read_wgt_mem_gnt=1'b1;
 
     repeat (2) begin
-    @ (posedge clk) ;
-   end
-
-    mem_intf_read_pic_mem_gnt=1'b0; 
-    mem_intf_read_wgt_mem_gnt=1'b0; 
-    // wait(mem_intf_write.mem_req)
-    //  mem_intf_write_mem_gnt=1'b1;
-    //   $display("done");
-    
-    wait ((mem_intf_read_pic.mem_req==1'b1)&&(mem_intf_read_pic.mem_start_addr=={ADDR_WIDTH{1'b0}}+sw_cnn_x_n))
-      @(posedge clk)
-    
-        //#12.5;
-       mem_intf_read_pic_mem_data[3:0]={8'd3,8'd3,8'd3,8'd3}; 
-    //    mem_intf_read_pic_mem_data[3:0]={8'd10,8'd10,8'd10,8'd10}; 
-    // mem_intf_read_pic_mem_data[7:4]={8'd11,8'd11,8'd11,8'd11};
-    // mem_intf_read_pic_mem_data[11:8]={8'd12,8'd12,8'd12,8'd12};
-    // mem_intf_read_pic_mem_data[15:12]={8'd13,8'd13,8'd13,8'd13};
-    // mem_intf_read_pic_mem_data[19:16]={8'd14,8'd14,8'd14,8'd14}; 
-    // mem_intf_read_pic_mem_data[23:20]={8'd15,8'd15,8'd15,8'd15};
-    // mem_intf_read_pic_mem_data[27:24]={8'd16,8'd16,8'd16,8'd16};
-    // mem_intf_read_pic_mem_data[31:28]={8'd17,8'd17,8'd17,8'd17};
-    mem_intf_read_pic_mem_last_valid=3'd4;
-
-    mem_intf_read_pic_mem_gnt=1'b1;
-
-   repeat (2) begin
-    @ (posedge clk) ;
-   end
-
+      @ (posedge clk) ;
+    end
+//Need to verify if gnt de-asserted after 1 cycle or not
       mem_intf_read_pic_mem_gnt=1'b0; 
-    
-    // wait(mem_intf_write.mem_req)
-    //     mem_intf_write_mem_gnt=1'b1;
-    //      $display("done");
+      mem_intf_read_wgt_mem_gnt=1'b0;
+  end
+  endtask // MEM_WGT_READ_REQ
 
-    wait ((mem_intf_read_pic.mem_req==1'b1)&&(mem_intf_read_pic.mem_start_addr=={ADDR_WIDTH{1'b0}}+sw_cnn_x_n*2))
-      @(posedge clk)
-    //     mem_intf_read_pic_mem_data[3:0]={8'd2,8'd2,8'd2,8'd2}; 
-    // mem_intf_read_pic_mem_data[7:4]={8'd3,8'd3,8'd3,8'd3};
-    mem_intf_read_pic_mem_data[3:0]={8'd4,8'd4,8'd4,8'd4};
-    // mem_intf_read_pic_mem_data[15:12]={8'd5,8'd5,8'd5,8'd5};
-    // mem_intf_read_pic_mem_last_valid=5'd15;
-    
-    mem_intf_read_pic_mem_gnt=1'b1;
+  reg [7:0] data;
+  reg [7:0] index;
+  reg [ADDR_WIDTH-1:0] start_line_addr;
+  
+  task WINDOWS_IN_RAW(input [15:0] times , input [7:0] row_num);
+    begin
+      data=8'd6;
+      if(row_num==8'd0)
+        begin
+         index=8'd1; 
+        end
+      else
+        begin
+          index=8'd0;
+        end
+      start_line_addr=row_num*X_COLS_NUM;
+      repeat(times)
+        begin
+          
+          MEM_PIC_READ_REQ(start_line_addr+JUMP*index,data);
+          MEM_PIC_READ_REQ(start_line_addr+JUMP*index+sw_cnn_x_n,data+1'b1);
+          MEM_PIC_READ_REQ(start_line_addr+JUMP*index+sw_cnn_x_n*2,data+2'b10);
+          MEM_PIC_READ_REQ(start_line_addr+JUMP*index+sw_cnn_x_n*3,data+2'b11);
+          data=data+3'd4;
+          index=index+1'b1;
 
-     repeat (2) begin
-    @ (posedge clk) ;
-   end
+        end
+    end
+  endtask
 
-      mem_intf_read_pic_mem_gnt=1'b0; 
 
-    // wait(mem_intf_write.mem_req)
-    //    mem_intf_write_mem_gnt=1'b1;
-    //     $display("done");
+  
     
-    wait ((mem_intf_read_pic.mem_req==1'b1)&&(mem_intf_read_pic.mem_start_addr=={ADDR_WIDTH{1'b0}}+sw_cnn_x_n*3))
-      @(posedge clk)   
-    //     mem_intf_read_pic_mem_data[3:0]={8'd10,8'd10,8'd10,8'd10}; 
-    // mem_intf_read_pic_mem_data[7:4]={8'd11,8'd11,8'd11,8'd11};
-    // mem_intf_read_pic_mem_data[11:8]={8'd12,8'd12,8'd12,8'd12};
-    // mem_intf_read_pic_mem_data[15:12]={8'd13,8'd13,8'd13,8'd13};
-    mem_intf_read_pic_mem_data[3:0]={8'd5,8'd5,8'd5,8'd5};
-    //mem_intf_read_pic_mem_last_valid=5'd15;
-    mem_intf_read_pic_mem_gnt=1'b1;
-  repeat (2) begin
-    @ (posedge clk) ;
-   end
-    
-      mem_intf_read_pic_mem_gnt=1'b0; 
-    
-    wait(mem_intf_write.mem_req && mem_intf_read_pic.mem_start_addr==mem_intf_read_pic.mem_size_bytes)
-      mem_intf_write_mem_gnt=1'b1;
+  task TEST_128X128_4X4();//input [ADDR_WIDTH-1:0] start_addr);
+   begin
+     MEM_PIC_READ_REQ_FRST({ADDR_WIDTH{1'b0}},8'd2);
+     MEM_WGT_READ_REQ({ADDR_WIDTH{1'b0}},8'd2);
+     //==============================================
+      MEM_PIC_READ_REQ(sw_cnn_x_n,8'd3);
+      MEM_PIC_READ_REQ(sw_cnn_x_n*2,8'd4);
+      MEM_PIC_READ_REQ(sw_cnn_x_n*3,8'd5);
+     // //==============================================
+     // MEM_PIC_READ_REQ(JUMP,8'd6);
+     // MEM_PIC_READ_REQ(JUMP+sw_cnn_x_n,8'd7);
+     // MEM_PIC_READ_REQ(JUMP+sw_cnn_x_n*2,8'd8);
+     // MEM_PIC_READ_REQ(JUMP+sw_cnn_x_n*3,8'd9);
+     // //==============================================
+     // MEM_PIC_READ_REQ(JUMP*2,8'd10);
+     // MEM_PIC_READ_REQ(JUMP*2+sw_cnn_x_n,8'd11);
+     // MEM_PIC_READ_REQ(JUMP*2+sw_cnn_x_n*2,8'd12);
+     // MEM_PIC_READ_REQ(JUMP*2+sw_cnn_x_n*3,8'd13);
+     // //==============================================
+     // MEM_PIC_READ_REQ(JUMP*3,8'd14);
+     // MEM_PIC_READ_REQ(JUMP*3+sw_cnn_x_n,8'd15);
+     // MEM_PIC_READ_REQ(JUMP*3+sw_cnn_x_n*2,8'd16);
+     // MEM_PIC_READ_REQ(JUMP*3+sw_cnn_x_n*3,8'd17);
+     // //==============================================
+     // MEM_PIC_READ_REQ(JUMP*4,8'd18);
+     // MEM_PIC_READ_REQ(JUMP*4+sw_cnn_x_n,8'd19);
+     // MEM_PIC_READ_REQ(JUMP*4+sw_cnn_x_n*2,8'd20);
+     // MEM_PIC_READ_REQ(JUMP*4+sw_cnn_x_n*3,8'd21);
+     // //==============================================
+     // MEM_PIC_READ_REQ(JUMP*5,8'd22);
+     // MEM_PIC_READ_REQ(JUMP*5+sw_cnn_x_n,8'd23);
+     // MEM_PIC_READ_REQ(JUMP*5+sw_cnn_x_n*2,8'd24);
+     // MEM_PIC_READ_REQ(JUMP*5+sw_cnn_x_n*3,8'd25);
+     // //==============================================
+     // MEM_PIC_READ_REQ(JUMP*6,8'd26);
+     // MEM_PIC_READ_REQ(JUMP*6+sw_cnn_x_n,8'd27);
+     // MEM_PIC_READ_REQ(JUMP*6+sw_cnn_x_n*2,8'd28);
+     // MEM_PIC_READ_REQ(JUMP*6+sw_cnn_x_n*3,8'd29);
+     // //==============================================
+        WINDOWS_IN_RAW(124,calc_row);
+         calc_row=calc_row+1'b1;
+         $monitor("end %d row at %0t",calc_row,$time);
+  
+     for(integer i=1;i<128;i++)
+       begin
+         WINDOWS_IN_RAW(125,calc_row);
+         calc_row=calc_row+1'b1;
+         $monitor("end %d row at %0t",calc_row,$time);         
+       end
+
+
+   
+    // wait(mem_intf_write.mem_req && mem_intf_read_pic.mem_start_addr==mem_intf_read_pic.mem_size_bytes)
+    //   mem_intf_write_mem_gnt=1'b1;
     $display("done");
     
   end
    endtask
-  
+
+  always @(posedge clk)
+    begin
+      if(mem_intf_write.mem_req) //&& mem_intf_read_pic.mem_start_addr==mem_intf_read_pic.mem_size_bytes)
+        begin
+          mem_intf_write_mem_gnt<=1'b1;
+        end                 
+      else
+        begin
+          mem_intf_write_mem_gnt<=1'b0;          
+        end
+    end
 
   endmodule
 
