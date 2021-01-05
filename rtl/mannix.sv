@@ -1,14 +1,14 @@
 module mannix #(
 	parameter ADDR_WIDTH=19,
-  parameter X_ROWS_NUM=5,
-  parameter X_COLS_NUM=5,
+  parameter X_ROWS_NUM=128,
+  parameter X_COLS_NUM=128,
                      
   parameter X_LOG2_ROWS_NUM =$clog2(X_ROWS_NUM),
   parameter X_LOG2_COLS_NUM =$clog2(X_COLS_NUM), 
   
 
-  parameter Y_ROWS_NUM=2,
-  parameter Y_COLS_NUM=2,
+  parameter Y_ROWS_NUM=4,
+  parameter Y_COLS_NUM=4,
                      
   parameter Y_LOG2_ROWS_NUM =$clog2(Y_ROWS_NUM),
   parameter Y_LOG2_COLS_NUM =$clog2(Y_COLS_NUM),
@@ -61,10 +61,10 @@ module mannix #(
     input [ADDR_WIDTH-1:0]            sw_cnn_addr_x,	// CNN Data window FIRST address
     input [ADDR_WIDTH-1:0]            sw_cnn_addr_y,	// CNN  weights window FIRST address
     input [ADDR_WIDTH-1:0]            sw_cnn_addr_z,	// CNN return address
-    input [X_LOG2_ROWS_NUM-1:0]       sw_cnn_x_m,  	// CNN data matrix num of rows
-    input [X_LOG2_COLS_NUM-1:0]       sw_cnn_x_n,	        // CNN data matrix num of columns
-    input [Y_LOG2_ROWS_NUM-1:0]       sw_cnn_y_m,	        // CNN weight matrix num of rows
-    input [Y_LOG2_COLS_NUM-1:0]       sw_cnn_y_n,	        // CNN weight matrix num of columns 
+    input [X_LOG2_ROWS_NUM:0]         sw_cnn_x_m,  	// CNN data matrix num of rows
+    input [X_LOG2_COLS_NUM:0]         sw_cnn_x_n,	        // CNN data matrix num of columns
+    input [Y_LOG2_ROWS_NUM:0]         sw_cnn_y_m,	        // CNN weight matrix num of rows
+    input [Y_LOG2_COLS_NUM:0]         sw_cnn_y_n,	        // CNN weight matrix num of columns 
     output reg                        cnn_sw_busy_ind	// An output to the software - 1 – CNN unit is busy CNN is available (Default)
   	);
 
@@ -122,7 +122,21 @@ module mannix #(
         .sw_pool_n(sw_pool_n)
         );
 	
-	cnn i_cnn (
+	cnn #(
+	.ADDR_WIDTH(ADDR_WIDTH),
+   	.X_ROWS_NUM(X_ROWS_NUM),
+   	.X_COLS_NUM(X_COLS_NUM),
+                     
+    	.X_LOG2_ROWS_NUM (X_LOG2_ROWS_NUM),
+    	.X_LOG2_COLS_NUM (X_LOG2_COLS_NUM), 
+  
+   	.Y_ROWS_NUM(Y_ROWS_NUM),
+   	.Y_COLS_NUM(Y_COLS_NUM),
+                     
+   	.Y_LOG2_ROWS_NUM (Y_LOG2_ROWS_NUM),
+   	.Y_LOG2_COLS_NUM (Y_LOG2_COLS_NUM)
+
+	)i_cnn (
 		.clk(clk),
        	.rst_n(rst_n),
 		.mem_intf_write(mem_intf_write_cnn),
