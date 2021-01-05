@@ -11,10 +11,10 @@ interface mem_intf_read
 	   logic [NUM_WORDS_IN_LINE-1:0][WORD_WIDTH-1:0] mem_data;
 	   logic [$clog2(NUM_WORDS_IN_LINE*WORD_WIDTH/8)-1:0] mem_last_valid;
 
-	   modport client_read (input mem_gnt, last, mem_data, mem_last_valid,
+	   modport client_read (input mem_valid, last, mem_data, mem_last_valid,
 	   					 output mem_req, mem_start_addr, mem_size_bytes);
 
-	   modport memory_read (output mem_gnt, last, mem_data, mem_last_valid,
+	   modport memory_read (output mem_valid, last, mem_data, mem_last_valid,
 	   					 input mem_req, mem_start_addr, mem_size_bytes);
 
 endinterface

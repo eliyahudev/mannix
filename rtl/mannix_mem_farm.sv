@@ -23,7 +23,7 @@ module mannix_mem_farm (
 	.clk(clk),
 	.rst_n(rst_n),
 	.data_in(read_ddr_req.mem_data),
-	.data_valid(read_ddr_req.mem_gnt),
+	.data_valid(read_ddr_req.mem_valid),
 	.base_addr(base_addr),
 	.last (last),
 	.num_of_last_valid(num_of_last_valid),

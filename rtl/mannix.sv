@@ -78,8 +78,8 @@ module mannix #(
   	mem_intf_write mem_intf_write_cnn();
   	mem_intf_read mem_intf_read_pic_cnn();
   	mem_intf_read mem_intf_read_wgt_cnn();
-	mem_intf_read #(.ADDR_WIDTH(32))  read_ddr_req();
-	mem_intf_write #(.ADDR_WIDTH(32)) write_ddr_req ();
+	mem_intf_read #(.ADDR_WIDTH(32),.NUM_WORDS_IN_LINE(16), .WORD_WIDTH(256))  read_ddr_req();
+	mem_intf_write #(.ADDR_WIDTH(32),.NUM_WORDS_IN_LINE(16), .WORD_WIDTH(256)) write_ddr_req ();
   	fcc i_fcc (
   	.clk(clk),
   	.FC_ADDRX(FC_ADDRX),

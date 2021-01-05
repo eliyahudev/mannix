@@ -111,7 +111,7 @@ always @(*)
         end
       READ:
         begin
-          if(mem_intf_read_pic.mem_gnt==1'b1)
+          if(mem_intf_read_pic.mem_valid==1'b1)
              nx_state = CALC;
           else
              nx_state = READ; 
@@ -147,7 +147,7 @@ always @(*)
       
       WRITE:
         begin
-          if(mem_intf_write.mem_gnt)
+          if(mem_intf_write.mem_ack)
           nx_state = READ;
           else
           nx_state = WRITE;
@@ -219,7 +219,7 @@ always @(posedge clk or negedge rst_n)
             last_byte_of_bus<=1'b0;
             counter_calc<=8'd0;
             
-            if(mem_intf_write.mem_gnt)
+            if(mem_intf_write.mem_ack)
               begin
                 mem_intf_write.mem_req<=1'b0;
                 end
@@ -269,7 +269,7 @@ always @(posedge clk or negedge rst_n)
             mem_intf_write.mem_size_bytes<=BYTES_TO_WRITE;
             //mem_intf_write.mem_data
             //mem_intf_write.mem_data<=dp_res;
-            // if(mem_intf_write.mem_gnt==1'b1)
+            // if(mem_intf_write.mem_ack==1'b1)
             //   begin
             //     mem_intf_read_pic.mem_start_addr <= mem_intf_read_pic.mem_start_addr + mem_intf_write.mem_size_bytes;
             //     end
@@ -330,7 +330,7 @@ always @(posedge clk or negedge rst_n)
           mem_intf_write.mem_data <= mem_intf_write.mem_data<<32;
         else if (state==SHIFT)                          
           mem_intf_write.mem_data[3:0]<=mem_intf_write.mem_data[3:0]+dp_res;
-        else if((state==WRITE) && (mem_intf_write.mem_gnt==1'b1))
+        else if((state==WRITE) && (mem_intf_write.mem_ack==1'b1))
           mem_intf_write.mem_data <= 'd0;//TODO: change to num of bits
       end
   end
