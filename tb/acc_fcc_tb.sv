@@ -89,7 +89,7 @@ module acc_fcc_tb ();
   reg signed [7:0] data [0:31] ;
   reg signed [7:0] weights [0:31];
   reg signed [16:0] bias ;
-  reg [17:0] result;
+  reg signed [17:0] result [0:127];
 
 
   integer dta;
@@ -108,12 +108,14 @@ assign clk = clk_enable ? clk_config_tb : 1'b0;
       wgt = $fopen("/project/tsmc65/users/shilodo1/mannix/software/fcc_mat_generator/weights.txt", "r");
       b   = $fopen("/project/tsmc65/users/shilodo1/mannix/software/fcc_mat_generator/bias.txt", "r");
       res = $fopen("/project/tsmc65/users/shilodo1/mannix/software/fcc_mat_generator/result.txt", "r");
+	
 
 
       clk_enable = 1'b1;
       clk_config_tb   = 1'b0;
       RESET_VALUES();
       ASYNC_RESET();
+	READ_RESULT();
 //The task that start it all!
       TEST_128X128();
    
@@ -375,10 +377,19 @@ endtask // MEM_PIC_READ_REQ_FRST
       @ (posedge clk) ;
     end
 	mem_intf_read_bias_mem_valid=1'b0;
-//      mem_intf_read_bias_mem_valid=1'b0;   
     end
   endtask // MEM_PIC_READ_REQ*/
-  
+//===========================================================================
+integer k;
+task READ_RESULT ();
+ begin
+	@(posedge clk) begin
+		for (k=0;k<128;k=k+1)begin
+		           scan=$fscanf(res,"%d\n",result[k]);
+		 end
+	  end
+end
+endtask
 //===================================================================
 //task MEM_WGT_READ_REQ
 //
@@ -407,54 +418,44 @@ endtask // MEM_PIC_READ_REQ_FRST
 
 reg [ADDR_WIDTH-1:0] address;
 integer i,j;
-reg [255:0] data_tmp;
-reg [255:0] weights_tmp;
+///reg [255:0] data_tmp;
+//reg [255:0] weights_tmp;
  
   task TEST_128X128();//input [ADDR_WIDTH-1:0] start_addr);
    begin
      fc_go = 1'b1;
      //i = 0;
      address = {ADDR_WIDTH{1'b0}};
-repeat (127) begin //128
+repeat (128) begin //128
+	@(posedge clk) begin
 	i=0;
 	scan=$fscanf(b,"%d\n",bias);
 	MEM_BIAS_READ_REQ(address,bias);
 repeat(4) begin
 	for (j=0;j<32;j=j+1)begin
                    scan=$fscanf(dta,"%d\n",data[i+j]);
-			
-                  /* scan=$fscanf(dta,"%d\n",data[i+1]);
-                   scan=$fscanf(dta,"%d\n",data[i+2]);
-                   scan=$fscanf(dta,"%d\n",data[i+3]);
-		   scan=$fscanf(dta,"%d\n",data[i+4]);
-                   scan=$fscanf(dta,"%d\n",data[i+5]);
-                   scan=$fscanf(dta,"%d\n",data[i+6]);
-                   scan=$fscanf(dta,"%d\n",data[i+7]);*/
                    
 		   scan=$fscanf(wgt,"%d\n",weights[i+j]);
-                  /* scan=$fscanf(wgt,"%d\n",weights[i+1]);
-                   scan=$fscanf(wgt,"%d\n",weights[i+2]);
-                   scan=$fscanf(wgt,"%d\n",weights[i+3]);
-		   scan=$fscanf(wgt,"%d\n",weights[i+4]);
-                   scan=$fscanf(wgt,"%d\n",weights[i+5]);
-                   scan=$fscanf(wgt,"%d\n",weights[i+6]);
-                   scan=$fscanf(wgt,"%d\n",weights[i+7]);*/
+
 	end
+
      //data_tmp ={data[i],data[i+1] ,data[i+2] ,data[i+3],data[i+4],data[i+5] ,data[i+6] ,data[i+7],data[i+8],data[i+9] ,data[i+10] ,data[i+11],data[i+12],data[i+13] ,data[i+14] ,data[i+15],data[i+16],data[i+17] ,data[i+18] ,data[i+19],data[i+20],data[i+21] ,data[i+22] ,data[i+23],data[i+24],data[i+25] ,data[i+26] ,data[i+27],data[i+28],data[i+29] ,data[i+30] ,data[i+31]};
     // MEM_PIC_READ_REQ_FRST(address,{data[i],data[i+1] ,data[i+2] ,data[i+3],data[i+4],data[i+5] ,data[i+6] ,data[i+7]});
      MEM_PIC_READ_REQ_FRST(address,data);
     // weights_tmp ={weights[i],weights[i+1] ,weights[i+2] ,weights[i+3],weights[i+4],weights[i+5] ,weights[i+6] ,weights[i+7],weights[i+8],weights[i+9] ,weights[i+10] ,weights[i+11],weights[i+12],weights[i+13] ,weights[i+14] ,weights[i+15],weights[i+16],weights[i+17] ,weights[i+18] ,weights[i+19],weights[i+20],weights[i+21] ,weights[i+22] ,weights[i+23],weights[i+24],weights[i+25] ,weights[i+26] ,weights[i+27],weights[i+28],weights[i+29] ,weights[i+30] ,weights[i+31]};
      MEM_WGT_READ_REQ_FRST(address,weights);
-	#10
+	#12.5
      mem_intf_read_pic_mem_valid=1'b0; 
      mem_intf_read_wgt_mem_valid=1'b0;
      address = address + 19'd32;
      i=i+32;
-     //==============================================
+end
+end
+     //==================================================================================================================
     
 
-	end
-	end   
+	
+end	 
 
 end
 $fclose(dta);

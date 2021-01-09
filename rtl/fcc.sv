@@ -110,7 +110,12 @@ module fcc (
                      
   parameter Y_LOG2_ROWS_NUM =$clog2(Y_ROWS_NUM);
   parameter Y_LOG2_COLS_NUM =$clog2(Y_COLS_NUM);
-  parameter CNT_32_MAX = 4; //needts to be fc_yn/32 ==
+  parameter CNT_32_MAX = 4; //needts to be fc_yn/32 
+//======================================================================================================
+//Output parameters
+//======================================================================================================
+parameter NUM_RELU_DESCALE_BITS = 5;
+parameter MAX_RELU_VAL = 1<<NUM_RELU_DESCALE_BITS;
 
 
   	 
@@ -455,11 +460,14 @@ always @(posedge clk or negedge rst_n) begin
 			    mem_intf_write.mem_req<=1'b1;
 			    mem_intf_write.mem_size_bytes<=BYTES_TO_WRITE;
 			    mem_intf_write.mem_last_valid<= 1'b0;				
-				if (data_out_sum + mem_bias > 32'd0) begin 
-					mem_intf_write.mem_data<= data_out_sum + mem_bias;
+				if (data_out_sum + mem_bias > MAX_RELU_VAL) begin 
+					mem_intf_write.mem_data<= MAX_RELU_VAL>>NUM_RELU_DESCALE_BITS;
+				end
+				else if (data_out_sum + mem_bias < 32'd0) begin
+					mem_intf_write.mem_data <= {(32-NUM_RELU_DESCALE_BITS){1'd0}};
 				end
 				else begin
-					mem_intf_write.mem_data <= 32'd0;
+					mem_intf_write.mem_data<= (data_out_sum + mem_bias)>>NUM_RELU_DESCALE_BITS;
 				end
 		if (mem_intf_write.mem_ack) begin
 			counter_32 <= {CNT_32_MAX{1'd0}};
