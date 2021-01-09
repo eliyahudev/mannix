@@ -7,6 +7,10 @@
 // Original Author   : Dor Shilo and BIG credit to Nitzan
 // Original Date     : 1-Jan-2020
 //
+//
+//	latest changes :
+//			added reading from bias, weights, weights and result txt files found in SW
+//
 //======================================================================================================
 
 
@@ -67,20 +71,32 @@ module acc_fcc_tb ();
   reg                             		   mem_intf_read_pic_mem_valid;
   reg                             		   mem_intf_read_pic_last;
   
-  reg [31:0][7:0]                 		   mem_intf_read_pic_mem_data;
+  reg signed [31:0][7:0]               		   mem_intf_read_pic_mem_data;
   
   reg [$clog2(NUM_WORDS_IN_LINE*WORD_WIDTH/8)-1:0] mem_intf_read_pic_mem_last_valid ;
   
   reg                                              mem_intf_read_wgt_mem_valid;
   reg [$clog2(NUM_WORDS_IN_LINE*WORD_WIDTH/8)-1:0] mem_intf_read_wgt_last;
-  reg [31:0][7:0]                                  mem_intf_read_wgt_mem_data;
+  reg signed [31:0][7:0]                           mem_intf_read_wgt_mem_data;
   reg                                              mem_intf_read_wgt_mem_last_valid;
 
   reg                                              mem_intf_read_bias_mem_valid;
   reg [$clog2(NUM_WORDS_IN_LINE*WORD_WIDTH/8)-1:0] mem_intf_read_bias_last;
-  reg [31:0][7:0]                                  mem_intf_read_bias_mem_data;
+  reg signed [31:0][7:0]                           mem_intf_read_bias_mem_data;
   reg                                              mem_intf_read_bias_mem_last_valid;
   
+
+  reg signed [7:0] data [0:31] ;
+  reg signed [7:0] weights [0:31];
+  reg signed [16:0] bias ;
+  reg [17:0] result;
+
+
+  integer dta;
+  integer wgt;
+  integer b;
+  integer res;
+  integer scan;
 always #CLK_PERIOD  clk_config_tb    = !clk_config_tb;  // Configurable 
 
 assign clk = clk_enable ? clk_config_tb : 1'b0;
@@ -88,6 +104,12 @@ assign clk = clk_enable ? clk_config_tb : 1'b0;
   
   initial
     begin
+      dta = $fopen("/project/tsmc65/users/shilodo1/mannix/software/fcc_mat_generator/data.txt", "r");
+      wgt = $fopen("/project/tsmc65/users/shilodo1/mannix/software/fcc_mat_generator/weights.txt", "r");
+      b   = $fopen("/project/tsmc65/users/shilodo1/mannix/software/fcc_mat_generator/bias.txt", "r");
+      res = $fopen("/project/tsmc65/users/shilodo1/mannix/software/fcc_mat_generator/result.txt", "r");
+
+
       clk_enable = 1'b1;
       clk_config_tb   = 1'b0;
       RESET_VALUES();
@@ -259,13 +281,15 @@ task RESET_VALUES();
 //		1) data - the data we want to give the pic at start
 //		2) addr - the start addr
 //===================================================================
-
-  task MEM_PIC_READ_REQ_FRST (input [ADDR_WIDTH-1:0] addr, input [7:0] data);
+integer m ;
+  task MEM_PIC_READ_REQ_FRST (input [ADDR_WIDTH-1:0] addr, input signed [7:0] data [0:31] );//[0:31]);
   begin
-    wait ((mem_intf_read_pic.mem_req==1'b1)&&(mem_intf_read_pic.mem_start_addr==addr))
-      @(posedge clk)
-       mem_intf_read_pic_mem_data[31:0]={32{data}}; 
-        mem_intf_read_pic_mem_last_valid=8'd31;
+    wait ((mem_intf_read_pic.mem_req==1'b1))//&&(mem_intf_read_pic.mem_start_addr==addr))
+    @(posedge clk)
+    for(m=0;m<32;m=m+1) begin
+       mem_intf_read_pic_mem_data[m] = data[m] ; 
+	end        
+	mem_intf_read_pic_mem_last_valid=8'd31;
     
         mem_intf_read_pic_mem_valid=1'b1;  
   end
@@ -280,11 +304,14 @@ endtask // MEM_PIC_READ_REQ_FRST
 //		2) addr - the start addr
 //===================================================================
 
-  task MEM_WGT_READ_REQ_FRST (input [ADDR_WIDTH-1:0] addr, input [7:0] data);
+  task MEM_WGT_READ_REQ_FRST (input [ADDR_WIDTH-1:0] addr, input signed [7:0] data [0:31] );
   begin
-    wait ((mem_intf_read_wgt.mem_req==1'b1)&&(mem_intf_read_wgt.mem_start_addr==addr))
+    wait ((mem_intf_read_wgt.mem_req==1'b1))//&&(mem_intf_read_wgt.mem_start_addr==addr))
       @(posedge clk)
-       mem_intf_read_wgt_mem_data[31:0]={32{data}}; 
+    for(m=0;m<32;m=m+1) begin
+       mem_intf_read_wgt_mem_data[m] = data[m] ; 
+	end   
+     //  mem_intf_read_wgt_mem_data = data ; 
         mem_intf_read_wgt_mem_last_valid=8'd31;
     
         mem_intf_read_wgt_mem_valid=1'b1;  
@@ -303,7 +330,7 @@ endtask // MEM_PIC_READ_REQ_FRST
 //		same as the last one but here we wait 2 clk cycles to 
 //		low gnt
 //===================================================================
-  task MEM_PIC_READ_REQ (input [ADDR_WIDTH-1:0] addr, input [7:0] data);
+/*  task MEM_PIC_READ_REQ (input [ADDR_WIDTH-1:0] addr, input [7:0] data);
     begin
       wait ((mem_intf_read_pic.mem_req==1'b1)&&(mem_intf_read_pic.mem_start_addr==addr))
         @(posedge clk)
@@ -320,7 +347,7 @@ endtask // MEM_PIC_READ_REQ_FRST
 
       mem_intf_read_pic_mem_valid=1'b0;   
     end
-  endtask // MEM_PIC_READ_REQ
+  endtask // MEM_PIC_READ_REQ*/
   
 
 //===================================================================
@@ -334,12 +361,12 @@ endtask // MEM_PIC_READ_REQ_FRST
 //		same as the last one but here we wait 2 clk cycles to 
 //		low gnt
 //===================================================================
-  task MEM_BIAS_READ_REQ (input [ADDR_WIDTH-1:0] addr, input [7:0] data);
+ task MEM_BIAS_READ_REQ (input [ADDR_WIDTH-1:0] addr, input [16:0] data);
     begin
       wait ((mem_intf_read_bias.mem_req==1'b1))//&&(mem_intf_read_bias.mem_start_addr==addr))
         @(posedge clk)
 
-      mem_intf_read_bias_mem_data[0]={32{data}}; 
+      mem_intf_read_bias_mem_data={data}; 
 
       mem_intf_read_bias_mem_last_valid=8'd31;
 
@@ -350,7 +377,7 @@ endtask // MEM_PIC_READ_REQ_FRST
 	mem_intf_read_bias_mem_valid=1'b0;
 //      mem_intf_read_bias_mem_valid=1'b0;   
     end
-  endtask // MEM_PIC_READ_REQ
+  endtask // MEM_PIC_READ_REQ*/
   
 //===================================================================
 //task MEM_WGT_READ_REQ
@@ -362,7 +389,7 @@ endtask // MEM_PIC_READ_REQ_FRST
 //	Description:
 //		same but for wgt
 //===================================================================
-  task MEM_WGT_READ_REQ (input [ADDR_WIDTH-1:0] addr, input [7:0] data);
+/*  task MEM_WGT_READ_REQ (input [ADDR_WIDTH-1:0] addr, input [7:0] data);
   begin
     wait ((mem_intf_read_wgt.mem_req==1'b1)&&(mem_intf_read_wgt.mem_start_addr=={ADDR_WIDTH{1'b0}}))  
       mem_intf_read_wgt_mem_data[31:0]={32{data}};
@@ -375,113 +402,67 @@ endtask // MEM_PIC_READ_REQ_FRST
       mem_intf_read_pic_mem_valid=1'b0; 
       mem_intf_read_wgt_mem_valid=1'b0;
   end
-  endtask // MEM_WGT_READ_REQ
-//===================================================================
-//task FC_ACTION
-//
-//	inputs:
-//		1) times - the data gets 4 bytes at a time from a 128x128 bytes matrix.
-//		    	   
-//
-//	Description:
-//		same as the last one but here we wait 2 clk cycles to 
-//		low gnt
-//===================================================================
-  reg [7:0] data;
-  reg [7:0] index;
-  
-  task FC_ACTION(input [15:0] times);
-    begin
-      data=8'd6;
-      index=8'd1;
-      repeat(times)
-        begin
-          if(mem_intf_write.mem_req) //&& mem_intf_read_pic.mem_start_addr==mem_intf_read_pic.mem_size_bytes)
-          mem_intf_write_mem_ack=1'b1;
-          else
-          mem_intf_write_mem_ack=1'b0;
-          
-          MEM_PIC_READ_REQ(index,data);
-          MEM_PIC_READ_REQ(index+1'b1,data+1'b1);
-          MEM_PIC_READ_REQ(index+2'b10,data+2'b10);
-          MEM_PIC_READ_REQ(index+2'b11,data+2'b11);
-          data=data+3'd4;
-          index=index+3'd4;
-          // if(mem_intf_write.mem_req) //&& mem_intf_read_pic.mem_start_addr==mem_intf_read_pic.mem_size_bytes)
-          // mem_intf_write_mem_ack=1'b1;
-          // else
-          // mem_intf_write_mem_ack=1'b0; 
-        end
-    end
-  endtask
+  endtask // MEM_WGT_READ_REQ*/
+//=================================================================================
 
 reg [ADDR_WIDTH-1:0] address;
-  
+integer i,j;
+reg [255:0] data_tmp;
+reg [255:0] weights_tmp;
+ 
   task TEST_128X128();//input [ADDR_WIDTH-1:0] start_addr);
    begin
      fc_go = 1'b1;
+     //i = 0;
      address = {ADDR_WIDTH{1'b0}};
-repeat (128) begin 
+repeat (127) begin //128
+	i=0;
+	scan=$fscanf(b,"%d\n",bias);
+	MEM_BIAS_READ_REQ(address,bias);
 repeat(4) begin
-     MEM_PIC_READ_REQ_FRST(address,8'd2);
-     MEM_WGT_READ_REQ_FRST(address,8'd3);
-     MEM_BIAS_READ_REQ(address,8'd9);
+	for (j=0;j<32;j=j+1)begin
+                   scan=$fscanf(dta,"%d\n",data[i+j]);
+			
+                  /* scan=$fscanf(dta,"%d\n",data[i+1]);
+                   scan=$fscanf(dta,"%d\n",data[i+2]);
+                   scan=$fscanf(dta,"%d\n",data[i+3]);
+		   scan=$fscanf(dta,"%d\n",data[i+4]);
+                   scan=$fscanf(dta,"%d\n",data[i+5]);
+                   scan=$fscanf(dta,"%d\n",data[i+6]);
+                   scan=$fscanf(dta,"%d\n",data[i+7]);*/
+                   
+		   scan=$fscanf(wgt,"%d\n",weights[i+j]);
+                  /* scan=$fscanf(wgt,"%d\n",weights[i+1]);
+                   scan=$fscanf(wgt,"%d\n",weights[i+2]);
+                   scan=$fscanf(wgt,"%d\n",weights[i+3]);
+		   scan=$fscanf(wgt,"%d\n",weights[i+4]);
+                   scan=$fscanf(wgt,"%d\n",weights[i+5]);
+                   scan=$fscanf(wgt,"%d\n",weights[i+6]);
+                   scan=$fscanf(wgt,"%d\n",weights[i+7]);*/
+	end
+     //data_tmp ={data[i],data[i+1] ,data[i+2] ,data[i+3],data[i+4],data[i+5] ,data[i+6] ,data[i+7],data[i+8],data[i+9] ,data[i+10] ,data[i+11],data[i+12],data[i+13] ,data[i+14] ,data[i+15],data[i+16],data[i+17] ,data[i+18] ,data[i+19],data[i+20],data[i+21] ,data[i+22] ,data[i+23],data[i+24],data[i+25] ,data[i+26] ,data[i+27],data[i+28],data[i+29] ,data[i+30] ,data[i+31]};
+    // MEM_PIC_READ_REQ_FRST(address,{data[i],data[i+1] ,data[i+2] ,data[i+3],data[i+4],data[i+5] ,data[i+6] ,data[i+7]});
+     MEM_PIC_READ_REQ_FRST(address,data);
+    // weights_tmp ={weights[i],weights[i+1] ,weights[i+2] ,weights[i+3],weights[i+4],weights[i+5] ,weights[i+6] ,weights[i+7],weights[i+8],weights[i+9] ,weights[i+10] ,weights[i+11],weights[i+12],weights[i+13] ,weights[i+14] ,weights[i+15],weights[i+16],weights[i+17] ,weights[i+18] ,weights[i+19],weights[i+20],weights[i+21] ,weights[i+22] ,weights[i+23],weights[i+24],weights[i+25] ,weights[i+26] ,weights[i+27],weights[i+28],weights[i+29] ,weights[i+30] ,weights[i+31]};
+     MEM_WGT_READ_REQ_FRST(address,weights);
+	#10
      mem_intf_read_pic_mem_valid=1'b0; 
      mem_intf_read_wgt_mem_valid=1'b0;
      address = address + 19'd32;
+     i=i+32;
      //==============================================
     
-//wait(mem_intf_write_mem_ack);
-//#5
-//    mem_intf_write_mem_ack = 1'b0;
-end
-end   
- //MEM_PIC_READ_REQ_FRST(8'd128,8'd4);
-     // MEM_WGT_READ_REQ_FRST(8'd128,8'd6);
-      //MEM_PIC_READ_REQ(fc_xm+2,8'd5);
-     // //==============================================
-     // MEM_PIC_READ_REQ(JUMP,8'd6);
-     // MEM_PIC_READ_REQ(JUMP+fc_x_n,8'd7);
-     // MEM_PIC_READ_REQ(JUMP+fc_x_n*2,8'd8);
-     // MEM_PIC_READ_REQ(JUMP+fc_x_n*3,8'd9);
-     // //==============================================
-     // MEM_PIC_READ_REQ(JUMP*2,8'd10);
-     // MEM_PIC_READ_REQ(JUMP*2+fc_x_n,8'd11);
-     // MEM_PIC_READ_REQ(JUMP*2+fc_x_n*2,8'd12);
-     // MEM_PIC_READ_REQ(JUMP*2+fc_x_n*3,8'd13);
-     // //==============================================
-     // MEM_PIC_READ_REQ(JUMP*3,8'd14);
-     // MEM_PIC_READ_REQ(JUMP*3+fc_x_n,8'd15);
-     // MEM_PIC_READ_REQ(JUMP*3+fc_x_n*2,8'd16);
-     // MEM_PIC_READ_REQ(JUMP*3+fc_x_n*3,8'd17);
-     // //==============================================
-     // MEM_PIC_READ_REQ(JUMP*4,8'd18);
-     // MEM_PIC_READ_REQ(JUMP*4+fc_x_n,8'd19);
-     // MEM_PIC_READ_REQ(JUMP*4+fc_x_n*2,8'd20);
-     // MEM_PIC_READ_REQ(JUMP*4+fc_x_n*3,8'd21);
-     // //==============================================
-     // MEM_PIC_READ_REQ(JUMP*5,8'd22);
-     // MEM_PIC_READ_REQ(JUMP*5+fc_x_n,8'd23);
-     // MEM_PIC_READ_REQ(JUMP*5+fc_x_n*2,8'd24);
-     // MEM_PIC_READ_REQ(JUMP*5+fc_x_n*3,8'd25);
-     // //==============================================
-     // MEM_PIC_READ_REQ(JUMP*6,8'd26);
-     // MEM_PIC_READ_REQ(JUMP*6+fc_x_n,8'd27);
-     // MEM_PIC_READ_REQ(JUMP*6+fc_x_n*2,8'd28);
-     // MEM_PIC_READ_REQ(JUMP*6+fc_x_n*3,8'd29);
-     // //==============================================
-   //  FC_ACTION(32);
 
-
-
-   
-//    wait(mem_intf_write.mem_req && mem_intf_read_pic.mem_start_addr==mem_intf_read_pic.mem_size_bytes)
-//      mem_intf_write_mem_ack=1'b1;
-//    $display("done");
-    
-// end
 	end
+	end   
+
+end
+$fclose(dta);
+$fclose(wgt);
+$fclose(b);
+$fclose(res);
    endtask
+
     always @(posedge clk)
     begin
       if(mem_intf_write.mem_req) //&& mem_intf_read_pic.mem_start_addr==mem_intf_read_pic.mem_size_bytes)

@@ -11,9 +11,9 @@
 
 module dot_product (a, b, res);
  parameter DEPTH=4;
-  input [7:0] a;
-  input [7:0] b;
-  output[16:0] res;
+  input signed [7:0] a;
+  input signed [7:0] b;
+  output signed [16:0] res;
 
   assign res=a*b;
 

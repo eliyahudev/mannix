@@ -1,0 +1,9 @@
+
+/project/tsmc65/users/shilodo1/mannix/tb/acc_fcc_tb.sv
+/project/tsmc65/users/shilodo1/mannix/rtl/fcc.sv
+/project/tsmc65/users/shilodo1/mannix/rtl/dot_product.sv
+/project/tsmc65/users/shilodo1/mannix/rtl/dot_product_parallel.sv
+/project/tsmc65/users/shilodo1/mannix/rtl/mem_intf_read.sv
+/project/tsmc65/users/shilodo1/mannix/rtl/mem_intf_write.sv
+
+

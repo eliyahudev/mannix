@@ -138,9 +138,9 @@ module fcc (
 //======================================================================================================
 // Data and weights simulation 
 //======================================================================================================
-  reg [7:0] mem_wgt    [DP_DEPTH-1:0]; //Simulating the memory weights - 8x8 values of 8 bit
-  reg [7:0] mem_bias ;
-  reg [7:0] mem_data  [DP_DEPTH-1:0]; 
+  reg signed [7:0] mem_wgt    [DP_DEPTH-1:0]; //Simulating the memory weights - 8x8 values of 8 bit
+  reg signed [7:0] mem_bias ;
+  reg signed [7:0] mem_data  [DP_DEPTH-1:0]; 
 
                 
 //======================================================================================================
@@ -203,7 +203,7 @@ reg fc_done_dp;
 					next_state = ACT;
 				end
 
-		else if((mem_intf_read_pic.mem_valid==1'b1) && (mem_intf_read_wgt.mem_valid==1'b1)&& (mem_intf_read_bias.mem_valid == 1'b1))
+		else if((mem_intf_read_pic.mem_valid==1'b1) && (mem_intf_read_wgt.mem_valid==1'b1))//&& (mem_intf_read_bias.mem_valid == 1'b1))
    				begin 
 					next_state = DP;
 				end
