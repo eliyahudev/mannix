@@ -82,14 +82,14 @@ module acc_fcc_tb ();
 
   reg                                              mem_intf_read_bias_mem_valid;
   reg [$clog2(NUM_WORDS_IN_LINE*WORD_WIDTH/8)-1:0] mem_intf_read_bias_last;
-  reg signed [31:0][7:0]                           mem_intf_read_bias_mem_data;
+  reg signed [31:0]	                           mem_intf_read_bias_mem_data;
   reg                                              mem_intf_read_bias_mem_last_valid;
   
 
   reg signed [7:0] data [0:31] ;
   reg signed [7:0] weights [0:31];
-  reg signed [16:0] bias ;
-  reg signed [17:0] result [0:127];
+  reg signed [31:0] bias ;
+  reg signed [31:0] result [0:127];
 
 
   integer dta;
@@ -104,10 +104,10 @@ assign clk = clk_enable ? clk_config_tb : 1'b0;
   
   initial
     begin
-      dta = $fopen("/project/tsmc65/users/shilodo1/mannix/software/fcc_mat_generator/data.txt", "r");
-      wgt = $fopen("/project/tsmc65/users/shilodo1/mannix/software/fcc_mat_generator/weights.txt", "r");
-      b   = $fopen("/project/tsmc65/users/shilodo1/mannix/software/fcc_mat_generator/bias.txt", "r");
-      res = $fopen("/project/tsmc65/users/shilodo1/mannix/software/fcc_mat_generator/result.txt", "r");
+      dta = $fopen("/project/tsmc65/users/shilodo1/mannix/software/fcc_cnn_mat_generator/data.txt", "r");
+      wgt = $fopen("/project/tsmc65/users/shilodo1/mannix/software/fcc_cnn_mat_generator/weights.txt", "r");
+      b   = $fopen("/project/tsmc65/users/shilodo1/mannix/software/fcc_cnn_mat_generator/bias.txt", "r");
+      res = $fopen("/project/tsmc65/users/shilodo1/mannix/software/fcc_cnn_mat_generator/result.txt", "r");
 	
 
 
@@ -305,13 +305,13 @@ endtask // MEM_PIC_READ_REQ_FRST
 //		1) data - the data we want to give the pic at start
 //		2) addr - the start addr
 //===================================================================
-
+integer l;
   task MEM_WGT_READ_REQ_FRST (input [ADDR_WIDTH-1:0] addr, input signed [7:0] data [0:31] );
   begin
     wait ((mem_intf_read_wgt.mem_req==1'b1))//&&(mem_intf_read_wgt.mem_start_addr==addr))
       @(posedge clk)
-    for(m=0;m<32;m=m+1) begin
-       mem_intf_read_wgt_mem_data[m] = data[m] ; 
+    for(l=0;l<32;l=l+1) begin
+       mem_intf_read_wgt_mem_data[l] = data[l] ; 
 	end   
      //  mem_intf_read_wgt_mem_data = data ; 
         mem_intf_read_wgt_mem_last_valid=8'd31;
@@ -320,37 +320,6 @@ endtask // MEM_PIC_READ_REQ_FRST
   end
 
 endtask // MEM_PIC_READ_REQ_FRST
-
-//===================================================================
-//task MEM_PIC_READ_REQ
-//
-//	inputs:
-//		1) data - the data we want to give the pic at start
-//		2) addr - the start addr
-//
-//	Description:
-//		same as the last one but here we wait 2 clk cycles to 
-//		low gnt
-//===================================================================
-/*  task MEM_PIC_READ_REQ (input [ADDR_WIDTH-1:0] addr, input [7:0] data);
-    begin
-      wait ((mem_intf_read_pic.mem_req==1'b1)&&(mem_intf_read_pic.mem_start_addr==addr))
-        @(posedge clk)
-
-      mem_intf_read_pic_mem_data[31:0]={32{data}}; 
-
-      mem_intf_read_pic_mem_last_valid=8'd31;
-
-      mem_intf_read_pic_mem_valid=1'b1;
-
-      repeat (2) begin
-        @ (posedge clk) ;
-      end
-
-      mem_intf_read_pic_mem_valid=1'b0;   
-    end
-  endtask // MEM_PIC_READ_REQ*/
-  
 
 //===================================================================
 //task MEM_BIAS_READ_REQ
@@ -363,12 +332,12 @@ endtask // MEM_PIC_READ_REQ_FRST
 //		same as the last one but here we wait 2 clk cycles to 
 //		low gnt
 //===================================================================
- task MEM_BIAS_READ_REQ (input [ADDR_WIDTH-1:0] addr, input [16:0] data);
+ task MEM_BIAS_READ_REQ (input [ADDR_WIDTH-1:0] addr, input [31:0] data);
     begin
       wait ((mem_intf_read_bias.mem_req==1'b1))//&&(mem_intf_read_bias.mem_start_addr==addr))
         @(posedge clk)
 
-      mem_intf_read_bias_mem_data={data}; 
+      mem_intf_read_bias_mem_data=data; 
 
       mem_intf_read_bias_mem_last_valid=8'd31;
 
@@ -390,31 +359,7 @@ task READ_RESULT ();
 	  end
 end
 endtask
-//===================================================================
-//task MEM_WGT_READ_REQ
-//
-//	inputs:
-//		1) data - the data we want to give the pic at start
-//		2) addr - the start addr
-//
-//	Description:
-//		same but for wgt
-//===================================================================
-/*  task MEM_WGT_READ_REQ (input [ADDR_WIDTH-1:0] addr, input [7:0] data);
-  begin
-    wait ((mem_intf_read_wgt.mem_req==1'b1)&&(mem_intf_read_wgt.mem_start_addr=={ADDR_WIDTH{1'b0}}))  
-      mem_intf_read_wgt_mem_data[31:0]={32{data}};
-      mem_intf_read_wgt_mem_valid = 1'b1;
 
-    repeat (2) begin
-      @ (posedge clk) ;
-    end
-//Need to verify if gnt de-asserted after 1 cycle or not
-      mem_intf_read_pic_mem_valid=1'b0; 
-      mem_intf_read_wgt_mem_valid=1'b0;
-  end
-  endtask // MEM_WGT_READ_REQ*/
-//=================================================================================
 
 reg [ADDR_WIDTH-1:0] address;
 integer i,j;
@@ -428,14 +373,13 @@ integer i,j;
      address = {ADDR_WIDTH{1'b0}};
 repeat (128) begin //128
 	@(posedge clk) begin
-	i=0;
+	//i=0;
 	scan=$fscanf(b,"%d\n",bias);
 	MEM_BIAS_READ_REQ(address,bias);
 repeat(4) begin
 	for (j=0;j<32;j=j+1)begin
-                   scan=$fscanf(dta,"%d\n",data[i+j]);
-                   
-		   scan=$fscanf(wgt,"%d\n",weights[i+j]);
+                   scan=$fscanf(dta,"%d\n",data[j]);
+              	   scan=$fscanf(wgt,"%d\n",weights[j]);
 
 	end
 
@@ -450,7 +394,7 @@ repeat(4) begin
      address = address + 19'd32;
      i=i+32;
 end
-end
+
      //==================================================================================================================
     
 
@@ -462,6 +406,7 @@ $fclose(dta);
 $fclose(wgt);
 $fclose(b);
 $fclose(res);
+end
    endtask
 
     always @(posedge clk)

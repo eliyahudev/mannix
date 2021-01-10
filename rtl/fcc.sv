@@ -144,7 +144,7 @@ parameter MAX_RELU_VAL = 1<<NUM_RELU_DESCALE_BITS;
 // Data and weights simulation 
 //======================================================================================================
   reg signed [7:0] mem_wgt    [DP_DEPTH-1:0]; //Simulating the memory weights - 8x8 values of 8 bit
-  reg signed [7:0] mem_bias ;
+  reg signed [31:0] mem_bias ;
   reg signed [7:0] mem_data  [DP_DEPTH-1:0]; 
 
                 
@@ -178,9 +178,9 @@ parameter MAX_RELU_VAL = 1<<NUM_RELU_DESCALE_BITS;
 // DP instanciation
 //======================================================================================================
 
-wire [16:0] dp_res;
+wire signed [16:0] dp_res;
 dot_product_parallel #(.DEPTH(DP_DEPTH)) dp_pll_ins(.a(mem_data), .b(mem_wgt), .res(dp_res)); 
-reg [17:0] data_out_sum ;
+reg signed [17:0] data_out_sum ;
 reg fc_done_dp;
 
 ////====================================================================================================
@@ -336,7 +336,7 @@ always @(posedge clk or negedge rst_n) begin
                			    mem_intf_read_pic.mem_req <=1'b0;
                			    mem_intf_read_wgt.mem_req <=1'b0;
 
-				    mem_bias<= mem_intf_read_bias.mem_data[7:0];
+				    mem_bias<= mem_intf_read_bias.mem_data[16:0];
 
 	  	                    mem_data[0]<= mem_intf_read_pic.mem_data[0];
           			    mem_wgt[0]<= mem_intf_read_wgt.mem_data[0];
@@ -460,7 +460,7 @@ always @(posedge clk or negedge rst_n) begin
 			    mem_intf_write.mem_req<=1'b1;
 			    mem_intf_write.mem_size_bytes<=BYTES_TO_WRITE;
 			    mem_intf_write.mem_last_valid<= 1'b0;				
-				if (data_out_sum + mem_bias > MAX_RELU_VAL) begin 
+			/*	if (data_out_sum + mem_bias > MAX_RELU_VAL) begin 
 					mem_intf_write.mem_data<= MAX_RELU_VAL>>NUM_RELU_DESCALE_BITS;
 				end
 				else if (data_out_sum + mem_bias < 32'd0) begin
@@ -468,7 +468,8 @@ always @(posedge clk or negedge rst_n) begin
 				end
 				else begin
 					mem_intf_write.mem_data<= (data_out_sum + mem_bias)>>NUM_RELU_DESCALE_BITS;
-				end
+				end*/
+		mem_intf_write.mem_data<= (data_out_sum + mem_bias);
 		if (mem_intf_write.mem_ack) begin
 			counter_32 <= {CNT_32_MAX{1'd0}};
 			data_out_sum<=17'd0;

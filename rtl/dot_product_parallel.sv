@@ -10,8 +10,8 @@
 //======================================================================================================
 module dot_product_parallel (a, b, res);
  parameter DEPTH=4;
-  input signed [7:0] a [0:DEPTH-1];
-  input signed [7:0] b [0:DEPTH-1];
+  input signed [7:0] a [DEPTH-1:0];
+  input signed [7:0] b [DEPTH-1:0];
   output signed [16:0] res ;
 
   wire signed [16:0] res_sum [0:DEPTH-1];
