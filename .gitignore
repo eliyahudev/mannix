@@ -1,0 +1,7 @@
+workspace/
+*.swp
+*.swo
+*/INCA_libs/
+*irun.history
+*irun.log
+
