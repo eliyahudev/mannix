@@ -1,45 +1,51 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 
-void* getData(FILE* filePointer, int data_to_read, int* label, int* x)
+int* getData(FILE* filePointer, int data_to_read)
 {
     //1
     char ch;
     char strn1[4] ;
     //int x[100];
-//    int* x  = (int*) malloc(data_to_read * sizeof(int));
+    int* x  = (int*) malloc(data_to_read * sizeof(int));
     int n = 0, k = 0;
     size_t i=0;
+    //2
 
     //3
     if (filePointer == NULL)
     {
         printf("File is not available \n");
-        exit(-1);
     }
     else
     {
         //4
-        while (k < data_to_read && (ch = fgetc(filePointer)) != EOF)
+        while ((ch = fgetc(filePointer)) != EOF && k < data_to_read)
         {
             if (ch >= '0' && ch <='9') {
                 strn1[n++] = ch;
+                //printf("%c", ch);
             }
-
-            if (ch == ',' || ch == '\t' || ch == ' ' || ch == '\n') {
+            if (ch == ',' || ch == '\t' || ch == ' ') {
                 strn1[n] = '\0';
                 n=0;
-                if(k==0) {
-                    label[k++] = atoi(strn1);
-                }
-                else {
-                    x[k++ - 1] = atoi(strn1); 
-                }
+                x[k++] = atoi(strn1); 
+                //printf("%c", ' ');
+            }
+            if (ch == '\n') {
+                strn1[n] = '\0';
+                n=0;
+                x[k++] = atoi(strn1); 
+                //printf("%c", '\n');
             }
         }
     }
-        
+    
+    // for (i = 0; i < k; i++)
+    // {
+    //     printf("%d\n", x[i]);
+    // }
+    
     //5
 
     return x;
