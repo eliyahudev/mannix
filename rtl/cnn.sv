@@ -81,11 +81,11 @@ module cnn (
   input [Y_LOG2_COLS_NUM:0]       sw_cnn_y_n;	        // CNN weight matrix num of columns 
   output reg                        cnn_sw_busy_ind;	// An output to the software - 1 – CNN unit is busy CNN is available (Default)
 
-  reg [7:0]                        cut_data_pic [DP_DEPTH-1:0] ;                   
-  reg [7:0]                        data_wgt [DP_DEPTH-1:0] ;
+  reg signed [7:0]                        cut_data_pic [DP_DEPTH-1:0] ;                   
+  reg signed [7:0]                        data_wgt [DP_DEPTH-1:0] ;
   reg [ADDR_WIDTH-1:0]             current_read_addr;
   reg [ADDR_WIDTH-1:0]             current_row_start_addr;
-  wire [16:0]                       dp_res;
+  wire signed [16:0]                       dp_res;
   
   reg [2:0]                         state;
   reg [2:0]                         nx_state;
