@@ -18,7 +18,8 @@ echo "compilation passed! bravo!!"
 #no need to enter password when git push
 if ! grep -q cache ~/.gitconfig
 then
-	git config --global credential.helper 'cache --timeout=36000000'
+git config --global credential.helper 'cache --timeout=36000000'
+git config --global push.default matching
 	echo "your git credentials will be saved on the next push"
 fi
 
