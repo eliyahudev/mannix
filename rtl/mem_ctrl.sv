@@ -14,6 +14,7 @@ module mem_ctrl
 	output logic write,
 	output logic [31:0] addr_write,
 	output logic [15:0][4:0] num_bytes_valid,
-	output logic [15:0][18:0] addr_sram
+	output logic [15:0][18:0] addr_sram,
+	output logic [15:0]cs
 	);
 endmodule

@@ -33,6 +33,7 @@ module mannix_mem_farm (
 	logic [15:0][255:0] data_out_sram, data_to_align, data_to_client;
 	logic [15:0][255:0] data_in_sram;
 	logic [15:0][4:0] num_bytes_valid;
+	logic [15:0] cs;
 
 
 	mem_demux i_mem_demux(
@@ -59,7 +60,8 @@ module mannix_mem_farm (
 		for (i=0; i < 16; i++) begin: loop
 			mem_sram i_mem_sram(
 			.clk(clk),
-			.rst_n(rst_n),
+			.cs(cs[i]),
+			.id(i[3:0]),
 			.data_in(data_in_sram[i]),
 			.read(read_sram[i]),
 			.addr(addr_sram[i]),
@@ -91,7 +93,8 @@ module mannix_mem_farm (
 	.write(write_ddr_req.mem_req),
 	.addr_write(write_ddr_req.mem_start_addr),
 	.num_bytes_valid(num_bytes_valid),
-	.addr_sram(addr_sram)
+	.addr_sram(addr_sram),
+	.cs(cs)
 	);
 
 endmodule
