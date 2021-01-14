@@ -1,4 +1,4 @@
-module mem_mux_a 
+module mem_demux 
 	(
 	input clk, // Clock
  	input rst_n, // Reset
@@ -7,6 +7,6 @@ module mem_mux_a
 	input [18:0] base_addr,
 	input last,
 	input [3:0] num_of_last_valid,
-	output [15:0][255:0] data_out
+	output logic [15:0][255:0] data_out
 	);
 endmodule

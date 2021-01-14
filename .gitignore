@@ -1,4 +1,5 @@
-workspace/
+workspace/*
+!workspace/*.sh
 *.swp
 *.swo
 */INCA_libs/
