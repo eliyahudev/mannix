@@ -1,5 +1,6 @@
 #include "stdio.h"
 #include <stdlib.h>
+#include <windows.h>
 #include "read_csv.h"
 typedef struct Allocator
 {
@@ -12,6 +13,7 @@ typedef struct Matrix
 {
     int rows;
     int cols;
+    int size;
     int* data;
 } Matrix;
 
@@ -25,6 +27,13 @@ void setMatrixValues(Matrix* m1, FILE* filePointer, int* label);
 
 // matrix oparations
 void printMatrix(Matrix* m1);
+void printcolor(Matrix* m1);
+int getMatrix(Matrix* m1, FILE * filePointer, int* label, int op);
+Matrix* addMatrix(Matrix* m1, Matrix* m2);
+Matrix* mullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix, Allocator* al);
+int hadamardMullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix,  int offset, int x, int y);
+Matrix* mns(Matrix* m1, Matrix* m_filter, Matrix* result_matrix, Allocator* al, int offset);
+
 
 // ==================== main ==========================
 
@@ -45,19 +54,23 @@ int main(int argc, char const *argv[]) {
     createAllocator(al, data, 10000);
 
     // create and get access to matrix via pointer
-    Matrix m[2];
-    Matrix* matrix_ptr = creatMatrix(N ,M , m, al);
+    Matrix m[1];
+    Matrix m2[1];
+    Matrix m3[1];
+    Matrix m4[1];
 
+    creatMatrix(N ,M , m, al);
+    creatMatrix(N-3 ,M-3 , m2, al);
     // create matrix from exel file 
     int label;
     FILE *filePointer;
-    filePointer = fopen("source/data_set_256_fasion_emnist.csv", "r");
-    while (!feof(filePointer))
-        setMatrixValues(matrix_ptr, filePointer, &label);
-    printf("label=%d\n",label);
-    printMatrix(matrix_ptr);
+    filePointer = fopen("source/test.csv", "r");
 
-    //close file
+    getMatrix(m, filePointer, &label, 0);
+    getMatrix(m2, filePointer, &label, 0);
+    int offset=3;
+    mns(m, m2, m3, al, offset);
+    printMatrix(m3);
     fclose(filePointer);
 
     return 0;
@@ -79,24 +92,27 @@ int* mannixDataMalloc(Allocator* alloc, int length) {
         printf("ERROR-out of range allocation");
         exit(-1);
     }
-    return alloc[0].data; 
-}
-
-// ================== matrix functions ========================
-// ------------------matrix creation -------------------------
-// cearte matrix with the value of zero 
-Matrix* creatMatrix(int rows, int cols, Matrix* m1, Allocator* al) {
-    m1[0].cols = cols;
-    m1[0].rows = rows;
-    m1[0].data = mannixDataMalloc(al, cols * rows);
-    for (size_t i = 0; i < rows*cols; i++) {
-        m1[0].data[i] = 0;
+    return alloc[0].data + alloc[0].index -length; 
     }
-    return m1;
-}
 
-void setMatrixValues(Matrix* m1, FILE* filePointer, int* label) {
-    getData(filePointer, m1[0].rows * m1[0].cols + 1, label, m1[0].data);
+// TODO - MATRIX ALLOCATOR maybe useful
+
+    // ================== matrix functions ========================
+    // ------------------matrix creation -------------------------
+    // cearte matrix with the value of zero 
+    Matrix* creatMatrix(int rows, int cols, Matrix* m1, Allocator* al) {
+        m1[0].cols = cols;
+        m1[0].rows = rows;
+        m1->size = cols * rows;
+        m1[0].data = mannixDataMalloc(al, cols * rows);
+        for (size_t i = 0; i < rows*cols; i++) {
+            m1[0].data[i] = 0;
+        }
+        return m1;
+    }
+    // set data
+    void setMatrixValues(Matrix* m1, FILE* filePointer, int* label) {
+        getData(filePointer, m1[0].rows * m1[0].cols + 1, label, m1[0].data);
     return;
 }
 
@@ -115,3 +131,118 @@ void printMatrix(Matrix* m1) {
     }
     printf("\n row size = %d, col size = %d\n\n", m1[0].rows, m1[0].cols);
 }
+
+
+//print matrix 
+void printcolor(Matrix* m1) {
+    int i=0;
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
+    WORD saved_attributes;
+
+    /* Save current attributes */
+    GetConsoleScreenBufferInfo(hConsole, &consoleInfo);
+    saved_attributes = consoleInfo.wAttributes;
+
+    while(i<m1[0].rows * m1[0].cols) {
+        if (i % m1[0].cols == 0){
+            SetConsoleTextAttribute(hConsole, saved_attributes);
+            printf("[");
+        }
+        SetConsoleTextAttribute(hConsole, m1[0].data[i++]);
+        printf("%c", 32);
+        if (i % m1[0].cols == 0 && i<m1[0].rows * m1[0].cols){
+            SetConsoleTextAttribute(hConsole, saved_attributes);
+            printf("]\n");
+        }
+
+        else if (i % m1[0].cols == 0){
+            SetConsoleTextAttribute(hConsole, saved_attributes);
+            printf("]\n");
+        }   
+    }
+    SetConsoleTextAttribute(hConsole, saved_attributes);
+    printf("\n row size = %d, col size = %d\n\n", m1[0].rows, m1[0].cols);
+}
+
+// get matrix
+// 0 - print matrix only
+// 1 - print picture only
+// 2 - print matrix and picture
+// o.w - dont print
+int getMatrix(Matrix* m1, FILE * filePointer, int* label, int op){
+    if(feof(filePointer))
+        return -1;
+    // set matrix data
+    setMatrixValues(m1, filePointer, label);
+    // print matrix options
+    if (0 == op || 1 == op || 2 == op) 
+        printf("label=%d\n",*label);
+    if (0 == op || 2 == op)
+        printMatrix(m1);
+    if (1 == op || 2 == op)
+        printcolor(m1);
+    return 0;
+}
+
+
+// add matricies
+// output stored in the left matrix (m1)
+Matrix* addMatrix(Matrix* m1, Matrix* m2) {
+    if (m1->rows != m2->rows || m1->cols != m2->cols) {
+        printf("DImension ERRER - Matricies sizes are not equal\n");
+        exit(-1);
+    }
+    int i=0;
+    while(i<m1->rows * m1->cols) {
+        m1->data[i] += m2->data[i];
+        i++;
+    }
+    return m1;
+}
+
+// mull matrix
+// important! - initiate result matrix
+Matrix* mullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix, Allocator* al){
+    if (m1-> cols != m2->rows ) {
+        printf("DImension ERRER - Matricies sizes are not match [%d][%d]\n",m1-> cols, m2->rows);
+        exit(-1);
+    }
+    creatMatrix(m1-> rows ,m2->cols , result_matrix, al);
+    for (int i=0; i< m1-> rows; i++) {
+        for (int j=0; j < m2->cols; j++) {
+            for (int k=0; k < m1->cols; k++) {
+                result_matrix->data[i*result_matrix->cols + j] +=  m1->data[i*m1->cols+k] * m2->data[k*m2->cols+j];
+            }
+        }
+    }
+    return result_matrix;
+}
+
+int hadamardMullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix, int offset, int x, int y) {
+
+    int filter_sum=0;;
+    for (int i=0; i < m2->rows; i++) {
+        for (int j=0; j < m2->cols; j++) {
+            filter_sum += m1->data[(i + x) * m1->cols + j + y] * m2->data[i* m2->cols + j];
+            // printf("m1: %d, m2: %d; \n",m1->data[(i + x) * m1->cols + j + y] ,m2->data[i* m2->cols + j]);
+        }
+        // printf("\n");
+    }
+    return filter_sum;
+}
+
+
+Matrix* mns(Matrix* m1, Matrix* m_filter, Matrix* result_matrix, Allocator* al, int offset){
+
+    creatMatrix(m1->rows - m_filter-> rows + 1 ,m1->cols - m_filter->cols + 1, result_matrix, al);
+    for (int i=0; i < result_matrix->rows + 1; i++) {
+        for (int j=0; j < result_matrix->cols + 1; j++) {
+            result_matrix->data[i*result_matrix->cols + j] = hadamardMullMatrix(m1, m_filter, result_matrix, offset, i, j);
+            // printf("%d\n",hadamardMullMatrix(m, m, m3, offset, i, j));
+        }
+    }
+    return result_matrix;
+}
+
+// TODO find max
