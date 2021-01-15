@@ -1,18 +1,16 @@
+#ifndef READ_CSV
+#define READ_CSV
 
-#include <stdio.h>
-#include <stdlib.h>
+#define LENGTH 5
 
 void* getData(FILE* filePointer, int data_to_read, int* label, int* x)
 {
-    //1
     char ch;
-    char strn1[4] ;
-    //int x[100];
-//    int* x  = (int*) malloc(data_to_read * sizeof(int));
+    char strn1[LENGTH] ;
     int n = 0, k = 0;
     size_t i=0;
 
-    //3
+
     if (filePointer == NULL)
     {
         printf("File is not available \n");
@@ -20,9 +18,14 @@ void* getData(FILE* filePointer, int data_to_read, int* label, int* x)
     }
     else
     {
-        //4
         while (k < data_to_read && (ch = fgetc(filePointer)) != EOF)
         {
+            if (ch == '-')
+                if (0 == n)
+                    strn1[n++] = ch;
+                else
+                    exit(-1);
+
             if (ch >= '0' && ch <='9') {
                 strn1[n++] = ch;
             }
@@ -45,4 +48,4 @@ void* getData(FILE* filePointer, int data_to_read, int* label, int* x)
     return x;
 }
 
-
+#endif
