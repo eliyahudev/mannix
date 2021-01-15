@@ -68,9 +68,10 @@ int main(int argc, char const *argv[]) {
 
     getMatrix(m, filePointer, &label, 0);
     getMatrix(m2, filePointer, &label, -1);
-    int offset=3;
+    signed offset=3;
+    // printf("%d", offset);
     // mns(m, m2, m3, al);
-    maxPull(m, m3, al, 4, 4, 4);
+    maxPull(m, m3, al, 2, 2, 2);
     printMatrix(m3);
     fclose(filePointer);
 
@@ -236,6 +237,7 @@ int hadamardMullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix, int x, int
     return filter_sum;
 }
 
+// TODO add stide like in maxpool
 // mull and sum:
 // multiple window by the filter 
 // and return the sum of the window 
@@ -250,14 +252,14 @@ Matrix* mns(Matrix* m1, Matrix* m_filter, Matrix* result_matrix, Allocator* al){
     return result_matrix;
 }
 
-
+// TODO add stide like in maxpool
 // get the max element from a window
 int getMax(Matrix* m1, Matrix* result_matrix, int p_m, int p_n, int x, int y, int stride) {
 
     int filter_sum = m1->data[x * stride * m1->cols + y * stride];
     // printf("[\n"); // for internal test
     for (int i=0; i < p_m; i++) {
-        printf("[");
+        // printf("[");
         for (int j=0; j < p_n; j++) {
             if (filter_sum < m1->data[(i + x * stride) * m1->cols + j + y * stride])
                 filter_sum = m1->data[(i + x * stride) * m1->cols + j + y * stride]; //[i][j]
@@ -290,3 +292,4 @@ Matrix* maxPull(Matrix* m1, Matrix* result_matrix, Allocator* al, int p_m, int p
     return result_matrix;
 }
 
+// TODO add relu - question for udi how to cut the 32 int values
