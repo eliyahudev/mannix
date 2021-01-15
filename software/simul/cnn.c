@@ -1,7 +1,5 @@
-#include "stdio.h"
-#include <stdlib.h>
-#include <windows.h>
-#include "read_csv.h"
+#include "inc.h"
+
 typedef struct Allocator
 {
     int index;
@@ -31,8 +29,10 @@ void printcolor(Matrix* m1);
 int getMatrix(Matrix* m1, FILE * filePointer, int* label, int op);
 Matrix* addMatrix(Matrix* m1, Matrix* m2);
 Matrix* mullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix, Allocator* al);
-int hadamardMullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix,  int offset, int x, int y);
-Matrix* mns(Matrix* m1, Matrix* m_filter, Matrix* result_matrix, Allocator* al, int offset);
+int hadamardMullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix, int x, int y);
+Matrix* mns(Matrix* m1, Matrix* m_filter, Matrix* result_matrix, Allocator* al);
+int getMax(Matrix* m1, Matrix* result_matrix, int p_m, int p_n, int x, int y, int stride);
+Matrix* maxPull(Matrix* m1, Matrix* result_matrix, Allocator* al, int p_m, int p_n, int stride);
 
 
 // ==================== main ==========================
@@ -60,16 +60,17 @@ int main(int argc, char const *argv[]) {
     Matrix m4[1];
 
     creatMatrix(N ,M , m, al);
-    creatMatrix(N-3 ,M-3 , m2, al);
+    creatMatrix(N ,M , m2, al);
     // create matrix from exel file 
     int label;
     FILE *filePointer;
-    filePointer = fopen("source/test.csv", "r");
+    filePointer = fopen("source/data_set_256_fasion_emnist.csv", "r");
 
     getMatrix(m, filePointer, &label, 0);
-    getMatrix(m2, filePointer, &label, 0);
+    getMatrix(m2, filePointer, &label, -1);
     int offset=3;
-    mns(m, m2, m3, al, offset);
+    // mns(m, m2, m3, al);
+    maxPull(m, m3, al, 4, 4, 4);
     printMatrix(m3);
     fclose(filePointer);
 
@@ -201,8 +202,8 @@ Matrix* addMatrix(Matrix* m1, Matrix* m2) {
     return m1;
 }
 
-// mull matrix
-// important! - initiate result matrix
+// matrix multipication
+// 
 Matrix* mullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix, Allocator* al){
     if (m1-> cols != m2->rows ) {
         printf("DImension ERRER - Matricies sizes are not match [%d][%d]\n",m1-> cols, m2->rows);
@@ -219,30 +220,73 @@ Matrix* mullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix, Allocator* al)
     return result_matrix;
 }
 
-int hadamardMullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix, int offset, int x, int y) {
+// ================= CNN functions ============================
+
+// hadamard multipication:
+// x - window's starting row 
+// y - window's starting column
+int hadamardMullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix, int x, int y) {
 
     int filter_sum=0;;
     for (int i=0; i < m2->rows; i++) {
         for (int j=0; j < m2->cols; j++) {
             filter_sum += m1->data[(i + x) * m1->cols + j + y] * m2->data[i* m2->cols + j];
-            // printf("m1: %d, m2: %d; \n",m1->data[(i + x) * m1->cols + j + y] ,m2->data[i* m2->cols + j]);
         }
-        // printf("\n");
     }
     return filter_sum;
 }
 
-
-Matrix* mns(Matrix* m1, Matrix* m_filter, Matrix* result_matrix, Allocator* al, int offset){
+// mull and sum:
+// multiple window by the filter 
+// and return the sum of the window 
+Matrix* mns(Matrix* m1, Matrix* m_filter, Matrix* result_matrix, Allocator* al){
 
     creatMatrix(m1->rows - m_filter-> rows + 1 ,m1->cols - m_filter->cols + 1, result_matrix, al);
     for (int i=0; i < result_matrix->rows + 1; i++) {
         for (int j=0; j < result_matrix->cols + 1; j++) {
-            result_matrix->data[i*result_matrix->cols + j] = hadamardMullMatrix(m1, m_filter, result_matrix, offset, i, j);
-            // printf("%d\n",hadamardMullMatrix(m, m, m3, offset, i, j));
+            result_matrix->data[i*result_matrix->cols + j] = hadamardMullMatrix(m1, m_filter, result_matrix, i, j);
         }
     }
     return result_matrix;
 }
 
-// TODO find max
+
+// get the max element from a window
+int getMax(Matrix* m1, Matrix* result_matrix, int p_m, int p_n, int x, int y, int stride) {
+
+    int filter_sum = m1->data[x * stride * m1->cols + y * stride];
+    // printf("[\n"); // for internal test
+    for (int i=0; i < p_m; i++) {
+        printf("[");
+        for (int j=0; j < p_n; j++) {
+            if (filter_sum < m1->data[(i + x * stride) * m1->cols + j + y * stride])
+                filter_sum = m1->data[(i + x * stride) * m1->cols + j + y * stride]; //[i][j]
+            // printf(" %d ; ", m1->data[(i + x * stride) * m1->cols + j + y * stride]);
+        }
+        // printf("]\n");
+    }
+    // printf("]\n");
+    // printf("------------max = %d ---------- [%d][%d]\n\n", filter_sum ,x, y);
+    return filter_sum;
+}
+
+// max pull for NN:
+// for an input of size W1xH1 where:
+// W1 - is width of the input
+// H1 - is height of the input 
+// f = filter size
+// s - stride
+// then Output shape would be W2xH2,Where:
+// W2=(W1-f)/s +1
+// H2=(H1-f)/s+1
+Matrix* maxPull(Matrix* m1, Matrix* result_matrix, Allocator* al, int p_m, int p_n, int stride){
+
+    creatMatrix((m1->rows - p_m) / stride + 1 ,(m1->cols - p_m) / stride + 1, result_matrix, al);
+    for (int i=0; i < result_matrix->rows + 1; i = i++) {
+        for (int j=0; j < result_matrix->cols + 1; j = j++) {
+            result_matrix->data[i*result_matrix->cols + j] = getMax(m1, result_matrix, p_m, p_n, i, j, stride);
+        }
+    }
+    return result_matrix;
+}
+
