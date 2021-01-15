@@ -68,7 +68,7 @@ int main(int argc, char const *argv[]) {
 
     getMatrix(m, filePointer, &label, 0);
     getMatrix(m2, filePointer, &label, -1);
-    // signed offset=3;
+    signed offset=3;
     // printf("%d", offset);
     // mns(m, m2, m3, al);
     maxPull(m, m3, al, 2, 2, 2);
