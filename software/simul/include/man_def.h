@@ -40,7 +40,8 @@
 // program define
 // #define MANNIX_CNN_F
 // #define MANNIX_ACTIVE_F
-// #define MANNIX_PULL
+// #define MANNIX_PULL_F
+// #define MANNIX_FC_F
 
 // dubaging defines
 #define TEST // for test only

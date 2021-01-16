@@ -29,11 +29,24 @@ typedef struct Matrix
     return;
 }
 
+
+void setSize(Matrix* matrix, int n_rows, int n_cols) {
+    if (matrix->size != n_cols * n_rows) {
+        printf("DImension ERRER - cols * rows not equal to size  [%d][%d]\n", matrix->cols * matrix->rows, matrix->size);
+        exit(-1);
+    }
+    matrix->rows = n_rows;
+    matrix->cols = n_cols;
+}
+
+void matrixToVector(Matrix* matrix) {
+    setSize(matrix, matrix->size, 1);
+}
 // ------------------------- matrix oparations -------------------------
 //print matrix 
 void printMatrix(Matrix* m1) {
     if(m1->rows <= 0 || m1->cols <= 0) {
-        printf("DImension ERRER - non positive hight or width  [%d][%d]\n",m1-> cols, m1->rows);
+        printf("Dimension ERRER - non positive hight or width  [%d][%d]\n",m1-> cols, m1->rows);
         exit(-1);
     }
     int i=0;
@@ -168,6 +181,7 @@ Matrix* mullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix, Allocator* al)
 }
 
 // ================= CNN functions ============================
+
 
 // hadamard multipication:
 // x - window's starting row 

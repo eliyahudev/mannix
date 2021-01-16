@@ -80,7 +80,7 @@ void  nonLinearityActivation(Matrix* input_matrix){
 }
 
 void pullLayer(Matrix* input_matrix, Matrix* result_matrix, Allocator* al, int p_m, int p_n, int stride) {
-    #ifdef MANNIX_PULL
+    #ifdef MANNIX_PULL_F
         volatile signed start = 1;
         volatile signed done = 0; 
         while (start)
@@ -95,14 +95,20 @@ void pullLayer(Matrix* input_matrix, Matrix* result_matrix, Allocator* al, int p
     #endif
 }
 
-void fc(Matrix* input_matrix, Matrix* weight_matrix, Matrix* result_matrix, Allocator* al) {
-    #ifdef MANNIX_PULL
+void fc(Matrix* input_matrix, Matrix* weight_matrix, Matrix* bais_vector, Matrix* result_matrix, Allocator* al) {
+    #ifdef MANNIX_FC_F
         volatile signed start = 1;
         volatile signed done = 0; 
         while (start)
-            MANNIX_fully_conneted 
+            MANNIX_fully_conneted();
         while (!done); 
     #else
+        matrixToVector(input_matrix);
+        mullMatrix(weight_matrix, input_matrix, result_matrix,al);
+        addMatrix(result_matrix, bias_vector);
+    #endif
 
 }
 #endif // CNN_H
+
+// todo - create multiple filter function for convolution

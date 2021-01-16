@@ -62,21 +62,21 @@ dump_np_to_csv_multi2D(conv2_b,"csv_dumps/float_orig/conv2_b",'%f')
 
 # Print Scaled
 
-if not os.path.exists('csv_dumps/scaled_int'):
-    os.makedirs('csv_dumps/scaled_int')
+if not os.path.exists('csv_dumps/s caled_int2'):
+    os.makedirs('csv_dumps/scaled_int2')
 
 w_scale = 128
 b_scale = 128*128
 
-np.savetxt("csv_dumps/scaled_int/fc1_w.csv" , (w_scale * fc1_w).astype(int), fmt='%i' , delimiter=",")
-np.savetxt("csv_dumps/scaled_int/fc1_b.csv" , (b_scale * fc1_b).astype(int), fmt='%i' , delimiter=",")
-np.savetxt("csv_dumps/scaled_int/fc2_w.csv" , (w_scale * fc2_w).astype(int), fmt='%i' , delimiter=",")
-np.savetxt("csv_dumps/scaled_int/fc2_b.csv" , (b_scale * fc2_b).astype(int), fmt='%i' , delimiter=",")
+np.savetxt("csv_dumps/scaled_int2/fc1_w.csv" , (w_scale * fc1_w).astype(int), fmt='%i' , delimiter=",")
+np.savetxt("csv_dumps/scaled_int2/fc1_b.csv" , (b_scale * fc1_b).astype(int), fmt='%i' , delimiter=",")
+np.savetxt("csv_dumps/scaled_int2/fc2_w.csv" , (w_scale * fc2_w).astype(int), fmt='%i' , delimiter=",")
+np.savetxt("csv_dumps/scaled_int2/fc2_b.csv" , (b_scale * fc2_b).astype(int), fmt='%i' , delimiter=",")
 
-dump_np_to_csv_multi2D((w_scale * conv1_w).astype(int),"csv_dumps/scaled_int/conv1_w",'%i')
-dump_np_to_csv_multi2D((b_scale * conv1_b).astype(int),"csv_dumps/scaled_int/conv1_b",'%i')
-dump_np_to_csv_multi2D((w_scale * conv2_w).astype(int),"csv_dumps/scaled_int/conv2_w",'%i')
-dump_np_to_csv_multi2D((b_scale * conv2_b).astype(int),"csv_dumps/scaled_int/conv2_b",'%i')
+dump_np_to_csv_multi2D((w_scale * conv1_w).astype(int),"csv_dumps/scaled_int2/conv1_w",'%i')
+dump_np_to_csv_multi2D((b_scale * conv1_b).astype(int),"csv_dumps/scaled_int2/conv1_b",'%i')
+dump_np_to_csv_multi2D((w_scale * conv2_w).astype(int),"csv_dumps/scaled_int2/conv2_w",'%i')
+dump_np_to_csv_multi2D((b_scale * conv2_b).astype(int),"csv_dumps/scaled_int2/conv2_b",'%i')
 
 
 

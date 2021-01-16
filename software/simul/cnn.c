@@ -33,13 +33,14 @@ int main(int argc, char const *argv[]) {
     // create matrix from exel file 
     int label;
     
+    // todo - chage filepointer for a more generic use (while loop) 
     FILE *filePointer = fopen("source/data_set_256_fasion_emnist.csv", "r");
     // FILE *filePointer2 = fopen("source/zeros.csv", "r");
     
     getMatrix(m, filePointer, &label, -1);
     getMatrix(m2, filePointer, &label, -1);
 
-    cnnConvolutionLayer(m, m2, m3, al);
+    // cnnConvolutionLayer(m, m2, m3, al);
     
     fclose(filePointer);
 
