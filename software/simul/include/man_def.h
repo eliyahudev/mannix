@@ -1,3 +1,5 @@
+// MANNIX i/o addresses
+
 #define GPP_BASE_ADDR   0x1A106000 // TODO 
 #define CNN_ADDRX       GPP_BASE_ADDR +0X0004
 #define CNN_ADDRY       GPP_BASE_ADDR +0X0008
@@ -35,3 +37,10 @@
 #define FC_START        GPP_BASE_ADDR +0X007C
 #define FC_DONE         GPP_BASE_ADDR +0X0080
 
+// program define
+// #define MANNIX_CNN_F
+// #define MANNIX_ACTIVE_F
+// #define MANNIX_PULL
+
+// dubaging defines
+#define TEST // for test only
