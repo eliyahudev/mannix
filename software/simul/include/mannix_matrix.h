@@ -1,13 +1,7 @@
 #ifndef MANNIX_MATRIX
 #define MANNIX_MATRIX
 
-typedef struct Matrix
-{
-    int rows;
-    int cols;
-    int size;
-    int* data;
-} Matrix;
+
 
 
 // ================== matrix functions ========================
@@ -24,8 +18,8 @@ typedef struct Matrix
         return m1;
     }
     // set data
-    void setMatrixValues(Matrix* m1, FILE* filePointer, int* label) {
-        getData(filePointer, m1[0].rows * m1[0].cols + 1, label, m1[0].data);
+    void setMatrixValues(Matrix* m1, FILE* filePointer, int* label, int op) {
+        getData(filePointer, m1[0].rows * m1[0].cols + 1, label, m1[0].data, op);
     return;
 }
 
@@ -39,9 +33,11 @@ void setSize(Matrix* matrix, int n_rows, int n_cols) {
     matrix->cols = n_cols;
 }
 
+// convert matrix to vector
 void matrixToVector(Matrix* matrix) {
     setSize(matrix, matrix->size, 1);
 }
+
 // ------------------------- matrix oparations -------------------------
 //print matrix 
 void printMatrix(Matrix* m1) {
@@ -52,17 +48,17 @@ void printMatrix(Matrix* m1) {
     int i=0;
     while(i<m1[0].rows * m1[0].cols) {
         if (i % m1[0].cols == 0)
-            printf("[");
+            printf(" [");
         printf("%d ", m1[0].data[i++]);
         if (i % m1[0].cols == 0 && i<m1[0].rows * m1[0].cols)
             printf("]\n");
         else if (i % m1[0].cols == 0)
-            printf("]\n");
+            printf("]");
     }
-    printf("\n row size = %d, col size = %d\n\n", m1[0].rows, m1[0].cols);
+    // printf("\n row size = %d, col size = %d\n\n", m1[0].rows, m1[0].cols);
 }
 
-
+#ifdef WINDOWS_MANNIX
 //print picture 
 void printcolor(Matrix* m1) {
     if(m1->rows <= 0 || m1->cols <= 0) {
@@ -106,24 +102,34 @@ void printcolor(Matrix* m1) {
     SetConsoleTextAttribute(hConsole, saved_attributes);
     printf("\n row size = %d, col size = %d\n\n", m1[0].rows, m1[0].cols);
 }
+#endif
 
 // get matrix
+// [optional] states (int state):
 // 0 - print matrix only
 // 1 - print picture only
 // 2 - print matrix and picture
 // o.w - dont print
-int getMatrix(Matrix* m1, FILE * filePointer, int* label, int op){
+// 
+// [optional] label status:
+// 0 - with label (for images)
+// 1 - without label
+int getMatrix(Matrix* m1, FILE * filePointer, int* label, int state, int op){
     if(feof(filePointer))
         return -1;
     // set matrix data
-    setMatrixValues(m1, filePointer, label);
+    setMatrixValues(m1, filePointer, label, op);
     // print matrix options
-    if (0 == op || 1 == op || 2 == op) 
+    if (0 == state || 1 == state || 2 == state) 
         printf("label=%d\n",*label);
-    if (0 == op || 2 == op)
+    if (0 == state || 2 == state) {
         printMatrix(m1);
-    if (1 == op || 2 == op)
+        printf("\n");
+    }
+    if (1 == state || 2 == state) {
         printcolor(m1);
+        printf("\n");
+    }
     return 0;
 }
 
@@ -180,6 +186,22 @@ Matrix* mullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix, Allocator* al)
     return result_matrix;
 }
 
+// transpose
+// m - Matrix
+Matrix* transpose(Matrix* m) {
+    if(m->rows <= 0 || m->cols <= 0) {
+        printf("DImension ERRER - non positive hight or width  [%d][%d]\n",m-> cols, m->rows);
+        exit(-1);
+    }
+    for(int i = 0; i < m->rows - 1; i++)
+        for(int j = i + 1; j < m->cols; j++) {
+            int temp = m->data[i*m->cols + j]; 
+            m->data[i*m->cols + j] = m->data[j*m->cols + i];
+            m->data[j*m->cols + i] = temp;
+        }
+    return m;
+}
+
 // ================= CNN functions ============================
 
 
@@ -200,20 +222,68 @@ int hadamardMullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix, int x, int
 int getMax(Matrix* m1, int p_m, int p_n, int x, int y, int stride) {
 
     int filter_sum = m1->data[x * stride * m1->cols + y * stride];
-    // printf("[\n"); // for internal test
+    #ifdef DEBUG
+    printf("[\n"); // for internal test
+    #endif
     for (int i=0; i < p_m; i++) {
-        // printf("[");
+        #ifdef DEBUG
+        printf("[");
+        #endif
         for (int j=0; j < p_n; j++) {
             if (filter_sum < m1->data[(i + x * stride) * m1->cols + j + y * stride])
                 filter_sum = m1->data[(i + x * stride) * m1->cols + j + y * stride]; //[i][j]
-            // printf(" %d ; ", m1->data[(i + x * stride) * m1->cols + j + y * stride]);
+            #ifdef DEBUG
+            printf(" %d ; ", m1->data[(i + x * stride) * m1->cols + j + y * stride]);
+            #endif
         }
-        // printf("]\n");
+        #ifdef DEBUG
+        printf("]\n");
+        #endif
     }
-    // printf("]\n");
-    // printf("------------max = %d ---------- [%d][%d]\n\n", filter_sum ,x, y);
+    #ifdef DEBUG
+    printf("]\n");
+    printf("------------max = %d ---------- [%d][%d]\n\n", filter_sum ,x, y);
+    #endif
     return filter_sum;
 }
+
+
+// maxpuling 
+// p_m - window's hight
+// p_n - window's width
+Matrix* matrixMaxPool(Matrix* m1, int p_m, int p_n, int stride){
+    
+    //set filter's window movment
+    int new_rows = (m1->rows - p_m) / stride + 1;
+    int new_cols = (m1->cols - p_m) / stride + 1;
+    int k = 0;
+    // set data
+    for (int i=0; i < new_rows; i = i++) {
+        for (int j=0; j < new_cols; j = j++) {
+            m1->data[k++] = getMax(m1, p_m, p_n, i, j, stride);
+        }
+    }
+    // set dimension
+    m1->rows = new_rows;
+    m1->cols = new_cols;
+
+    return m1;
+}
+
+// mull and sum:
+// multiple window by the filter 
+// and return the sum of the window 
+Matrix* matrixConvolution(Matrix* m1, Matrix* m_filter, int bias, Matrix* result_matrix, Allocator* al){
+
+    creatMatrix(m1->rows - m_filter-> rows + 1 ,m1->cols - m_filter->cols + 1, result_matrix, al);
+    for (int i=0; i < result_matrix->rows + 1; i++) {
+        for (int j=0; j < result_matrix->cols + 1; j++) {
+            result_matrix->data[i*result_matrix->cols + j] = hadamardMullMatrix(m1, m_filter, result_matrix, i, j) + bias;
+        }
+    }
+    return result_matrix;
+}
+
 
 
 #endif

@@ -11,14 +11,14 @@
 #define CNN_STRAT       GPP_BASE_ADDR +0X0020
 #define CNN_DONE        GPP_BASE_ADDR +0X0024
 
-#define PL_ADDRX        GPP_BASE_ADDR +0X0028
-#define PULL_ADDRZ      GPP_BASE_ADDR +0X002C
-#define PULL_XM         GPP_BASE_ADDR +0X0030
-#define PULL_XN         GPP_BASE_ADDR +0X0034  
-#define PULL_PM         GPP_BASE_ADDR +0X0038
-#define PULL_PN         GPP_BASE_ADDR +0X003C
-#define PULL_START      GPP_BASE_ADDR +0X0040
-#define PULL_DONE       GPP_BASE_ADDR +0X0044
+#define POOL_ADDRX        GPP_BASE_ADDR +0X0028
+#define POOL_ADDRZ      GPP_BASE_ADDR +0X002C
+#define POOL_XM         GPP_BASE_ADDR +0X0030
+#define POOL_XN         GPP_BASE_ADDR +0X0034  
+#define POOL_PM         GPP_BASE_ADDR +0X0038
+#define POOL_PN         GPP_BASE_ADDR +0X003C
+#define POOL_START      GPP_BASE_ADDR +0X0040
+#define POOL_DONE       GPP_BASE_ADDR +0X0044
 
 #define ACTIV_ADDRX     GPP_BASE_ADDR +0X0048
 #define ACTIV_XM        GPP_BASE_ADDR +0X004C
@@ -45,3 +45,8 @@
 
 // dubaging defines
 #define TEST // for test only
+#define DEBUG // debug variable
+
+// OS
+#define WINDOWS_MANNIX
+// #define DEBIAN
