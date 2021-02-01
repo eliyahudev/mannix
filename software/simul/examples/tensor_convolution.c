@@ -16,7 +16,8 @@ int main(int argc, char const *argv[]) {
 
 
     //memory allocated
-    int data[500000];
+ 
+    int data[500000];  // we may use float for the first test infirence
     Matrix alloc_matrix[500];
     Tensor tens[100];
 
