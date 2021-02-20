@@ -35,15 +35,18 @@ int main(int argc, char const *argv[]) {
     FILE *biasFilePointer = fopen("../../python/csv_dumps/scaled_int2/conv1_b.csv", "r");
 
     printf("\n matrix before maxpooling: \n");
-    // create matrix from exel file     
+    // declare matricies 
     creatMatrix(N ,M , image, al);
     creatMatrix(5 ,5 , filter, al);
     creatMatrix(5 ,1 , bias, al);
+    creatMatrix(N - 5 + 1 ,M - 5 + 1 ,result_matrix , al);  // the output saved here
 
+    // create matrix from exel file     
     getMatrix(image,imageFilePointer, &label,0, 0);
     getMatrix(filter,filterFilePointer, &label,0, 1);
     getMatrix(bias,biasFilePointer, &label,0, 1);
     
+    // CONVOLUTION
     matrixConvolution(image, filter, bias->data[0], result_matrix, al);
     
     printf("\n result matrix after convolution: \n");
