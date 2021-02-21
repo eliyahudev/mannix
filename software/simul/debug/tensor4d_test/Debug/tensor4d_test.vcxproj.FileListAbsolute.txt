@@ -1,0 +1,2 @@
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\debug\tensor4d_test\Debug\tensor4d_test.exe
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\debug\tensor4d_test\Debug\tensor4d_test.pdb

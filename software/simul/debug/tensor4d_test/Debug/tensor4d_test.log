@@ -1,0 +1,8 @@
+﻿  tensor_convolution.c
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\include\mannix_matrix.h(15,30): warning C4018: '<': signed/unsigned mismatch
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\include\mannix_tensor.h(109,43): warning C4552: '>>': result of expression not used
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\include\mannix_tensor.h(130,26): warning C4018: '<': signed/unsigned mismatch
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\examples\tensor_convolution.c(72,26): warning C4018: '<': signed/unsigned mismatch
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\examples\tensor_convolution.c(88,26): warning C4018: '<': signed/unsigned mismatch
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\examples\tensor_convolution.c(6,9): warning C4101: 'label': unreferenced local variable
+  tensor4d_test.vcxproj -> C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\debug\tensor4d_test\Debug\tensor4d_test.exe
