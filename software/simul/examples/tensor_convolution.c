@@ -17,35 +17,39 @@ int main(int argc, char const *argv[]) {
     
     //memory allocated
 #ifdef VS_MANNIX
-    int* data = (int*)malloc(sizeof(int)*500000);  // we may use float for the first test infirence
-    Matrix* alloc_matrix = (Matrix*)malloc(sizeof(int)*500);
-    Tensor* tens = (Tensor*)malloc(sizeof(Tensor)*100);
+    int* data = (int*)malloc(sizeof(int)* MANNIX_DATA_SIZE);  // we may use float for the first test infirence
+    Matrix* alloc_matrix = (Matrix*)malloc(sizeof(int)* MANNIX_MAT_SIZE);
+    Tensor* tens = (Tensor*)malloc(sizeof(Tensor)* MANNIX_TEN_SIZE);
 #else
-    int data[500000];  // we may use float for the first test infirence
-    Matrix alloc_matrix[500];
-    Tensor tens[100];
+    int data[MANNIX_DATA_SIZE];  // we may use float for the first test infirence
+    Matrix alloc_matrix[MANNIX_MAT_SIZE];
+    Tensor tens[MANNIX_TEN_SIZE];
 #endif
+
     //declare allocotors 
     Allocator al[1];
     MatAllocator mat_al[1];
     TensorAllocator tens_alloc[1];
 
     // allocate memory
-    createAllocator(al, data, 40000);
-    createMatrixAllocator(mat_al, alloc_matrix, 500);
-    createTensorAllocator( tens_alloc, tens, 100);
+    createAllocator(al, data, MANNIX_DATA_SIZE);
+    createMatrixAllocator(mat_al, alloc_matrix, MANNIX_MAT_SIZE);
+    createTensorAllocator( tens_alloc, tens, MANNIX_TEN_SIZE);
 
     // declare 4D tensors
 #ifdef VS_MANNIX
     Tensor4D* image = (Tensor4D*)malloc(sizeof(Tensor4D)*1);
     Tensor4D* filter = (Tensor4D*)malloc(sizeof(Tensor4D)*2);
+    Tensor4D* result_4D_tensor = (Tensor4D*)malloc(sizeof(Tensor4D) * 1);
+
 #else
     Tensor4D image[1];
     Tensor4D filter[2];
+    Tensor4D result_4D_tensor[1];
 #endif
     // declare matrix bias [for each matrix there is one bias value, for example for image->matrix[0] we add the same value bias->data[0] to all cells]
     Matrix bias[2];
-    Matrix result_matrix[1];
+    
     
 
     // import matricies
@@ -64,26 +68,25 @@ int main(int argc, char const *argv[]) {
     create4DTensor(&filter[1], 5, 5, 6, 12, al, mat_al, tens_alloc);
     creatMatrix(6,1,&bias[0],al);
     creatMatrix(12,1,&bias[1],al);
-    // set tensor
-    for (size_t i = 0; i < image->depth; i++) {
-        addScalarMatrix(&image->tensor->matrix[i], 3);
-    }    
-    // setImage(&image[0], imageFilePointer);
+    
+    // set values
+    setImage(&image[0], imageFilePointer);
     setFilter(&filter[0], path, 1);
     setFilter(&filter[1], path, 2);
     setBias(&bias[1], path, 2);
     setBias(&bias[0], path, 1);
 
-
+    printf("image\n");
     print4DTensor(&image[0]);
+    printf("filter\n");
     print4DTensor(&filter[0]);
-    // printf("\n\n");
-    // printMatrix(&bias[1]);
-
-    // printf("3D convolution:\n");
-    tensorConvolution(&image[0].tensor[0], &filter[0].tensor[0].matrix[0], bias[0].data[0], result_matrix, al, mat_al);
-    printMatrix(result_matrix);
-    // printf("\nrows: %d, cols: %d\n",result_matrix->rows, result_matrix->cols);
+    printf("bias\n");
+    printMatrix(bias);
+// ======================= convolution ==============================================
+    printf("\n3D convolution:\n");
+    tensor4DConvolution(image, filter, bias, result_4D_tensor, al, mat_al, tens_alloc);
+    print4DTensor(result_4D_tensor);
+// ==================================================================================
 
     fclose(imageFilePointer);
 
@@ -93,6 +96,7 @@ int main(int argc, char const *argv[]) {
     free(tens);
     free(image);
     free(filter);
+    free(result_4D_tensor);
 #endif
 
     return 0;
