@@ -37,16 +37,32 @@
 #define FC_START        GPP_BASE_ADDR +0X007C
 #define FC_DONE         GPP_BASE_ADDR +0X0080
 
-// program define
+//---- program define ----
 // #define MANNIX_CNN_F
 // #define MANNIX_ACTIVE_F
 // #define MANNIX_PULL_F
 // #define MANNIX_FC_F
 
-// dubaging defines
+//---- dubaging defines ----
 #define TEST // for test only
-#define DEBUG // debug variable
+//#define DEBUG // debug variable
 
-// OS
+//---- OS ----
 #define WINDOWS_MANNIX
 // #define DEBIAN
+
+//---- environment setups----
+//#define VS_MANNIX
+
+// ----- environment defines ----------
+// memory size definitions
+#define MANNIX_DATA_SIZE 500000 
+#define MANNIX_MAT_SIZE 500
+#define MANNIX_TEN_SIZE 100
+// activation
+#define NUM_RELU_DESCALE_BITS 5
+#define RELU_SCALE ((int)(1<<NUM_RELU_DESCALE_BITS))
+#define MAX_RELU_VAL ((int)(1<<NUM_RELU_DESCALE_BITS))
+#define NUM_FINAL_DESCALE_BITS 9
+#define FINAL_SCALE ((int)(1<<NUM_FINAL_DESCALE_BITS))
+#define MAX_FINAL_VAL ((int)(127*FINAL_SCALE))

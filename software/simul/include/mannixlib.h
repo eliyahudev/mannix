@@ -17,10 +17,19 @@ int* mannixDataMalloc(Allocator* alloc, int length) {
         printf("ERROR-out of range allocation");
         exit(-1);
     }
+
     return alloc[0].data + alloc[0].index -length; 
     }
 
-
+int mannixDataFree(Allocator* alloc, int* data, int length) {
+    if (alloc->data + alloc->index - length == data)
+        alloc->index -= length;
+    else {
+        printf("ERROR- cannot free memory due to incorrect size  [%p][%p]\n",(alloc->data - length),data);
+        exit(-1);
+    }
+    return 0;
+}
 
 // ================= Matrix allocation ============================
 MatAllocator* createMatrixAllocator(MatAllocator* mat_alloc, Matrix* matrix, int max_size) {

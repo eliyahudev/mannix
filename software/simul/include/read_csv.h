@@ -1,7 +1,7 @@
 #ifndef READ_CSV
 #define READ_CSV
 
-#define LENGTH 5
+#define LENGTH 10
 
 void* getData(FILE* filePointer, int data_to_read, int* label, int* x, int op)
 {
@@ -13,6 +13,7 @@ void* getData(FILE* filePointer, int data_to_read, int* label, int* x, int op)
     if (filePointer == NULL)
     {
         printf("File is not available \n");
+        printf("please checkout man_def.h -> \"environment setups\" \n");
         exit(-1);
     }
     else
@@ -65,14 +66,12 @@ void* getData(FILE* filePointer, int data_to_read, int* label, int* x, int op)
 // int filter_num = 0;
 // int filter_depth = 4;
 // FilePointer = open("../../python/csv_dumps/scaled_int2/conv1_w_0_4.csv");
-FILE* createFd(char* file_path, int layer, int filter_num, int filter_depth) {
-    char path[60];
+FILE* createFilter(char* file_path, int layer, int filter_num, int filter_depth) {
+    char path[64];
     strcpy(path, file_path);
     char cast_int[3]; // todo - add "warning this function hendle up to 3 digit layer"  
-    char str[16] = "conv";
-#ifdef DEBUG
-    printf("open: ");
-#endif
+    char str[64] = "conv";
+
     itoa(layer, cast_int, 10);
     strcat(str, cast_int);
     strcat(str, "_w_");
@@ -85,14 +84,31 @@ FILE* createFd(char* file_path, int layer, int filter_num, int filter_depth) {
     strcat(path,str);
     strcat(path,"\0");
 
-#ifdef DEBUG
-    printf("%s\n", path);
-#endif
     FILE *FilePointer = fopen(path,"r");
-#ifdef DEBUG
-    printf("success, fd = %d\n", FilePointer);
-#endif
     return FilePointer;
     
 }
+
+
+FILE* createFdFc(char* file_path, char* conv_fc, int layer, char* w_b) {
+    char path[60];
+    strcpy(path, file_path);
+    char cast_int[3]; // todo - add "warning this function hendle up to 3 digit layer"  
+    char str[32] = "";
+
+    strcat(str, conv_fc);
+    itoa(layer, cast_int, 10);
+    strcat(str, cast_int);
+    strcat(str, "_");
+    strcat(str, w_b);
+    strcat(str, ".csv");
+    strcat(path,str);
+    strcat(path,"\0");
+
+    FILE *FilePointer = fopen(path,"r");
+    return FilePointer;
+    
+}
+
+
 #endif
