@@ -64,7 +64,8 @@ void fc(Matrix* input_matrix, Matrix* weight_matrix, Matrix* bias_vector, Matrix
             MANNIX_fully_conneted();
         while (!done); 
     #else
-        fullyConnected(input_matrix, weight_matrix, bias_vector, result_matrix, al);
+        printf("");
+        //fullyConnected(input_matrix, weight_matrix, bias_vector, result_matrix, al);
     #endif
 
 }

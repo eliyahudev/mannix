@@ -7,7 +7,7 @@
 // ================== matrix functions ========================
     // ------------------matrix creation -------------------------
     // cearte matrix with the value of zero 
-    Matrix* creatMatrix(int rows, int cols, Matrix* m1, Allocator* al) {
+Matrix* creatMatrix(int rows, int cols, Matrix* m1, Allocator* al) {
         m1[0].cols = cols;
         m1[0].rows = rows;
         m1->size = cols * rows;
@@ -18,25 +18,22 @@
         return m1;
     }
     // set data
-    void setMatrixValues(Matrix* m1, FILE* filePointer, int* label, int op) {
+void setMatrixValues(Matrix* m1, FILE* filePointer, int* label, int op) {
         getData(filePointer, m1[0].rows * m1[0].cols + 1, label, m1[0].data, op);
     return;
 }
 
+// void setWeightsMatrix(Tensor4D* tens_4d, char* path, int layer) {
 
-void setSize(Matrix* matrix, int n_rows, int n_cols) {
-    if (matrix->size != n_cols * n_rows) {
-        printf("DImension ERRER - cols * rows not equal to size  [%d][%d]\n", matrix->cols * matrix->rows, matrix->size);
-        exit(-1);
-    }
+// }
+
+
+void setMatrixSize(Matrix* matrix, int n_rows, int n_cols) {
+
     matrix->rows = n_rows;
     matrix->cols = n_cols;
 }
 
-// convert matrix to vector
-void matrixToVector(Matrix* matrix) {
-    setSize(matrix, matrix->size, 1);
-}
 
 // ------------------------- matrix oparations -------------------------
 //print matrix 
@@ -114,11 +111,14 @@ void printcolor(Matrix* m1) {
 // [optional] label status:
 // 0 - with label (for images)
 // 1 - without label
+//
+// return: 0 - success ,-1 - failed
 int getMatrix(Matrix* m1, FILE * filePointer, int* label, int state, int op){
     if(feof(filePointer))
         return -1;
     // set matrix data
     setMatrixValues(m1, filePointer, label, op);
+
     // print matrix options
     if (0 == state || 1 == state || 2 == state) 
         printf("label=%d\n",*label);
@@ -142,10 +142,13 @@ Matrix* addMatrix(Matrix* m1, Matrix* m2) {
         exit(-1);
     }
     int i=0;
-    while(i<m1->rows * m1->cols) {
+    while(i<m1->size) {
+        int y = m2->data[i];
         m1->data[i] += m2->data[i];
+        int x = m1->data[i];
         i++;
     }
+
     return m1;
 }
 
@@ -204,12 +207,27 @@ Matrix* transpose(Matrix* m) {
 
 // ================= CNN functions ============================
 
+void setBias(Matrix* bias, char* file_path, char* type, int layer, char* w_b) {
+    int label[1];
+    FILE* fd = createFdFc(file_path, type, layer, w_b);
+    getMatrix(bias, fd, label,-1, 1);
+    fclose(fd);
+}
+
+
+void setWeight(Matrix* bias, char* file_path, char* type, int layer, char* w_b) {
+    int label[1];
+    FILE* fd = createFdFc(file_path, type, layer, w_b);
+    getMatrix(bias, fd, label,-1, 1);
+    fclose(fd);
+}
+
 
 // hadamard multipication:
 // x - window's starting row 
 // y - window's starting column
 int hadamardMullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix, int x, int y) {
-
+    
     int filter_sum=0;;
     for (int i=0; i < m2->rows; i++) {
         for (int j=0; j < m2->cols; j++) {
@@ -222,28 +240,12 @@ int hadamardMullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix, int x, int
 int getMax(Matrix* m1, int p_m, int p_n, int x, int y, int stride) {
 
     int filter_sum = m1->data[x * stride * m1->cols + y * stride];
-    #ifdef DEBUG
-    printf("[\n"); // for internal test
-    #endif
     for (int i=0; i < p_m; i++) {
-        #ifdef DEBUG
-        printf("[");
-        #endif
         for (int j=0; j < p_n; j++) {
             if (filter_sum < m1->data[(i + x * stride) * m1->cols + j + y * stride])
-                filter_sum = m1->data[(i + x * stride) * m1->cols + j + y * stride]; //[i][j]
-            #ifdef DEBUG
-            printf(" %d ; ", m1->data[(i + x * stride) * m1->cols + j + y * stride]);
-            #endif
+                filter_sum = m1->data[(i + x * stride) * m1->cols + j + y * stride];
         }
-        #ifdef DEBUG
-        printf("]\n");
-        #endif
     }
-    #ifdef DEBUG
-    printf("]\n");
-    printf("------------max = %d ---------- [%d][%d]\n\n", filter_sum ,x, y);
-    #endif
     return filter_sum;
 }
 
@@ -270,20 +272,38 @@ Matrix* matrixMaxPool(Matrix* m1, int p_m, int p_n, int stride){
     return m1;
 }
 
+
 // mull and sum:
 // multiple window by the filter 
 // and return the sum of the window 
-Matrix* matrixConvolution(Matrix* m1, Matrix* m_filter, int bias, Matrix* result_matrix, Allocator* al){
+Matrix* matrixConvolution(Matrix* m1, Matrix* m_filter, int bias, Matrix* result_matrix){
 
-    creatMatrix(m1->rows - m_filter-> rows + 1 ,m1->cols - m_filter->cols + 1, result_matrix, al);
-    for (int i=0; i < result_matrix->rows + 1; i++) {
-        for (int j=0; j < result_matrix->cols + 1; j++) {
+    for (int i=0; i < result_matrix->rows ; i++) {
+        for (int j=0; j < result_matrix->cols ; j++) {
             result_matrix->data[i*result_matrix->cols + j] = hadamardMullMatrix(m1, m_filter, result_matrix, i, j) + bias;
         }
     }
+
     return result_matrix;
 }
 
 
+Matrix* matrixActivation(Matrix* m1) {
+    int i = 0;
+    while(i<m1->size) {
+        m1->data[i] = (m1->data[i] >= MAX_FINAL_VAL) ? MAX_FINAL_VAL : ((m1->data[i] <= 0) ? 0 : m1->data[i]) ; // saturate, Scale back to 8-bit
+        m1->data[i] = m1->data[i]>>NUM_FINAL_DESCALE_BITS ; // val/FINAL_SCALE ;
+        i++;
+    }
+    return m1;
+}
 
+
+Matrix* matrixFC(Matrix* input_matrix, Matrix* weight_matrix, Matrix* bias_vector, Matrix* result_matrix, Allocator* al) {
+    
+    mullMatrix(weight_matrix, input_matrix, result_matrix,al);
+    addMatrix(result_matrix, bias_vector);
+
+    return result_matrix;
+}
 #endif

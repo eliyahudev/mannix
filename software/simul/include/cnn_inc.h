@@ -1,5 +1,6 @@
 #ifndef CNN_INC_H
 #define CNN_INC_H
+#pragma warning(disable : 4996)
 
 #include "stdio.h"
 #include <stdlib.h>

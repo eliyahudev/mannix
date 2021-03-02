@@ -14,7 +14,6 @@ void createTensor(int rows, int cols, int depth, Tensor* tens, Allocator* al, Ma
 }
 
 
-
 // todo - maybe irrelevant
 void setMatrixToTensor(Tensor* tens, FILE* filePointer, int* label, int op) {
     for (int i = 0; i < tens->depth; i++) {
@@ -23,14 +22,6 @@ void setMatrixToTensor(Tensor* tens, FILE* filePointer, int* label, int op) {
     }
 }
 
-void tensorFlatten(Tensor* tens) {
-    int new_row = tens->rows * tens->cols * tens->depth;
-    tens->matrix->rows = new_row;
-    tens->matrix->cols = 1;
-    tens->rows = new_row;
-    tens->cols = 1;
-    tens->depth = 1;
-}
 
 void addTensor(Tensor* tens1, Tensor* tens2) {
     if(tens1->depth != tens2->depth) {
@@ -41,16 +32,6 @@ void addTensor(Tensor* tens1, Tensor* tens2) {
         addMatrix(&tens1->matrix[i], &tens2->matrix[i]);
     }
 }
-
-// void mullTensor(Tensor* tens1, Tensor* tens2) {
-//     if(tens1->depth != tens2->depth) {
-//         printf("DImension ERRER - Tensors depth is not equal\n");
-//         exit(-1);
-//     }
-//     for(int i = 0; i < tens1->depth; i++) {
-//         mullMatrix(&tens1->matrix[i], &tens2->matrix[i]);
-//     }
-// }
  
 
 void printTensor(Tensor* tens) {
@@ -63,38 +44,33 @@ void printTensor(Tensor* tens) {
     }
 }
 
+
+void tensorFlatten(Tensor* tens, int n_row) {
+    
+    tens->rows  = n_row;
+    tens->cols  = 1;
+    tens->depth = 1;
+    setMatrixSize(&tens->matrix[0], tens->rows, tens->cols);
+}
+
+
 Matrix* TensorToMatrix(Tensor* tens) { return tens->matrix;}
 
-// ================= CNN functions ============================
-
-// TODO add a stride like in maxpool
-
-// mull and sum:
-// multiple window by the filter 
-// and return the sum of the window 
-// Tensor* tensorConvolution(Tensor *tens, Tensor* m_filter, Tensor*  tmp_tens, Allocator* al){
-//     createTensor(m1->rows - m_filter-> rows + 1 ,m1->cols - m_filter->cols + 1, tmp_tens, al);
-//     for (size_t d = 0; d < count; d++) {
-//         matrixConvolution(Matrix* m1, Matrix* m_filter, Matrix* result_matrix, Allocator* al);
-
-//     }
-    
-//     return result_matrix;
-// }
+// ================= NN functions ============================
 
 
 // maxpuling matrix
 // set data and reshap the matrix to the new size
 // p_m - window's hight
 // p_n - window's depth
-Tensor* tensorMaxPool(Tensor *tens, int p_m, int p_n, int stride){
+Tensor* tensorMaxPool(Tensor *tens, /*TODO add result_tens,*/int p_m, int p_n, int stride){
     
     //set filter's window movment
     int new_rows = (tens->rows - p_m) / stride + 1;
     int new_cols = (tens->cols - p_m) / stride + 1;
     int k = 0;
     for(int d = 0; d < tens->depth; d++) {
-        
+        // matrixMaxPool(&tens->matrix[d], p_m, p_n, stride);
         // set data
         for (int i=0; i < new_rows; i = i++) {
             for (int j=0; j < new_cols; j = j++) {
@@ -113,24 +89,32 @@ Tensor* tensorMaxPool(Tensor *tens, int p_m, int p_n, int stride){
 }
 
 
-// todo - change to Udi's ReLu method
-void mannixRelu(Matrix* m1) {
-
-    for (int i=0; i < m1->rows; i++) {
-        for (int j=0; j < m1->cols; j++) {
-            if (m1->data[i*m1->cols + j] < 0)
-                m1->data[i*m1->cols + j] = 0;
-            else
-                m1->data[i*m1->cols + j]  >> 8;
-        }
+void tensorActivation(Tensor *tens) {
+    for (size_t i = 0; i < tens->depth; i++) {
+        matrixActivation(&tens->matrix[i]);
     }
 }
 
 
-void fullyConnected(Matrix* input_matrix, Matrix* weight_matrix, Matrix* bias_vector, Matrix* result_matrix, Allocator* al) {
-        matrixToVector(input_matrix);
-        mullMatrix(weight_matrix, input_matrix, result_matrix,al);
-        addMatrix(result_matrix, bias_vector);
+Matrix* tensorConvolution(Tensor* tens, Matrix* m_filter, int bias, Matrix* result_matrix, Allocator* al, MatAllocator* mat_alloc){
+
+    Matrix tmp_matrix[1];
+
+    creatMatrix(tens->rows - m_filter->rows + 1, tens->cols - m_filter->cols + 1, tmp_matrix, al);  // todo - delete after debuging    
+
+    for (size_t i = 0; i < tens->depth; i++) {
+        matrixConvolution(&tens->matrix[i], m_filter, bias, tmp_matrix);
+        addMatrix(result_matrix, tmp_matrix);
+    }
+    // delete allocation
+    mannixDataFree(al, tmp_matrix->data, tmp_matrix->size);
+    
+    return result_matrix;
 }
 
+
+Matrix* tesorFC(Tensor* tens, Matrix* weight_matrix, Matrix* bias_vector, Matrix* result_matrix, Allocator* al) {
+    matrixFC(&tens->matrix[0] , weight_matrix, bias_vector, result_matrix, al);
+    return &tens->matrix[0];
+}    
 #endif
