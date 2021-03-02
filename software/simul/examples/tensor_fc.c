@@ -100,7 +100,6 @@ int main(int argc, char const *argv[]) {
     matrixActivation(&result_matrix[2]);
     printf("\ntensor after fc + activation\n");
     printMatrix(&result_matrix[2]);
-    /*======================== TODO ADD ACTIVATION LAYER =================================*/
     
     fclose(imageFilePointer);
 
