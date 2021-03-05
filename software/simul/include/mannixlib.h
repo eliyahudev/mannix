@@ -3,14 +3,14 @@
 
 
 // ================= int allocation ============================
-Allocator* createAllocator(Allocator* alloc, int* data, int max_size) {
+Allocator* createAllocator(Allocator* alloc, DATA_TYPE* data, int max_size) {
     alloc[0].index = 0;
     alloc[0].max_size = max_size-1;
     alloc[0].data = data;
     return alloc;
 }
 
-int* mannixDataMalloc(Allocator* alloc, int length) {
+DATA_TYPE* mannixDataMalloc(Allocator* alloc, int length) {
     if (alloc[0].index + length < alloc[0].max_size)
         alloc[0].index += length;
     else {
@@ -21,7 +21,7 @@ int* mannixDataMalloc(Allocator* alloc, int length) {
     return alloc[0].data + alloc[0].index -length; 
     }
 
-int mannixDataFree(Allocator* alloc, int* data, int length) {
+int mannixDataFree(Allocator* alloc, DATA_TYPE* data, int length) {
     if (alloc->data + alloc->index - length == data)
         alloc->index -= length;
     else {

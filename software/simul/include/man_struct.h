@@ -6,9 +6,8 @@ typedef struct Matrix
     int rows;
     int cols;
     int size;
-    int* data;
+    DATA_TYPE* data;
 } Matrix;
-
 
 
 typedef struct Tensor
@@ -33,7 +32,7 @@ typedef struct Allocator
 {
     int index;
     int max_size;
-    int* data;
+    DATA_TYPE* data;
 } Allocator;
 
 
