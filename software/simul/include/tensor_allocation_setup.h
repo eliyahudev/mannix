@@ -16,11 +16,11 @@
     
     //memory allocated
 #ifdef VS_MANNIX
-    int* data = (int*)malloc(sizeof(int)* MANNIX_DATA_SIZE);  // we may use float for the first test infirence
-    Matrix* alloc_matrix = (Matrix*)malloc(sizeof(int)* MANNIX_MAT_SIZE);
+    DATA_TYPE* data = (DATA_TYPE*)malloc(sizeof(DATA_TYPE)* MANNIX_DATA_SIZE);  // we may use float for the first test infirence
+    Matrix* alloc_matrix = (Matrix*)malloc(sizeof(DATA_TYPE)* MANNIX_MAT_SIZE);
     Tensor* tens = (Tensor*)malloc(sizeof(Tensor)* MANNIX_TEN_SIZE);
 #else
-    int data[MANNIX_DATA_SIZE];  // we may use float for the first test infirence
+    DATA_TYPE data[MANNIX_DATA_SIZE];  // we may use float for the first test infirence
     Matrix alloc_matrix[MANNIX_MAT_SIZE];
     Tensor tens[MANNIX_TEN_SIZE];
 #endif

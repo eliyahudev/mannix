@@ -44,15 +44,17 @@
 // #define MANNIX_FC_F
 
 //---- dubaging defines ----
-#define TEST // for test only
-//#define DEBUG // debug variable
+// #define TEST // result example of few pictures
+#define DEBUG // debug variable
 
 //---- OS ----
 #define WINDOWS_MANNIX
 // #define DEBIAN
 
 //---- environment setups----
-//#define VS_MANNIX
+#define VS_MANNIX // this flag must be set when using visual studio environment
+#define DATA_TYPE float // type could be float or int
+#define DISABLE_SCALE // if float is chosen set this flag which desable the activation
 
 // ----- environment defines ----------
 // memory size definitions

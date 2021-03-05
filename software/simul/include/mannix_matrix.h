@@ -13,7 +13,7 @@ Matrix* creatMatrix(int rows, int cols, Matrix* m1, Allocator* al) {
         m1->size = cols * rows;
         m1[0].data = mannixDataMalloc(al, cols * rows);
         for (size_t i = 0; i < m1->size; i++) {
-            m1[0].data[i] = 0;
+            m1[0].data[i] = 0.0;
         }
         return m1;
     }
@@ -46,7 +46,11 @@ void printMatrix(Matrix* m1) {
     while(i<m1[0].rows * m1[0].cols) {
         if (i % m1[0].cols == 0)
             printf(" [");
+#ifdef DISABLE_SCALE
+        printf("%.06f ", m1[0].data[i++]);
+#else
         printf("%d ", m1[0].data[i++]);
+#endif
         if (i % m1[0].cols == 0 && i<m1[0].rows * m1[0].cols)
             printf("]\n");
         else if (i % m1[0].cols == 0)
@@ -143,16 +147,16 @@ Matrix* addMatrix(Matrix* m1, Matrix* m2) {
     }
     int i=0;
     while(i<m1->size) {
-        int y = m2->data[i];
+        // int y = m2->data[i];
         m1->data[i] += m2->data[i];
-        int x = m1->data[i];
+        // int x = m1->data[i];
         i++;
     }
 
     return m1;
 }
 
-Matrix* addScalarMatrix(Matrix* m1, int num) {
+Matrix* addScalarMatrix(Matrix* m1, DATA_TYPE num) {
     int i=0;
     while(i<m1->rows * m1->cols) {
         m1->data[i] += num;
@@ -161,7 +165,7 @@ Matrix* addScalarMatrix(Matrix* m1, int num) {
     return m1;
 }
 
-Matrix* mullScalarMatrix(Matrix* m1, int num) {
+Matrix* mullScalarMatrix(Matrix* m1, DATA_TYPE num) {
     int i=0;
     while(i<m1->rows * m1->cols) {
         m1->data[i] *= num;
@@ -198,7 +202,7 @@ Matrix* transpose(Matrix* m) {
     }
     for(int i = 0; i < m->rows - 1; i++)
         for(int j = i + 1; j < m->cols; j++) {
-            int temp = m->data[i*m->cols + j]; 
+            DATA_TYPE temp = m->data[i*m->cols + j]; 
             m->data[i*m->cols + j] = m->data[j*m->cols + i];
             m->data[j*m->cols + i] = temp;
         }
@@ -226,28 +230,31 @@ void setWeight(Matrix* bias, char* file_path, char* type, int layer, char* w_b) 
 // hadamard multipication:
 // x - window's starting row 
 // y - window's starting column
-int hadamardMullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix, int x, int y) {
+DATA_TYPE hadamardMullMatrix(Matrix* m1, Matrix* m2, Matrix* result_matrix, int x, int y) {
     
-    int filter_sum=0;;
+    DATA_TYPE filter_sum=0;;
     for (int i=0; i < m2->rows; i++) {
         for (int j=0; j < m2->cols; j++) {
             filter_sum += m1->data[(i + x) * m1->cols + j + y] * m2->data[i* m2->cols + j];
         }
     }
+
     return filter_sum;
 }
 
-int getMax(Matrix* m1, int p_m, int p_n, int x, int y, int stride) {
+DATA_TYPE getMax(Matrix* m1, int p_m, int p_n, int x, int y, int stride) {
 
-    int filter_sum = m1->data[x * stride * m1->cols + y * stride];
+    DATA_TYPE filter_sum = m1->data[x * stride * m1->cols + y * stride];
     for (int i=0; i < p_m; i++) {
         for (int j=0; j < p_n; j++) {
-            if (filter_sum < m1->data[(i + x * stride) * m1->cols + j + y * stride])
+            if (filter_sum < m1->data[(i + x * stride) * m1->cols + j + y * stride]) {
                 filter_sum = m1->data[(i + x * stride) * m1->cols + j + y * stride];
+            }
         }
     }
     return filter_sum;
 }
+
 
 
 // maxpuling 
@@ -268,7 +275,7 @@ Matrix* matrixMaxPool(Matrix* m1, int p_m, int p_n, int stride){
     // set dimension
     m1->rows = new_rows;
     m1->cols = new_cols;
-
+    m1->size = new_rows * new_cols;
     return m1;
 }
 
@@ -276,7 +283,7 @@ Matrix* matrixMaxPool(Matrix* m1, int p_m, int p_n, int stride){
 // mull and sum:
 // multiple window by the filter 
 // and return the sum of the window 
-Matrix* matrixConvolution(Matrix* m1, Matrix* m_filter, int bias, Matrix* result_matrix){
+Matrix* matrixConvolution(Matrix* m1, Matrix* m_filter, DATA_TYPE bias, Matrix* result_matrix){
 
     for (int i=0; i < result_matrix->rows ; i++) {
         for (int j=0; j < result_matrix->cols ; j++) {
@@ -290,11 +297,18 @@ Matrix* matrixConvolution(Matrix* m1, Matrix* m_filter, int bias, Matrix* result
 
 Matrix* matrixActivation(Matrix* m1) {
     int i = 0;
+#ifdef DISABLE_SCALE
+   while(i<m1->size) {
+        m1->data[i] = (m1->data[i] >= 0) ? m1->data[i] : 0;
+        i++;
+    } 
+#else
     while(i<m1->size) {
         m1->data[i] = (m1->data[i] >= MAX_FINAL_VAL) ? MAX_FINAL_VAL : ((m1->data[i] <= 0) ? 0 : m1->data[i]) ; // saturate, Scale back to 8-bit
         m1->data[i] = m1->data[i]>>NUM_FINAL_DESCALE_BITS ; // val/FINAL_SCALE ;
         i++;
     }
+#endif
     return m1;
 }
 
@@ -306,4 +320,18 @@ Matrix* matrixFC(Matrix* input_matrix, Matrix* weight_matrix, Matrix* bias_vecto
 
     return result_matrix;
 }
+
+
+int maxElement(Matrix* result_matrix) {
+    DATA_TYPE max = result_matrix->data[0];
+    int key = 0;
+    for(int i = 1; i < result_matrix->size; i++) {
+        if (max < result_matrix->data[i]) {
+            max = result_matrix->data[i];
+            key = i;
+        }
+    }
+    return key;
+}
+
 #endif

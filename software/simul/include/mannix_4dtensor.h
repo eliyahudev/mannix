@@ -26,18 +26,24 @@ void setFilter(Tensor4D* tens_4d, char* path, int layer) {
         }
 }
 
-void setImage(Tensor4D* tens_4d, FILE* fd) {
+int setImage(Tensor4D* tens_4d, FILE* fd) {
 
     int label[1];
 
     // set matricies
     for(int i = 0; i < tens_4d->dim; i++)
         for(int j = 0; j < tens_4d->depth; j++) {
+#ifdef TEST
             getMatrix(&tens_4d->tensor[i].matrix[j], fd, label, 1, 0);
+#else
+            getMatrix(&tens_4d->tensor[i].matrix[j], fd, label, -1, 0);
+#endif
         }
+    return label[0];
 }
 
 // ============================== Auxiliary functions ==============================
+
 void print4DTensor(Tensor4D* tens_4d) {
 
     printf("tensor{\n");    
@@ -68,8 +74,9 @@ Tensor4D* tensor4DConvolution(Tensor4D* tens, Tensor4D* filter, Matrix* bias, Te
                             TensorAllocator* tens_alloc) {
     create4DTensor(result_4D_tensor, tens->rows - filter->rows + 1, tens->cols - filter->cols + 1, filter->dim, 1, al, mat_alloc, tens_alloc);
     for (size_t i = 0; i < filter->dim; i++) {
-        tensorConvolution(&tens->tensor[0], &filter[0].tensor->matrix[i], bias->data[i], &result_4D_tensor->tensor->matrix[i], al, mat_alloc);
+        tensorConvolution(&tens->tensor[0], &filter->tensor[i], bias->data[i], &result_4D_tensor->tensor->matrix[i], al, mat_alloc);
     }
+
     return result_4D_tensor;
 }
 

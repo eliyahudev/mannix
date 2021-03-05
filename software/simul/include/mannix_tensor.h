@@ -96,14 +96,14 @@ void tensorActivation(Tensor *tens) {
 }
 
 
-Matrix* tensorConvolution(Tensor* tens, Matrix* m_filter, int bias, Matrix* result_matrix, Allocator* al, MatAllocator* mat_alloc){
+Matrix* tensorConvolution(Tensor* tens, Tensor* m_filter, DATA_TYPE bias, Matrix* result_matrix, Allocator* al, MatAllocator* mat_alloc){
 
     Matrix tmp_matrix[1];
 
     creatMatrix(tens->rows - m_filter->rows + 1, tens->cols - m_filter->cols + 1, tmp_matrix, al);  // todo - delete after debuging    
 
     for (size_t i = 0; i < tens->depth; i++) {
-        matrixConvolution(&tens->matrix[i], m_filter, bias, tmp_matrix);
+        matrixConvolution(&tens->matrix[i], &m_filter->matrix[i], bias, tmp_matrix);
         addMatrix(result_matrix, tmp_matrix);
     }
     // delete allocation
