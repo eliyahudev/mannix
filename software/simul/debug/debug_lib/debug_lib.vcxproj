@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{e91ed2ed-8f0b-4b93-9b7b-bce5693aa998}</ProjectGuid>
-    <RootNamespace>mannixdebu</RootNamespace>
+    <ProjectGuid>{9b7f5a51-e2d2-4992-bde7-35de4e07afc7}</ProjectGuid>
+    <RootNamespace>debuglib</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

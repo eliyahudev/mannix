@@ -1,2 +1,0 @@
-C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\debug\mannix_debu\Debug\mannix_debu.exe
-C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\debug\mannix_debu\Debug\mannix_debu.pdb
