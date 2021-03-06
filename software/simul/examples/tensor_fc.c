@@ -26,14 +26,14 @@ int main(int argc, char const *argv[]) {
         char* path = { "../../../python/csv_dumps/scaled_int/" };
     #endif
 //    FILE* imageFilePointer = fopen("../../../../../test_and_delete/mannix_test/inference/img_csv_dumps/img_9558.csv", "r");
-     FILE *imageFilePointer = fopen("../../source/data_set_256_fasion_emnist.csv", "r"); 
+     FILE *imageFilePointer = fopen("../../test_src/data_set_256_fasion_emnist.csv", "r"); 
 #else 
     #ifdef DISABLE_SCALE
         char* path = { "../../python/csv_dumps/float_orig/" };
     #else
         char* path = { "../../python/csv_dumps/scaled_int/" };
     #endif
-    FILE* imageFilePointer = fopen("../source/data_set_256_fasion_emnist.csv", "r");
+    FILE* imageFilePointer = fopen("../test_src/data_set_256_fasion_emnist.csv", "r");
 #endif
     // allocate memory for image, filter and bias
     create4DTensor(&image[0], 28, 28, 1, 1, al, mat_al, tens_alloc);

@@ -11,4 +11,4 @@ C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\inclu
 C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\include\mannix_4dtensor.h(96,26): warning C4018: '<': signed/unsigned mismatch
 C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\include\tensor_allocation_setup.h(5,9): warning C4101: 'label': unreferenced local variable
 C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\include\read_csv.h(83): warning C4715: 'getData': not all control paths return a value
-  mannix_debu.vcxproj -> C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\debug\mannix_debu\Debug\mannix_debu.exe
+  debug_lib.vcxproj -> C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\debug\debug_lib\Debug\debug_lib.exe

@@ -44,7 +44,7 @@
 // #define MANNIX_FC_F
 
 //---- dubaging defines ----
-// #define TEST // result example of few pictures
+#define TEST // result example of few pictures
 #define DEBUG // debug variable
 
 //---- OS ----
@@ -60,7 +60,7 @@
 // memory size definitions
 #define MANNIX_DATA_SIZE 500000 
 #define MANNIX_MAT_SIZE 500
-#define MANNIX_TEN_SIZE 100
+#define MANNIX_TEN_SIZE 500
 // activation
 #define NUM_RELU_DESCALE_BITS 5
 #define RELU_SCALE ((int)(1<<NUM_RELU_DESCALE_BITS))

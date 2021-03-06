@@ -72,8 +72,8 @@ Tensor* tensorMaxPool(Tensor *tens, /*TODO add result_tens,*/int p_m, int p_n, i
     for(int d = 0; d < tens->depth; d++) {
         // matrixMaxPool(&tens->matrix[d], p_m, p_n, stride);
         // set data
-        for (int i=0; i < new_rows; i = i++) {
-            for (int j=0; j < new_cols; j = j++) {
+        for (int i=0; i < new_rows; i++) {
+            for (int j=0; j < new_cols; j++) {
                 tens->matrix[0].data[k++] = getMax(&tens->matrix[d], p_m, p_n, i, j, stride);
             }
         }
