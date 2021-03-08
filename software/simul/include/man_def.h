@@ -44,17 +44,18 @@
 // #define MANNIX_FC_F
 
 //---- dubaging defines ----
-#define TEST // result example of few pictures
-#define DEBUG // debug variable
+// #define TEST // result example of few pictures
+// #define CMP_TEST //
+// #define DEBUG // debug variable
 
 //---- OS ----
 #define WINDOWS_MANNIX
 // #define DEBIAN
 
 //---- environment setups----
-#define VS_MANNIX // this flag must be set when using visual studio environment
-#define DATA_TYPE float // type could be float or int
-#define DISABLE_SCALE // if float is chosen set this flag which desable the activation
+// #define VS_MANNIX // this flag must be set when using visual studio environment
+#define DATA_TYPE int // type could be float or int
+// #define DISABLE_SCALE // if float is chosen set this flag which desable the activation
 
 // ----- environment defines ----------
 // memory size definitions
@@ -62,9 +63,14 @@
 #define MANNIX_MAT_SIZE 500
 #define MANNIX_TEN_SIZE 500
 // activation
-#define NUM_RELU_DESCALE_BITS 5
-#define RELU_SCALE ((int)(1<<NUM_RELU_DESCALE_BITS))
-#define MAX_RELU_VAL ((int)(1<<NUM_RELU_DESCALE_BITS))
-#define NUM_FINAL_DESCALE_BITS 9
-#define FINAL_SCALE ((int)(1<<NUM_FINAL_DESCALE_BITS))
-#define MAX_FINAL_VAL ((int)(127*FINAL_SCALE))
+#define WB_LOG2_SCALE 7
+#define UINT_DATA_WIDTH 8
+#define LOG2_RELU_FACTOR 3
+#define EXP_UINT_DATA_WIDTH 1 << UINT_DATA_WIDTH
+#define MAX_DATA_RANGE (EXP_UINT_DATA_WIDTH) - 1    
+// #define NUM_RELU_DESCALE_BITS 5
+// #define RELU_SCALE ((int)(1<<NUM_RELU_DESCALE_BITS))
+// #define MAX_RELU_VAL ((int)(1<<NUM_RELU_DESCALE_BITS))
+// #define NUM_FINAL_DESCALE_BITS 9
+// #define FINAL_SCALE ((int)(1<<NUM_FINAL_DESCALE_BITS))
+// #define MAX_FINAL_VAL ((int)(127*FINAL_SCALE))
