@@ -30,6 +30,10 @@ module mannix #(
 	//port for memory
 	input [31:0] read_addr_ddr,
 	input [31:0] write_addr_ddr,
+	input [18:0] read_addr_sram,
+	input [18:0] write_addr_sram,
+	input read_from_ddr,
+	input write_to_ddr,
 	input [4:0] client_priority,
 	//port for fcc
 	input [31:0] 		fc_addrx, 
@@ -153,10 +157,14 @@ module mannix #(
 	.pool_w(mem_intf_write_pool),
 	.cnn_w(mem_intf_write_cnn),
 	.read_addr_ddr(read_addr_ddr),
+	.read_from_ddr(read_from_ddr),
+	.write_to_ddr(write_to_ddr),
 	.write_addr_ddr(write_addr_ddr),
 	.client_priority(client_priority),
 	.read_ddr_req(read_ddr_req),
-	.write_ddr_req(write_ddr_req)
+	.write_ddr_req(write_ddr_req),
+	.read_addr_sram(read_addr_sram),
+	.write_addr_sram(write_addr_sram)
 	);
 	
 endmodule
