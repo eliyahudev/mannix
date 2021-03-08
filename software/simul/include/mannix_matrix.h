@@ -138,6 +138,29 @@ int getMatrix(Matrix* m1, FILE * filePointer, int* label, int state, int op){
 }
 
 
+void writeMatrixToCsv (Matrix* m1, char* layer_name) {
+    printf(layer_name);
+    printf("\n");
+    FILE* fptr = fopen(/*"../test_products/test.csv"*/layer_name, "w");
+    if(fptr != NULL) 
+    for (size_t i = 0; i < m1->rows; i++) {
+        for (size_t j = 0; j < m1->cols; j++) {
+#ifdef DISABLE_SCALE
+            fprintf(fptr,"%6.02f",m1->data[i*m1->cols+j]);
+#else
+            fprintf(fptr,"%6d",m1->data[i*m1->cols+j]);
+#endif  
+        if(m1->rows != j + 1)
+            fprintf(fptr,",");            
+        }
+        fprintf(fptr,"\n");
+    }
+    else
+        printf("Warning - cannot print to csv\n");
+    fclose(fptr);
+}
+
+
 // add matricies
 // output stored in the left matrix (m1)
 Matrix* addMatrix(Matrix* m1, Matrix* m2) {
@@ -287,7 +310,7 @@ Matrix* matrixConvolution(Matrix* m1, Matrix* m_filter, DATA_TYPE bias, Matrix* 
 
     for (int i=0; i < result_matrix->rows ; i++) {
         for (int j=0; j < result_matrix->cols ; j++) {
-            result_matrix->data[i*result_matrix->cols + j] = hadamardMullMatrix(m1, m_filter, result_matrix, i, j) + bias;
+            result_matrix->data[i*result_matrix->cols + j] = hadamardMullMatrix(m1, m_filter, result_matrix, i, j) + bias;  //TODO ask Udi why I am getting more accurate results without bias 
         }
     }
 
@@ -295,7 +318,7 @@ Matrix* matrixConvolution(Matrix* m1, Matrix* m_filter, DATA_TYPE bias, Matrix* 
 }
 
 
-Matrix* matrixActivation(Matrix* m1) {
+Matrix* matrixActivation(Matrix* m1, int sc) {
     int i = 0;
 #ifdef DISABLE_SCALE
    while(i<m1->size) {
@@ -303,9 +326,10 @@ Matrix* matrixActivation(Matrix* m1) {
         i++;
     } 
 #else
+    int scale = (1 << WB_LOG2_SCALE) /** LOG2_RELU_FACTOR*/ * sc ;
     while(i<m1->size) {
-        m1->data[i] = (m1->data[i] >= MAX_FINAL_VAL) ? MAX_FINAL_VAL : ((m1->data[i] <= 0) ? 0 : m1->data[i]) ; // saturate, Scale back to 8-bit
-        m1->data[i] = m1->data[i]>>NUM_FINAL_DESCALE_BITS ; // val/FINAL_SCALE ;
+        m1->data[i] = m1->data[i] / scale ;
+        m1->data[i] = (m1->data[i] >= MAX_DATA_RANGE) ? MAX_DATA_RANGE : ((m1->data[i] <= 0) ? 0 : m1->data[i]) ;
         i++;
     }
 #endif

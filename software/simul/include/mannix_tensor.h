@@ -45,6 +45,22 @@ void printTensor(Tensor* tens) {
 }
 
 
+void writeTensorToCsv (Tensor* tens, char* file_path) {
+    
+    char path[60];
+    char cast_int[3]; // todo - add "warning this function hendle up to 3 digit layer"  
+
+    for (size_t i = 0; i < tens->depth; i++) {
+        strcpy(path, file_path);
+        strcat(path,"_");
+        itoa(i, cast_int, 10);
+        strcat(path,cast_int);
+        strcat(path,".csv");
+        writeMatrixToCsv (&tens->matrix[i], path);
+    }
+}
+
+
 void tensorFlatten(Tensor* tens, int n_row) {
     
     tens->rows  = n_row;
@@ -89,9 +105,9 @@ Tensor* tensorMaxPool(Tensor *tens, /*TODO add result_tens,*/int p_m, int p_n, i
 }
 
 
-void tensorActivation(Tensor *tens) {
+void tensorActivation(Tensor *tens, int sc) {
     for (size_t i = 0; i < tens->depth; i++) {
-        matrixActivation(&tens->matrix[i]);
+        matrixActivation(&tens->matrix[i], sc);
     }
 }
 

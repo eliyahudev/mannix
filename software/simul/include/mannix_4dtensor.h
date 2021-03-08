@@ -1,5 +1,6 @@
 // ============================== tensor4d ==============================
 // ============================== SETUP ==============================
+
 void create4DTensor(Tensor4D* tens_4d, int rows, int cols, int depth, int dim, Allocator* al, MatAllocator* mat_alloc, TensorAllocator* tens_alloc) {
     tens_4d->rows = rows;
     tens_4d->cols = cols;
@@ -36,7 +37,11 @@ int setImage(Tensor4D* tens_4d, FILE* fd) {
 #ifdef TEST
             getMatrix(&tens_4d->tensor[i].matrix[j], fd, label, 1, 0);
 #else
+    #ifdef CMP_TEST
+            getMatrix(&tens_4d->tensor[i].matrix[j], fd, label, 1, 1);
+    #else
             getMatrix(&tens_4d->tensor[i].matrix[j], fd, label, -1, 0);
+    #endif
 #endif
         }
     return label[0];
@@ -56,6 +61,24 @@ void print4DTensor(Tensor4D* tens_4d) {
     printf("rows size: %d columns size: %d depth size: %d dim: %d \n\n",tens_4d->rows,tens_4d->cols,tens_4d->depth,tens_4d->dim);
 
 }
+
+
+void writeTensor4DToCsv (Tensor4D* tens_4d, char* file_path, char* layer_name) {
+    
+    char path[60];
+    char cast_int[3]; // todo - add "warning this function hendle up to 3 digit layer"  
+    printf("writing results to:\n");
+
+    for (size_t i = 0; i < tens_4d->dim; i++) {
+        strcpy(path, file_path);
+        strcat(path, layer_name);
+        strcat(path, "_");
+        itoa(i, cast_int, 10);
+        strcat(path, cast_int);
+        writeTensorToCsv (&tens_4d->tensor[i], path) ;
+    }
+}
+
 
 // ============================== NN functions ==============================
 
@@ -80,9 +103,9 @@ Tensor4D* tensor4DConvolution(Tensor4D* tens, Tensor4D* filter, Matrix* bias, Te
     return result_4D_tensor;
 }
 
-Tensor4D* tensor4DActivation(Tensor4D* tens) {
+Tensor4D* tensor4DActivation(Tensor4D* tens, int sc) {
     for (size_t i = 0; i < tens->dim; i++) {
-        tensorActivation(&tens->tensor[i]);
+        tensorActivation(&tens->tensor[i], sc);
     }
     return tens;
 }
