@@ -1,0 +1,14 @@
+﻿  cnn__float_example.c
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\include\read_csv.h(47,55): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\include\read_csv.h(75,50): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\include\mannix_matrix.h(15,30): warning C4018: '<': signed/unsigned mismatch
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\include\mannix_matrix.h(82,20): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 1 has type 'double'
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\include\mannix_matrix.h(91,58): warning C4244: 'function': conversion from 'float' to 'WORD', possible loss of data
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\include\mannix_tensor.h(93,26): warning C4018: '<': signed/unsigned mismatch
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\include\mannix_tensor.h(105,26): warning C4018: '<': signed/unsigned mismatch
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\include\mannix_4dtensor.h(76,26): warning C4018: '<': signed/unsigned mismatch
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\include\mannix_4dtensor.h(84,26): warning C4018: '<': signed/unsigned mismatch
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\include\mannix_4dtensor.h(96,26): warning C4018: '<': signed/unsigned mismatch
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\include\tensor_allocation_setup.h(5,9): warning C4101: 'label': unreferenced local variable
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\include\read_csv.h(83): warning C4715: 'getData': not all control paths return a value
+  debug_lib.vcxproj -> C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\simul\debug\debug_lib\Debug\debug_lib.exe

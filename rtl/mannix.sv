@@ -55,7 +55,8 @@ module mannix #(
     input [OUT_LOG2_ROWS_NUM-1:0]     sw_pool_m,	//POOL size - rows
     input [OUT_LOG2_COLS_NUM-1:0]     sw_pool_n,	//POOL size - columns 
     output                            pool_sw_busy_ind,	//An output to the software - 1 – POOL unit is busy - 0 -POOL is available (Default)
-  	//port for fcc
+  	//port for cnn
+    input [ADDR_WIDTH-1:0]            sw_cnn_addr_bias, 	// CNN Bias value address
     input [ADDR_WIDTH-1:0]            sw_cnn_addr_x,	// CNN Data window FIRST address
     input [ADDR_WIDTH-1:0]            sw_cnn_addr_y,	// CNN  weights window FIRST address
     input [ADDR_WIDTH-1:0]            sw_cnn_addr_z,	// CNN return address
@@ -64,6 +65,9 @@ module mannix #(
     input [Y_LOG2_ROWS_NUM:0]         sw_cnn_y_m,	        // CNN weight matrix num of rows
     input [Y_LOG2_COLS_NUM:0]         sw_cnn_y_n,	        // CNN weight matrix num of columns 
     output reg                        cnn_sw_busy_ind	// An output to the software - 1 – CNN unit is busy CNN is available (Default)
+
+    input                             sw_cnn_go,          //Input from Software to start calculation
+    output reg                        sw_cnn_done        //Output to Softare to inform on end of calculation
   	);
 
 
@@ -76,6 +80,7 @@ module mannix #(
   	mem_intf_write mem_intf_write_cnn();
   	mem_intf_read mem_intf_read_pic_cnn();
   	mem_intf_read mem_intf_read_wgt_cnn();
+        mem_intf_read mem_intf_read_bias_cnn();
 	mem_intf_read #(.ADDR_WIDTH(32),.NUM_WORDS_IN_LINE(16), .WORD_WIDTH(256))  read_ddr_req();
 	mem_intf_write #(.ADDR_WIDTH(32),.NUM_WORDS_IN_LINE(16), .WORD_WIDTH(256)) write_ddr_req ();
   	fcc i_fcc (
@@ -131,17 +136,23 @@ module mannix #(
 	)i_cnn (
 		.clk(clk),
        	.rst_n(rst_n),
-		.mem_intf_write(mem_intf_write_cnn),
-		.mem_intf_read_pic(mem_intf_read_pic_cnn),
-        .mem_intf_read_wgt(mem_intf_read_wgt_cnn),        
+	.mem_intf_write(mem_intf_write_cnn),
+	.mem_intf_read_pic(mem_intf_read_pic_cnn),
+        .mem_intf_read_wgt(mem_intf_read_wgt_cnn),
+        .mem_intf_read_bias( mem_intf_read_bias_cnn),        
         .cnn_sw_busy_ind(cnn_sw_busy_ind),
+        .sw_cnn_addr_bias(sw_cnn_addr_bias),
         .sw_cnn_addr_x(sw_cnn_addr_x),
         .sw_cnn_addr_y(sw_cnn_addr_y),
         .sw_cnn_addr_z(sw_cnn_addr_z),
         .sw_cnn_x_m(sw_cnn_x_m),  
         .sw_cnn_x_n(sw_cnn_x_n),
         .sw_cnn_y_m(sw_cnn_y_m),
-        .sw_cnn_y_n(sw_cnn_y_n)
+        .sw_cnn_y_n(sw_cnn_y_n),
+        .sw_cnn_go(sw_cnn_go),
+        .sw_cnn_done(sw_cnn_done),
+        //Debug output - Internal use
+        .data2write_out()
 	);
 
 	mannix_mem_farm i_mannix_mem_farm (
