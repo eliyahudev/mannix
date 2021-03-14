@@ -85,9 +85,59 @@ void* getData(FILE* filePointer, int data_to_read, int* label, DATA_TYPE* x, int
 #else
 
 void* getData(FILE* filePointer, int data_to_read, int* label, DATA_TYPE* x, int op)
+// {
+//     char ch;
+//     char strn1[LENGTH] ;
+//     int n = 0, k = 0;
+//     size_t i=0;
+
+//     if (filePointer == NULL)
+//     {
+//         printf("File is not available \n");
+//         printf("please checkout man_def.h -> \"environment setups\" \n");
+//         exit(-1);
+//     }
+//     else
+//     {
+//         while (k < data_to_read && (ch = fgetc(filePointer)) != EOF)
+//         {
+//             // negative sign only at the start of a number
+//             if (ch == '-')
+//                 if (0 == n)
+//                     strn1[n++] = ch;
+//                 else
+//                     exit(-1);
+
+//             if (ch >= '0' && ch <='9') {
+//                 strn1[n++] = ch;
+//             }
+
+//             if (ch == ',' || ch == '\t' || ch == ' ' || ch == '\n') {
+//                 strn1[n] = '\0';
+//                 n=0;
+//                 if(k==0 && op == 0) {
+//                     label[k++] = atoi(strn1);
+//                 }
+//                 else if(k == 0 && op != 0) {
+//                     label[k] = -1;
+//                     x[k++] = atoi(strn1);
+//                 }
+//                 else if(op == 0){
+//                     x[k++ - 1] = atoi(strn1); 
+//                 }
+//                 else {
+//                     x[k++] = atoi(strn1);
+//                 }
+//             }
+//         }
+//     }
+        
+
+// }
 {
-    char ch;
-    char strn1[LENGTH] ;
+    char ch, exp_sign;
+    char strn1[LENGTH];
+    char* expon;
     int n = 0, k = 0;
     size_t i=0;
 
@@ -101,6 +151,7 @@ void* getData(FILE* filePointer, int data_to_read, int* label, DATA_TYPE* x, int
     {
         while (k < data_to_read && (ch = fgetc(filePointer)) != EOF)
         {
+            while (ch == ' ' && (ch = fgetc(filePointer)) != EOF);  //  TODO - CHANGE INT FORM LIKE FLOAT FORM $$$$$$$$$$ VERY IMPORTANT!!!!! $$$$$$$$$$$$
             // negative sign only at the start of a number
             if (ch == '-')
                 if (0 == n)
@@ -112,27 +163,52 @@ void* getData(FILE* filePointer, int data_to_read, int* label, DATA_TYPE* x, int
                 strn1[n++] = ch;
             }
 
-            if (ch == ',' || ch == '\t' || ch == ' ' || ch == '\n') {
+
+            if (ch == '.' ) {
+                strn1[n++] = ch;
+            }
+
+            if (ch == ',' || ch == '\n' || ch == 'E' || ch == 'e') {
+                                
                 strn1[n] = '\0';
                 n=0;
                 if(k==0 && op == 0) {
-                    label[k++] = atoi(strn1);
+                    label[k++] = atoi(strn1); 
                 }
                 else if(k == 0 && op != 0) {
                     label[k] = -1;
-                    x[k++] = atoi(strn1);
+                    x[k++] = atoi(strn1); 
                 }
                 else if(op == 0){
-                    x[k++ - 1] = atoi(strn1); 
+                    x[k++ - 1] = atoi(strn1);  
                 }
                 else {
-                    x[k++] = atoi(strn1);
+                    x[k++] = atoi(strn1); 
                 }
+                // if (ch == 'E' || ch == 'e' ) {
+
+                //     if ((ch = fgetc(filePointer)) == EOF) exit(-1);
+                //     if (ch == '-') 
+                //         exp_sign = '-';
+                //     else { 
+                //         exp_sign = '+';
+                //         strn1[n++] = ch;
+                //     } 
+                //     while ((ch = fgetc(filePointer)) != EOF && ch != ',' && ch != '\n')  strn1[n++] = ch;
+                //     strn1[n] = '\0';
+
+                //     n=0;
+                //     for (size_t i = 0; i < strtof(strn1, &expon); i++)
+                //     {
+                //         if (exp_sign == '-')
+                //             x[k-1] = x[k-1] * 0.1;
+                //         else
+                //             x[k-1] = x[k-1] * 10;
+                //     }
+                // }
             }
         }
-    }
-        
-
+    }        
 }
 #endif
 
@@ -188,6 +264,5 @@ FILE* createFdFc(char* file_path, char* conv_fc, int layer, char* w_b) {
     return FilePointer;
     
 }
-
 
 #endif
