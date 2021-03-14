@@ -27,10 +27,23 @@ module mem_ctrl
 	always @(posedge clk or negedge rst_n)
 		if (!rst_n)begin
 			read_ddr<='0;
-			read_sram<='0;
 			write_sram<='0;
 		end
 		else if (read_from_ddr) begin
+				addr_read<=read_addr_ddr;
+				read_ddr<=1'b1;
+				base_addr_to_demux<=write_addr_sram;
+				write_sram<=16'b11;
+			end
+			else begin
+				read_ddr<=1'b0;	
+			end
+
+	always @(posedge clk or negedge rst_n)
+		if (!rst_n)begin
+			read_sram<='0;
+		end
+		else if (client_read_req[0]) begin
 				addr_read<=read_addr_ddr;
 				read_ddr<=1'b1;
 				base_addr_to_demux<=write_addr_sram;

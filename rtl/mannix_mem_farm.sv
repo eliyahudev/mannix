@@ -67,7 +67,6 @@ module mannix_mem_farm (
 	.data_in(data_out_sram),
 	.client_to_send(ctrl_fabric),
 	.data_out(data_to_align)
-
 	);
 	genvar i;
 	generate
