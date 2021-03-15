@@ -3,7 +3,7 @@
 <h3>Todo list:</h3>
 <li> Update software interface.</li>
 <li> Make adjustments to pulp-enix environment. </li>
-<li> Change code structure such that all input and output data are 8 bit length. </li>
+<li> Change code structure such that all data input and output are 8 bit size. </li>
 <li> Run the software for only one image with pulp-enix environment. </li>
 <li> Start integration level for each each module separately. </li>
 </br>
