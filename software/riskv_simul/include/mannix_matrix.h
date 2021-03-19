@@ -547,7 +547,40 @@ Matrix_int32* matrixFC(Matrix_uint8* input_matrix, Matrix_int8* weight_matrix, M
 }
 
 
-int maxElement_int32(Matrix_int32* result_matrix) {
+Matrix_uint8* matrixFCNActivate(Matrix_uint8* input_matrix, Matrix_int8* weight_matrix, Matrix_int32* bias_vector, Matrix_uint8* result_matrix, Allocator_int32* al, int sc) {
+
+   // Notice : Matrix algebra order is : (weight_matrix * input_matrix) + bias
+   // Currently we assume input matrix is a single column. 
+    Matrix_int32 tmp_matrix[1];
+
+    if (input_matrix->cols!=1) {
+        printf("matrixFC : Dimension ERROR, currently we restrict input matrix to a single column\n");
+        printf("input_matrix->rows=%d , input_matrix->cols=%d\n",input_matrix->rows,input_matrix->cols);
+        exit(-1); 
+    }    
+ 
+
+    else if (input_matrix->rows != weight_matrix->cols)  {
+        printf("matrixFC : Dimension ERROR :\n");
+        printf("input_matrix->rows=%d , weight_matrix->cols=%d\n",input_matrix->rows,weight_matrix->cols);
+        exit(-1);
+    }
+
+    creatMatrix_uint8(weight_matrix->rows, input_matrix->cols, result_matrix, (Allocator_uint8*) al);     
+    creatMatrix_int32(weight_matrix->rows, input_matrix->cols, tmp_matrix, al);     
+
+    mullMatrix_i32_i8Xui8(weight_matrix,input_matrix,tmp_matrix,al);
+
+    matrixAddNActivate(tmp_matrix, bias_vector, result_matrix, sc);
+
+    mannixDataFree_int32(al, tmp_matrix->data, tmp_matrix->size);
+
+    return result_matrix;
+}
+
+
+
+int maxElement_uint8(Matrix_uint8* result_matrix) {
     int max = result_matrix->data[0];
     int key = 0;
     for(int i = 1; i < result_matrix->size; i++) {

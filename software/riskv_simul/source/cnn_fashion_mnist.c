@@ -19,6 +19,7 @@ int main(int argc, char const *argv[]) {
     Matrix_int8 fc_weight[3];
     Matrix_int32 fc_bias[3];
     Matrix_int32 result_matrix[3];
+    Matrix_uint8 result_matrix_uint8[3];
     
     // import matrices
 
@@ -123,11 +124,6 @@ int main(int argc, char const *argv[]) {
         int sc = LOG2_RELU_FACTOR ;  // 'sc' (extra scale) is determined by LOG2_RELU_FACTOR , consider maling this layer specific;
 
     //  convolution layer 
-        // tensor4DConvolution(image, &conv_weight[0], &conv_bias[0], result_4D_tensor, (Allocator_int32 *)al, (MatAllocator_int32 *)mat_al, (TensorAllocator_int32 *)tens_alloc);
- 
-        // IFDEF_CMP_TEST( writeTensor4DToCsv_int32 (&result_4D_tensor[0], path_out, "conv1_out"); )
-        
-        // Tensor4D_uint8 * actResult_4D_tensor = tensor4DActivation(result_4D_tensor,sc);
         
         Tensor4D_uint8 * actResult_4D_tensor = tensor4DConvNActivate(image, &conv_weight[0], &conv_bias[0], result_4D_tensor_uint8, (Allocator_int32 *)al, (MatAllocator_int32 *)mat_al, (TensorAllocator_int32 *)tens_alloc, sc);
         IFDEF_CMP_TEST( writeTensor4DToCsv_uint8 (actResult_4D_tensor, path_out, "conv1_relu_out"); )
@@ -135,13 +131,6 @@ int main(int argc, char const *argv[]) {
         Tensor4D_uint8 * maxPoolResult_tensor =  tensor4DMaxPool(actResult_4D_tensor, 2, 2, 2);
        
         IFDEF_CMP_TEST( writeTensor4DToCsv_uint8 (maxPoolResult_tensor, path_out, "conv1_pool2d_out"); )
-
-        // tensor4DConvolution(actResult_4D_tensor, &conv_weight[1], &conv_bias[1], &result_4D_tensor[1], 
-                            // (Allocator_int32*) al, (MatAllocator_int32*) mat_al, (TensorAllocator_int32*) tens_alloc);        
-      
-        // IFDEF_CMP_TEST( writeTensor4DToCsv_int32 (&result_4D_tensor[1], path_out, "conv2_out"); )
-
-        // actResult_4D_tensor = tensor4DActivation(&result_4D_tensor[1],sc/*,*/);
       
         actResult_4D_tensor = tensor4DConvNActivate(actResult_4D_tensor, &conv_weight[1], &conv_bias[1], &result_4D_tensor_uint8[1], (Allocator_int32 *)al, (MatAllocator_int32 *)mat_al, (TensorAllocator_int32 *)tens_alloc, sc);
 
@@ -156,27 +145,19 @@ int main(int argc, char const *argv[]) {
 
         tensor4Dflatten(maxPoolResult_tensor);
         
-        tensor4DFC(maxPoolResult_tensor, &fc_weight[0], &fc_bias[0], &result_matrix[0], (Allocator_int32*)al);
-        
-        IFDEF_CMP_TEST(strcpy(file_out,path_out);writeMatrixToCsv_int32(&result_matrix[0],strcat(file_out,"fc1_out.csv")); ) 
+        Matrix_uint8 * actResultMatrix  = matrixFCNActivate(maxPoolResult_tensor->tensor->matrix, &fc_weight[0], &fc_bias[0], &result_matrix_uint8[0], (Allocator_int32 *)al, sc);
 
-        Matrix_uint8 * actResultMatrix = matrixActivation(&result_matrix[0], sc);
-        
         IFDEF_CMP_TEST(strcpy(file_out,path_out);writeMatrixToCsv_uint8(actResultMatrix,strcat(file_out,"fc1_relu_out.csv")); ) 
-
-        matrixFC(actResultMatrix, &fc_weight[1], &fc_bias[1], &result_matrix[1],(Allocator_int32*) al);
-
-        IFDEF_CMP_TEST(strcpy(file_out,path_out);writeMatrixToCsv_int32(&result_matrix[1],strcat(file_out,"fc2_out.csv")); ) 
-
-        actResultMatrix = matrixActivation(&result_matrix[1], sc);
         
+        actResultMatrix  = matrixFCNActivate(&result_matrix_uint8[0], &fc_weight[1], &fc_bias[1], &result_matrix_uint8[1], (Allocator_int32 *)al, sc);
+
         IFDEF_CMP_TEST(strcpy(file_out,path_out);writeMatrixToCsv_uint8(actResultMatrix,strcat(file_out,"fc2_relu_out.csv")); ) 
 
-        matrixFC(actResultMatrix, &fc_weight[2], &fc_bias[2], &result_matrix[2],(Allocator_int32*) al);
+        actResultMatrix  = matrixFCNActivate(&result_matrix_uint8[1], &fc_weight[2], &fc_bias[2], &result_matrix_uint8[2], (Allocator_int32 *)al, sc);
         
-        IFDEF_CMP_TEST(strcpy(file_out,path_out);writeMatrixToCsv_int32(&result_matrix[2],strcat(file_out,"fc3_out.csv")); ) 
+        IFDEF_CMP_TEST(strcpy(file_out,path_out);writeMatrixToCsv_uint8(&result_matrix_uint8[2],strcat(file_out,"fc3_out.csv")); ) 
 
-        int detected_label = maxElement_int32(&result_matrix[2]) ;
+        int detected_label = maxElement_uint8(&result_matrix_uint8[2]) ;
 #ifdef TEST
         printf("\n ======== result : %d  ==================\n", detected_label);
 #endif

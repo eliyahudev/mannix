@@ -213,10 +213,10 @@ Matrix_uint8* tensorConvNActivate(Tensor_uint8* tens, Tensor_int8* m_filter, int
 }
 
 
-tensorFC(Tensor_uint8* tens, Matrix_int8* weight_matrix, Matrix_int32* bias_vector, Matrix_int32* result_matrix, Allocator_int32* al) {
-    matrixFC(&tens->matrix[0] , weight_matrix, bias_vector, result_matrix, al);
-    //return &tens->matrix[0];
-}    
+// tensorFC(Tensor_uint8* tens, Matrix_int8* weight_matrix, Matrix_int32* bias_vector, Matrix_int32* result_matrix, Allocator_int32* al) {
+    // matrixFC(&tens->matrix[0] , weight_matrix, bias_vector, result_matrix, al);
+    // return &tens->matrix[0];
+// }    
 
 
 #endif

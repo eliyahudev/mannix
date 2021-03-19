@@ -192,9 +192,9 @@ Tensor4D_uint8* tensor4DMaxPool(Tensor4D_uint8* tens_4d,int p_m, int p_n, int st
 }
 
 
-Matrix_int32* tensor4DFC(Tensor4D_uint8* tens_4d, Matrix_int8* weight_matrix, Matrix_int32* bias_vector, Matrix_int32* result_matrix, Allocator_int32* al) {
+// Matrix_int32* tensor4DFC(Tensor4D_uint8* tens_4d, Matrix_int8* weight_matrix, Matrix_int32* bias_vector, Matrix_int32* result_matrix, Allocator_int32* al) {
     
-    tensor4Dflatten(tens_4d);
-    tensorFC(tens_4d->tensor, weight_matrix, bias_vector, result_matrix, al);
-    return result_matrix;
-}
+    // tensor4Dflatten(tens_4d);
+    // tensorFC(tens_4d->tensor, weight_matrix, bias_vector, result_matrix, al);
+    // return result_matrix;
+// }
