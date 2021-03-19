@@ -46,31 +46,44 @@
 //---- dubaging defines ----
 // #define TEST // result example of few pictures
 // #define CMP_TEST //
-// #define DEBUG // debug variable
+//#define DEBUG // debug variable
+
+#ifdef CMP_TEST
+#define IFDEF_CMP_TEST(dump_call) dump_call
+#else
+#define IFDEF_CMP_TEST(dump_call) 
+#endif
+
 
 //---- OS ----
 #define WINDOWS_MANNIX
 // #define DEBIAN
 
 //---- environment setups----
-// #define VS_MANNIX // this flag must be set when using visual studio environment
-#define DATA_TYPE int // type could be float or int
-// #define DISABLE_SCALE // if float is chosen set this flag which desable the activation
+
+#define VS_MANNIX
+
+//#define MEM_DUMP_MODE // Dumps the model parameters loadable data vector , run once per model configuration.
+
+#define MEM_LOAD_MODE  // Model parameters and data to be actively loaded , skip CSV read
+#ifdef VS_MANNIX
+#define MODEL_PARAMS_FILE "../../model_params_db/model_params_mfdb.txt"
+#define DATASET_FILE "../../test_src/fashion_mnist_V1_mfds.txt"
+#else
+#define MODEL_PARAMS_FILE "../model_params_db/model_params_mfdb.txt"
+#define DATASET_FILE "../test_src/fashion_mnist_V1_mfds.txt"
+#endif
 
 // ----- environment defines ----------
 // memory size definitions
-#define MANNIX_DATA_SIZE 500000 
-#define MANNIX_MAT_SIZE 500
+#define MANNIX_DATA_SIZE 53000 
+#define MANNIX_MAT_SIZE 2000
 #define MANNIX_TEN_SIZE 500
 // activation
 #define WB_LOG2_SCALE 7
 #define UINT_DATA_WIDTH 8
-#define LOG2_RELU_FACTOR 3
+#define LOG2_RELU_FACTOR 1
 #define EXP_UINT_DATA_WIDTH 1 << UINT_DATA_WIDTH
-#define MAX_DATA_RANGE (EXP_UINT_DATA_WIDTH) - 1    
-// #define NUM_RELU_DESCALE_BITS 5
-// #define RELU_SCALE ((int)(1<<NUM_RELU_DESCALE_BITS))
-// #define MAX_RELU_VAL ((int)(1<<NUM_RELU_DESCALE_BITS))
-// #define NUM_FINAL_DESCALE_BITS 9
-// #define FINAL_SCALE ((int)(1<<NUM_FINAL_DESCALE_BITS))
-// #define MAX_FINAL_VAL ((int)(127*FINAL_SCALE))
+#define MAX_DATA_RANGE (EXP_UINT_DATA_WIDTH) - 1  
+
+

@@ -7,7 +7,9 @@
 #include <windows.h>
 #include "man_def.h"
 #include "man_struct.h"
-#include "read_csv.h"
+# ifndef MEM_LOAD_MODE
+   #include "read_csv.h"
+#endif
 #include "mannixlib.h"
 #include "mannix_matrix.h"
 #include "mannix_tensor.h"
