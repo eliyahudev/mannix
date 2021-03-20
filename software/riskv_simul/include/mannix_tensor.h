@@ -134,28 +134,11 @@ Matrix_uint8* TensorToMatrix(Tensor_uint8* tens) { return tens->matrix;}
 // ================= NN functions ============================
 
 
-Tensor_uint8* tensorMaxPool_uint8(Tensor_uint8 *tens, /*TODO add result_tens,*/int p_m, int p_n, int stride){
+Tensor_uint8* tensorMaxPool_uint8(Tensor_uint8 *tens, Tensor_uint8 *tens_result, int p_m, int p_n, int stride){
     
-    //set filter's window movment
-    int new_rows = (tens->rows - p_m) / stride + 1;
-    int new_cols = (tens->cols - p_m) / stride + 1;
-    int k = 0;
     for(int d = 0; d < tens->depth; d++) {
-        // matrixMaxPool(&tens->matrix[d], p_m, p_n, stride);
-        // set data
-        for (int i=0; i < new_rows; i++) {
-            for (int j=0; j < new_cols; j++) {
-                tens->matrix[0].data[k++] = getMax(&tens->matrix[d], p_m, p_n, i, j, stride);
-            }
-        }
-        tens->matrix[d].data = tens->matrix[0].data + (new_rows * new_cols * d); 
-        // set dimension
-        tens->matrix[d].rows = new_rows;
-        tens->matrix[d].cols = new_cols;
+        matrixMaxPool(&tens->matrix[d], &tens_result->matrix[d], p_m, p_n, stride);
     }
-    tens->rows = new_rows;
-    tens->cols = new_cols;
-
     return tens;
 }
 
@@ -211,13 +194,6 @@ Matrix_uint8* tensorConvNActivate(Tensor_uint8* tens, Tensor_int8* m_filter, int
     
     return result_matrix;
 }
-
-
-// tensorFC(Tensor_uint8* tens, Matrix_int8* weight_matrix, Matrix_int32* bias_vector, Matrix_int32* result_matrix, Allocator_int32* al) {
-    // matrixFC(&tens->matrix[0] , weight_matrix, bias_vector, result_matrix, al);
-    // return &tens->matrix[0];
-// }    
-
 
 #endif
 

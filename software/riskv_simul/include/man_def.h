@@ -61,7 +61,7 @@
 
 //---- environment setups----
 
-#define VS_MANNIX
+// #define VS_MANNIX
 
 //#define MEM_DUMP_MODE // Dumps the model parameters loadable data vector , run once per model configuration.
 

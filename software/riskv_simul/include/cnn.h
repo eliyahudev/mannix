@@ -48,7 +48,7 @@ void pullLayer_uint8(Matrix_uint8* input_matrix, Matrix_uint8* result_matrix, Al
             MANNIX_pull_layer_uint8(input_matrix->data, input_matrix->rows, input_matrix->cols, p_m, p_n, start, done);
         while (!done); 
     #else
-        matrixMaxPool(input_matrix, p_m, p_n, stride);
+       // matrixMaxPool(input_matrix, p_m, p_n, stride);
     #endif
     
     #ifdef TEST

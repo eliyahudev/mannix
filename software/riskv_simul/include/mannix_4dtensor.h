@@ -178,23 +178,17 @@ Tensor4D_uint8* tensor4DActivation(Tensor4D_int32* tens, int sc) {
 }
 
 
-Tensor4D_uint8* tensor4DMaxPool(Tensor4D_uint8* tens_4d,int p_m, int p_n, int stride) {
+Tensor4D_uint8* tensor4DMaxPool(Tensor4D_uint8* tens_4d, Tensor4D_uint8* tens_4d_result, int p_m, int p_n, int stride, Allocator_uint8* al, MatAllocator_uint8* mat_alloc, TensorAllocator_uint8* tens_alloc) {
     
     int new_rows = (tens_4d->rows - p_m) / stride + 1;
     int new_cols = (tens_4d->cols - p_m) / stride + 1;
 
+    create4DTensor_uint8(tens_4d_result, new_rows, new_cols, tens_4d->depth, tens_4d->dim, al, mat_alloc, tens_alloc);
+
     for (int i = 0; i < tens_4d->dim; i++) {
-        tensorMaxPool_uint8(&tens_4d->tensor[i], p_m, p_n, stride);
+        tensorMaxPool_uint8(&tens_4d->tensor[i], &tens_4d_result->tensor[i], p_m, p_n, stride);
     }
-    tens_4d->rows = new_rows;
-    tens_4d->cols = new_cols;
-    return tens_4d;
+
+    return tens_4d_result;
 }
 
-
-// Matrix_int32* tensor4DFC(Tensor4D_uint8* tens_4d, Matrix_int8* weight_matrix, Matrix_int32* bias_vector, Matrix_int32* result_matrix, Allocator_int32* al) {
-    
-    // tensor4Dflatten(tens_4d);
-    // tensorFC(tens_4d->tensor, weight_matrix, bias_vector, result_matrix, al);
-    // return result_matrix;
-// }
