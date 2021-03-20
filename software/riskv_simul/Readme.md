@@ -1,3 +1,4 @@
+
 <h1> Stage 2 work plan</h1>
 
 <h3>has been done:</h3>
@@ -6,9 +7,11 @@
 <li> Adjustments to pulp-enix environment. </li>
 <h3>Todo list:</h3>
 <p> 
+<h3>Todo list:</h3>
 <li> Update software interface.</li>
 <li> Run the software for only one image with pulp-enix environment. </li>
 <li> Create simulation checker in python.</li>
 <li> Start integration level for each each module separately. </li>
 </br>
 </p>
+
