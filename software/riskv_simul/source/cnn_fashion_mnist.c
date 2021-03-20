@@ -11,6 +11,7 @@ int main(int argc, char const *argv[]) {
     Tensor4D_uint8 image[1];
     Tensor4D_int8 conv_weight[2];
     Tensor4D_int32 result_4D_tensor[2];
+    Tensor4D_uint8 result_maxPool_tensor[2];
     Tensor4D_uint8 result_4D_tensor_uint8[2];
 
     // declare matrix bias [for each matrix there is one bias value, for example for image->matrix[0] we add the same value bias->data[0] to all cells]
@@ -128,15 +129,15 @@ int main(int argc, char const *argv[]) {
         Tensor4D_uint8 * actResult_4D_tensor = tensor4DConvNActivate(image, &conv_weight[0], &conv_bias[0], result_4D_tensor_uint8, (Allocator_int32 *)al, (MatAllocator_int32 *)mat_al, (TensorAllocator_int32 *)tens_alloc, sc);
         IFDEF_CMP_TEST( writeTensor4DToCsv_uint8 (actResult_4D_tensor, path_out, "conv1_relu_out"); )
  
-        Tensor4D_uint8 * maxPoolResult_tensor =  tensor4DMaxPool(actResult_4D_tensor, 2, 2, 2);
+        Tensor4D_uint8 * maxPoolResult_tensor =  tensor4DMaxPool(actResult_4D_tensor, &result_maxPool_tensor[0], 2, 2, 2, al, mat_al, tens_alloc);
        
         IFDEF_CMP_TEST( writeTensor4DToCsv_uint8 (maxPoolResult_tensor, path_out, "conv1_pool2d_out"); )
       
-        actResult_4D_tensor = tensor4DConvNActivate(actResult_4D_tensor, &conv_weight[1], &conv_bias[1], &result_4D_tensor_uint8[1], (Allocator_int32 *)al, (MatAllocator_int32 *)mat_al, (TensorAllocator_int32 *)tens_alloc, sc);
+        actResult_4D_tensor = tensor4DConvNActivate(maxPoolResult_tensor, &conv_weight[1], &conv_bias[1], &result_4D_tensor_uint8[1], (Allocator_int32 *)al, (MatAllocator_int32 *)mat_al, (TensorAllocator_int32 *)tens_alloc, sc);
 
         IFDEF_CMP_TEST( writeTensor4DToCsv_uint8 (actResult_4D_tensor  , path_out, "conv2_relu_out"); )
 
-        maxPoolResult_tensor =  tensor4DMaxPool(actResult_4D_tensor, 2, 2, 2);
+        maxPoolResult_tensor =  tensor4DMaxPool(actResult_4D_tensor, & result_maxPool_tensor[1], 2, 2, 2, al, mat_al, tens_alloc);
      
         IFDEF_CMP_TEST( writeTensor4DToCsv_uint8 (maxPoolResult_tensor, path_out, "conv2_pool2d_out"); )
 

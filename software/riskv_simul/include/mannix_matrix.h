@@ -451,23 +451,17 @@ unsigned char getMax(Matrix_uint8* m1, int p_m, int p_n, int x, int y, int strid
 // maxpuling 
 // p_m - window's hight
 // p_n - window's width
-Matrix_uint8* matrixMaxPool(Matrix_uint8* m1, int p_m, int p_n, int stride){
+Matrix_uint8* matrixMaxPool(Matrix_uint8* m1, Matrix_uint8* m2, int p_m, int p_n, int stride){
     
-    //set filter's window movment
-    int new_rows = (m1->rows - p_m) / stride + 1;
-    int new_cols = (m1->cols - p_m) / stride + 1;
     int k = 0;
+
     // set data
-    for (int i=0; i < new_rows; i = i++) {
-        for (int j=0; j < new_cols; j = j++) {
-            m1->data[k++] = getMax(m1, p_m, p_n, i, j, stride);
+    for (int i=0; i < m2->rows; i = i++) {
+        for (int j=0; j < m2->cols; j = j++) {
+            m2->data[k++] = getMax(m1, p_m, p_n, i, j, stride);
         }
     }
-    // set dimension
-    m1->rows = new_rows;
-    m1->cols = new_cols;
-    m1->size = new_rows * new_cols;
-    return m1;
+    return m2;
 }
 
 
