@@ -10,13 +10,13 @@
 //======================================================================================================
 module dot_product_parallel (a, b, res);
  parameter DEPTH=4;
-  input signed [7:0] a [0:DEPTH-1];
+  input        [7:0] a [0:DEPTH-1];
   input signed [7:0] b [0:DEPTH-1];
-  output signed [16:0] res ;
+  output signed [31:0] res ;
 
-  wire signed [16:0] res_sum [0:DEPTH-1];
+  wire signed [31:0] res_sum [0:DEPTH-1];
 
-   wire signed [16:0] res_tmp [0:DEPTH-1];
+  wire signed [31:0] res_tmp [0:DEPTH-1];
   
   genvar       i;
 generate

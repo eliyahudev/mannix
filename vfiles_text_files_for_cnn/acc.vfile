@@ -1,0 +1,7 @@
+/u/e2017/dabushn3/project_4th/proj/mannix/tb/acc_cnn_tb.sv
+/u/e2017/dabushn3/project_4th/proj/mannix/rtl/mem_intf_write.sv
+/u/e2017/dabushn3/project_4th/proj/mannix/rtl/mem_intf_read.sv
+/u/e2017/dabushn3/project_4th/proj/mannix/rtl/cnn.sv
+/u/e2017/dabushn3/project_4th/proj/mannix/rtl/dot_product_parallel.sv
+/u/e2017/dabushn3/project_4th/proj/mannix/rtl/dot_product.sv
+/u/e2017/dabushn3/project_4th/proj/mannix/rtl/activation.sv

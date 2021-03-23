@@ -145,7 +145,7 @@ parameter MAX_RELU_VAL = 1<<NUM_RELU_DESCALE_BITS;
 //======================================================================================================
   reg signed [7:0] mem_wgt    [DP_DEPTH-1:0]; //Simulating the memory weights - 8x8 values of 8 bit
   reg signed [31:0] mem_bias ;
-  reg signed [7:0] mem_data  [DP_DEPTH-1:0]; 
+  reg [7:0] mem_data  [DP_DEPTH-1:0]; 
 
                 
 //======================================================================================================

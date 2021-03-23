@@ -11,10 +11,10 @@
 
 module dot_product (a, b, res);
  parameter DEPTH=4;
-  input signed [7:0] a;
+  input        [7:0] a;
   input signed [7:0] b;
-  output signed [16:0] res;
+  output signed [31:0] res;
 
-  assign res=a*b;
+  assign res=$signed({1'b0,a})*b;
 
 endmodule

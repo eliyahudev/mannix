@@ -17,7 +17,8 @@ module acc_cnn_tb ();
   parameter   CLK_PERIOD = 6.25; //80Mhz
 
 
-  parameter JUMP=1;
+  parameter JUMP_COL=1;
+  parameter JUMP_ROW=1;
   parameter WORD_WIDTH=8;
   parameter NUM_WORDS_IN_LINE=32;
   parameter ADDR_WIDTH=19;
@@ -41,15 +42,16 @@ module acc_cnn_tb ();
                      
   parameter Y_LOG2_ROWS_NUM =$clog2(Y_ROWS_NUM);
   parameter Y_LOG2_COLS_NUM =$clog2(Y_COLS_NUM);
-  
+
+  parameter DP_DEPTH=4;
 
   reg         clk;
   reg         rst_n;
   reg         clk_config_tb;
   reg         clk_enable;
 
-  reg signed [7:0]  a_data [0:16383];
-  reg signed [7:0]  w_data [0:15];
+  reg        [7:0]  a_data [0:((X_COLS_NUM*X_ROWS_NUM)-1)];
+  reg signed [7:0]  w_data [0:((Y_COLS_NUM*Y_ROWS_NUM)-1)];
   
   //====================      
   // Software Interface
@@ -58,7 +60,7 @@ module acc_cnn_tb ();
   reg [ADDR_WIDTH-1:0]            sw_cnn_addr_x;	// CNN Data window FIRST address
   reg [ADDR_WIDTH-1:0]            sw_cnn_addr_y;	// CNN  weights window FIRST address
   reg [ADDR_WIDTH-1:0]            sw_cnn_addr_z;	// CNN return address
-  reg [X_LOG2_ROWS_NUM:0]       sw_cnn_x_m;  	// CNN data matrix num of rows
+  reg [X_LOG2_ROWS_NUM:0]       sw_cnn_x_m;  	        // CNN data matrix num of rows
   reg [X_LOG2_COLS_NUM:0]       sw_cnn_x_n;	        // CNN data matrix num of columns
   reg [Y_LOG2_ROWS_NUM:0]       sw_cnn_y_m;	        // CNN weight matrix num of rows
   reg [Y_LOG2_COLS_NUM:0]       sw_cnn_y_n;	        // CNN weight matrix num of columns 
@@ -72,7 +74,7 @@ module acc_cnn_tb ();
   reg                             mem_intf_read_pic_mem_gnt;
   reg                             mem_intf_read_pic_last;
   
-  reg signed [31:0][7:0]                 mem_intf_read_pic_mem_data;
+  reg [31:0][7:0]                 mem_intf_read_pic_mem_data;
   
   reg [$clog2(NUM_WORDS_IN_LINE*WORD_WIDTH/8)-1:0] mem_intf_read_pic_mem_last_valid ;
   
@@ -90,12 +92,13 @@ module acc_cnn_tb ();
   reg signed [34:0] sum_res_real;
   reg signed [31:0]       avrg;
 
-  wire [31:0] data2write_out;
+  wire signed [31:0] data2write_out;
+  wire [7:0]  activation_out_smpl;
   
-
+  reg [7:0] index;
   reg signed [7:0] data [0:3] ;
   reg signed [7:0] weights [0:3];
-  reg signed [7:0] results [0:15624];
+  reg [7:0] results [0:15624];
   reg signed [31:0] results_real [0:15624];
   //reg signed [16:0] bias ;
   //reg [17:0] result;
@@ -116,32 +119,39 @@ assign clk = clk_enable ? clk_config_tb : 1'b0;
   initial
     begin
 
-      dta = $fopen("/nfs/site/stod/areas/d/w.dabushni.103/PROJECT_4TH_YEAR/data.txt", "r");
-      wgt = $fopen("/nfs/site/stod/areas/d/w.dabushni.103/PROJECT_4TH_YEAR/weights.txt", "r");
-      res_real = $fopen("/nfs/site/stod/areas/d/w.dabushni.103/PROJECT_4TH_YEAR/res_real.txt", "r");
-      res = $fopen("/nfs/site/stod/areas/d/w.dabushni.103/PROJECT_4TH_YEAR/results.txt", "r");
+      // dta = $fopen("/u/e2017/dabushn3/project_4th/proj/mannix/vfiles_text_files_for_cnn/data.txt", "r");
+      // wgt = $fopen("/u/e2017/dabushn3/project_4th/proj/mannix/vfiles_text_files_for_cnn/weights.txt", "r");
+      // res_real = $fopen("/u/e2017/dabushn3/project_4th/proj/mannix/vfiles_text_files_for_cnn/res_real.txt", "r");
+      // res = $fopen("/u/e2017/dabushn3/project_4th/proj/mannix/vfiles_text_files_for_cnn/results_after_activation.txt", "r");
+      
+      dta = $fopen("/u/e2017/dabushn3/project_4th/proj/mannix/vfiles_text_files_for_cnn/128x128/data.txt", "r");
+      wgt = $fopen("/u/e2017/dabushn3/project_4th/proj/mannix/vfiles_text_files_for_cnn/128x128/weights.txt", "r");
+      res_real = $fopen("/u/e2017/dabushn3/project_4th/proj/mannix/vfiles_text_files_for_cnn/128x128/res_real.txt", "r");
+      res = $fopen("/u/e2017/dabushn3/project_4th/proj/mannix/vfiles_text_files_for_cnn/128x128/results_after_activation.txt", "r");
+      
       clk_enable = 1'b1;
       clk_config_tb   = 1'b0;
       cnn_go=1'b1;
       sum_res_real=35'd0;
       avrg=32'd0;
       
-      for (integer k=0;k<16384;k=k+1)
+      for (integer k=0;k<(X_ROWS_NUM*X_COLS_NUM);k=k+1)
         begin
         scan=$fscanf(dta,"%d\n",a_data[k]);
           end
      
-      for (integer s=0;s<16;s=s+1)
+      for (integer s=0;s<(Y_ROWS_NUM*Y_COLS_NUM);s=s+1)
         begin
           scan=$fscanf(wgt,"%d\n",w_data[s]);
       end
 
-      for (integer r=0;r<15625;r=r+1)
+      for (integer r=0;r<((X_ROWS_NUM-3'd3)*(X_COLS_NUM-3'd3));r=r+1)
         begin
           scan=$fscanf(res,"%d\n",results[r]);
+          
       end
 
-      for (integer r1=0;r1<15625;r1=r1+1)
+      for (integer r1=0;r1<((X_ROWS_NUM-3'd3)*(X_COLS_NUM-3'd3));r1=r1+1)
         begin
           scan=$fscanf(res_real,"%d\n",results_real[r1]);
           sum_res_real=sum_res_real+results_real[r1];
@@ -152,9 +162,11 @@ assign clk = clk_enable ? clk_config_tb : 1'b0;
       
       RESET_VALUES();
       ASYNC_RESET();
-      TEST_128X128_4X4();
+      @(posedge clk)
       cnn_go=1'b0;
-      #30;
+      TEST_128X128_4X4();
+      //cnn_go=1'b0;
+      #100;
       
       $stop;
     end
@@ -190,8 +202,9 @@ assign clk = clk_enable ? clk_config_tb : 1'b0;
 
   
 cnn #(
-
-  .JUMP(JUMP),
+  .DP_DEPTH(DP_DEPTH),
+  .JUMP_COL(JUMP_COL),
+  .JUMP_ROW(JUMP_ROW),    
   .ADDR_WIDTH(ADDR_WIDTH),
                        
   .MAX_BYTES_TO_RD(MAX_BYTES_TO_RD),
@@ -235,8 +248,8 @@ cnn #(
             .sw_cnn_go(cnn_go),
             .sw_cnn_done(cnn_done),
                //Debug
-            .data2write_out(data2write_out)   
-
+            .data2write_out(data2write_out),   
+            .activation_out_smpl(activation_out_smpl)
 
             );
 
@@ -263,7 +276,7 @@ task RESET_VALUES();
   begin
 
     calc_row <=8'd0;
-    
+    index<=8'd0;
    mem_intf_write_mem_gnt=1'b0;
   
    mem_intf_read_pic_mem_gnt=1'b0;
@@ -287,10 +300,10 @@ task RESET_VALUES();
      sw_cnn_addr_x={ADDR_WIDTH{1'b0}};	// CNN Data window FIRST address
      sw_cnn_addr_y={ADDR_WIDTH{1'b0}};	// CNN  weights window FIRST address
      sw_cnn_addr_z={ADDR_WIDTH{1'b0}};	// CNN return address
-    sw_cnn_x_m='d128;  	// CNN data matrix num of rows
-    sw_cnn_x_n='d128;	        // CNN data matrix num of columns
-    sw_cnn_y_m='d4;	        // CNN weight matrix num of rows
-    sw_cnn_y_n='d4;	        // CNN weight matrix num of columns
+    sw_cnn_x_m=X_ROWS_NUM;  	        // CNN data matrix num of rows
+    sw_cnn_x_n=X_COLS_NUM;	        // CNN data matrix num of columns
+    sw_cnn_y_m=Y_ROWS_NUM;	        // CNN weight matrix num of rows
+    sw_cnn_y_n=Y_COLS_NUM;	        // CNN weight matrix num of columns
     
    
       
@@ -311,7 +324,9 @@ task RESET_VALUES();
     
         mem_intf_read_pic_mem_last_valid=num_of_bytes-1'b1;
     
-        mem_intf_read_pic_mem_gnt=1'b1;  
+        mem_intf_read_pic_mem_gnt=1'b1;
+      //@(posedge clk)
+      //  mem_intf_read_pic_mem_gnt=1'b0;
   end
 endtask // MEM_PIC_READ_REQ_FRST
 
@@ -334,7 +349,7 @@ endtask // MEM_PIC_READ_REQ_FRST
 
       mem_intf_read_pic_mem_gnt=1'b1;
 
-      repeat (2) begin
+      repeat (1) begin
         @ (posedge clk) ;
       end
 
@@ -343,15 +358,15 @@ endtask // MEM_PIC_READ_REQ_FRST
   endtask // MEM_PIC_READ_REQ
   
 
-  task MEM_WGT_READ_REQ (input [ADDR_WIDTH-1:0] addr, input signed [7:0] data [0:15]);
+  task MEM_WGT_READ_REQ (input [ADDR_WIDTH-1:0] addr, input signed [7:0] data [0:((Y_COLS_NUM*Y_ROWS_NUM)-1)]);
   begin
     wait ((mem_intf_read_wgt.mem_req==1'b1)&&(mem_intf_read_wgt.mem_start_addr=={ADDR_WIDTH{1'b0}}))  
-      for(j=0;j<16;j++)
+      for(j=0;j<(Y_COLS_NUM*Y_ROWS_NUM);j++)
               mem_intf_read_wgt_mem_data[j]=data[j];
     
       mem_intf_read_wgt_mem_gnt=1'b1;
 
-    repeat (2) begin
+    repeat (1) begin
       @ (posedge clk) ;
     end
 //Need to verify if gnt de-asserted after 1 cycle or not
@@ -365,7 +380,7 @@ endtask // MEM_PIC_READ_REQ_FRST
   begin
     wait ((mem_intf_read_bias.mem_req==1'b1)&&(mem_intf_read_bias.mem_start_addr=={ADDR_WIDTH{1'b0}}))
               mem_intf_read_bias_mem_data='d0;
-              mem_intf_read_bias_mem_data[3:0]=data;
+             // mem_intf_read_bias_mem_data[3:0]=data;
     
       mem_intf_read_bias_mem_gnt=1'b1;
 
@@ -382,9 +397,10 @@ endtask // MEM_PIC_READ_REQ_FRST
   
 
   //reg [7:0] data;
-  reg [7:0] index;
+  //reg [7:0] index;
   reg [ADDR_WIDTH-1:0] start_line_addr;
   reg [31:0]           index_res;
+  integer              u;
   
   task WINDOWS_IN_RAW(input [15:0] times , input [7:0] row_num);
     begin
@@ -400,17 +416,27 @@ endtask // MEM_PIC_READ_REQ_FRST
       start_line_addr=row_num*X_COLS_NUM;
       repeat(times)
         begin
-          index_res=(row_num*125)+index;
+          index_res=(row_num*(X_ROWS_NUM-Y_ROWS_NUM+1))+index;
           
-          $monitor ("probelm: index: %d equal, Value: %d \n",index_res,results_real[index_res]) ;
+          //$monitor ("index: %d, Value res: %d , RTL val: %d \n",index_res,results[index_res],) ;
+          for(u=0;u<Y_ROWS_NUM;u++)
+            begin
+              MEM_PIC_READ_REQ(start_line_addr+JUMP_ROW*index+sw_cnn_x_n*u,Y_ROWS_NUM);
+              end
+              
+          // MEM_PIC_READ_REQ(start_line_addr+JUMP_ROW*index,4);
+          // MEM_PIC_READ_REQ(start_line_addr+JUMP_ROW*index+sw_cnn_x_n,4);
+          // MEM_PIC_READ_REQ(start_line_addr+JUMP_ROW*index+sw_cnn_x_n*2,4);
+          // MEM_PIC_READ_REQ(start_line_addr+JUMP_ROW*index+sw_cnn_x_n*3,4);
           
-          MEM_PIC_READ_REQ(start_line_addr+JUMP*index,4);
-          MEM_PIC_READ_REQ(start_line_addr+JUMP*index+sw_cnn_x_n,4);
-          MEM_PIC_READ_REQ(start_line_addr+JUMP*index+sw_cnn_x_n*2,4);
-          MEM_PIC_READ_REQ(start_line_addr+JUMP*index+sw_cnn_x_n*3,4);
         //  data=data+3'd4;
           index=index+1'b1;
           wait(data2write_out==results_real[index_res]);
+          $display ("index: %d, Value res: %d , RTL val: %d \n",index_res,results[index_res],activation_out_smpl) ;
+          if(results[index_res]==activation_out_smpl)
+            $display("Yay");
+            else
+              $display("Boo");
           // $monitor ("index: %d equal, Value: %d",index ,results_real[(row_num*(8'd125))+(index-1'd1)]);
         end
     end
@@ -421,61 +447,28 @@ endtask // MEM_PIC_READ_REQ_FRST
     
   task TEST_128X128_4X4();//input [ADDR_WIDTH-1:0] start_addr);
     begin      
-     MEM_PIC_READ_REQ_FRST({ADDR_WIDTH{1'b0}},4);
+     MEM_PIC_READ_REQ_FRST({ADDR_WIDTH{1'b0}},Y_ROWS_NUM);
      MEM_WGT_READ_REQ({ADDR_WIDTH{1'b0}},w_data);
-      MEM_BIAS_READ_REQ(sw_cnn_addr_bias,avrg); 
+     MEM_BIAS_READ_REQ(sw_cnn_addr_bias,avrg); 
      //==============================================
-      MEM_PIC_READ_REQ(sw_cnn_x_n,4);
-      MEM_PIC_READ_REQ(sw_cnn_x_n*2,4);
-      MEM_PIC_READ_REQ(sw_cnn_x_n*3,4);
+      MEM_PIC_READ_REQ(sw_cnn_x_n,Y_ROWS_NUM);
+      MEM_PIC_READ_REQ(sw_cnn_x_n*2,Y_ROWS_NUM);
+      MEM_PIC_READ_REQ(sw_cnn_x_n*3,Y_ROWS_NUM);
+      //MEM_PIC_READ_REQ(sw_cnn_x_n*4,Y_ROWS_NUM);
       wait(data2write_out==results_real[0])
         $monitor ("index: 0 equal, Value: %d",results_real[0]);
-     // //==============================================
-     // MEM_PIC_READ_REQ(JUMP,8'd6);
-     // MEM_PIC_READ_REQ(JUMP+sw_cnn_x_n,8'd7);
-     // MEM_PIC_READ_REQ(JUMP+sw_cnn_x_n*2,8'd8);
-     // MEM_PIC_READ_REQ(JUMP+sw_cnn_x_n*3,8'd9);
-     // //==============================================
-     // MEM_PIC_READ_REQ(JUMP*2,8'd10);
-     // MEM_PIC_READ_REQ(JUMP*2+sw_cnn_x_n,8'd11);
-     // MEM_PIC_READ_REQ(JUMP*2+sw_cnn_x_n*2,8'd12);
-     // MEM_PIC_READ_REQ(JUMP*2+sw_cnn_x_n*3,8'd13);
-     // //==============================================
-     // MEM_PIC_READ_REQ(JUMP*3,8'd14);
-     // MEM_PIC_READ_REQ(JUMP*3+sw_cnn_x_n,8'd15);
-     // MEM_PIC_READ_REQ(JUMP*3+sw_cnn_x_n*2,8'd16);
-     // MEM_PIC_READ_REQ(JUMP*3+sw_cnn_x_n*3,8'd17);
-     // //==============================================
-     // MEM_PIC_READ_REQ(JUMP*4,8'd18);
-     // MEM_PIC_READ_REQ(JUMP*4+sw_cnn_x_n,8'd19);
-     // MEM_PIC_READ_REQ(JUMP*4+sw_cnn_x_n*2,8'd20);
-     // MEM_PIC_READ_REQ(JUMP*4+sw_cnn_x_n*3,8'd21);
-     // //==============================================
-     // MEM_PIC_READ_REQ(JUMP*5,8'd22);
-     // MEM_PIC_READ_REQ(JUMP*5+sw_cnn_x_n,8'd23);
-     // MEM_PIC_READ_REQ(JUMP*5+sw_cnn_x_n*2,8'd24);
-     // MEM_PIC_READ_REQ(JUMP*5+sw_cnn_x_n*3,8'd25);
-     // //==============================================
-     // MEM_PIC_READ_REQ(JUMP*6,8'd26);
-     // MEM_PIC_READ_REQ(JUMP*6+sw_cnn_x_n,8'd27);
-     // MEM_PIC_READ_REQ(JUMP*6+sw_cnn_x_n*2,8'd28);
-     // MEM_PIC_READ_REQ(JUMP*6+sw_cnn_x_n*3,8'd29);
-     // //==============================================
-        WINDOWS_IN_RAW(124,calc_row);
+
+        WINDOWS_IN_RAW(X_ROWS_NUM-Y_ROWS_NUM,calc_row);
           calc_row=calc_row+1'b1;
           $monitor("end %d row at %0t",calc_row,$time);
   
-        for(integer i=1;i<125;i++)
+        for(integer i=1;i<(X_ROWS_NUM-Y_ROWS_NUM+1);i++)
         begin
-          WINDOWS_IN_RAW(125,calc_row);
+          WINDOWS_IN_RAW(X_ROWS_NUM-Y_ROWS_NUM+1,calc_row);
           calc_row=calc_row+1'b1;
           $monitor("end %d row at %0t",calc_row,$time);         
         end
 
-
-   
-    // wait(mem_intf_write.mem_req && mem_intf_read_pic.mem_start_addr==mem_intf_read_pic.mem_size_bytes)
-    //   mem_intf_write_mem_gnt=1'b1;
     $display("done");
     
   end
@@ -500,4 +493,3 @@ endtask // MEM_PIC_READ_REQ_FRST
   //   end
 
   endmodule
-
