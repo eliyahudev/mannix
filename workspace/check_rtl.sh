@@ -1,2 +1,2 @@
 #!/usr/bin/bash
-irun -sv ../rtl/*.sv
+irun -sv ../rtl/*.sv ../rtl/mem_intf.svh +incdir+../rtl/
