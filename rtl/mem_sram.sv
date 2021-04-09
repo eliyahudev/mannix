@@ -15,7 +15,9 @@ module mem_sram
 	input read,
 	input [18:0] addr, 
 	input write,
-	output logic [255:0] data_out
+	input mask_enable,
+	input [255:0] mask, //where the bit that high, there the new data will written 
+	output logic [255:0] data_out,
 	output logic [262144-1:0] debug_mem //for debug - need to be deleted
 	);
 	
@@ -23,8 +25,10 @@ module mem_sram
 	
 	always @(posedge clk)
 		if (cs) begin
-			if (write && !read)
+			if (write && !read && !mask_enable)
 				mem[addr[14:5]]<=data_in;//the [4:0] bits are the 32B inside the line
+			if (write && !read && mask_enable)
+				mem[addr[14:5]]<=data_in & mask | mem[addr[14:5]];//the [4:0] bits are the 32B inside the line
 			if (read && !write)
 				data_out<=mem[addr[14:5]];
 		end

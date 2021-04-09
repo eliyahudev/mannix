@@ -8,7 +8,13 @@ the sw responsible to load this module, this can be done in two ways:
 //Original Author   : Simhi Gerner
 //Original Date     : 27-Nov-2020
 //======================================================================================================*/
-module mannix_mem_farm (
+`include "mem_intf.svh"
+module mannix_mem_farm #(
+	parameter WORD_WIDTH=8,
+	parameter NUM_WORDS_IN_LINE=32,
+	parameter ADDR_WIDTH=19
+	)
+	(
 	input clk, // Clock
  	input rst_n, // Reset
 	mem_intf_read.memory_read fcc_pic_r,
@@ -39,7 +45,7 @@ module mannix_mem_farm (
 //	logic [15:0] write_sram; should be removed when test will pass
 	logic [15:0][18:0] addr_sram;
 	logic [15:0][255:0] data_out_sram, data_to_align, data_to_client, data_in_demux;
-	logic [15:0][255:0] data_in_sram;
+	logic [15:0][255:0] data_in_sram, data_req_ctrl_to_sram;
 	logic [15:0][4:0] num_bytes_valid;
 	logic [15:0] cs;
 	logic [15:0] client_read_req;
@@ -47,14 +53,43 @@ module mannix_mem_farm (
 	logic data_valid_demux, valid_to_demux;
 	logic req_for_sw;
 	logic [15:0][262143:0] debug_mem;
-
+	logic [15:0] mask_enable;
+	logic [15:0][255:0] mask;
+	logic [15:0][15:0] req_arb, gnt_arb, req_req_ctrl, gnt_req_ctrl;
 	assign client_read_req = {10'd0,fcc_pic_r.mem_req, fcc_wgt_r.mem_req, fcc_bias_r.mem_req, 
 	cnn_pic_r.mem_req, cnn_wgt_r.mem_req, pool_r.mem_req};
 
 	assign client_read_addr = {{10{19'b0}},fcc_pic_r.mem_start_addr, fcc_wgt_r.mem_start_addr,
 	fcc_bias_r.mem_start_addr, cnn_pic_r.mem_start_addr, cnn_wgt_r.mem_start_addr, pool_r.mem_start_addr};
-
+	// divide the interface signal to input and output structs
+	// because array of interface cannot be
+	req_ctrl_in_s [15:0] req_ctrl_in;
+	req_ctrl_out_s [15:0] req_ctrl_out;
 	
+	assign req_ctrl_in[0] = {fcc_pic_r.mem_req, fcc_pic_r.mem_start_addr, fcc_pic_r.mem_size_bytes, 295'b0 };
+	assign req_ctrl_in[1] = {fcc_wgt_r.mem_req, fcc_wgt_r.mem_start_addr, fcc_wgt_r.mem_size_bytes, 295'b0 };
+	assign req_ctrl_in[2] = {fcc_bias_r.mem_req, fcc_bias_r.mem_start_addr, fcc_bias_r.mem_size_bytes, 295'b0 };
+	assign req_ctrl_in[3] = {cnn_pic_r.mem_req, cnn_pic_r.mem_start_addr, cnn_pic_r.mem_size_bytes, 295'b0 };
+	assign req_ctrl_in[4] = {cnn_wgt_r.mem_req, cnn_wgt_r.mem_start_addr, cnn_wgt_r.mem_size_bytes, 295'b0 };
+	assign req_ctrl_in[5] = {pool_r.mem_req, pool_r.mem_start_addr, pool_r.mem_size_bytes, 295'b0 };
+
+	assign req_ctrl_in[6] = {39'b0, fcc_w.mem_req, fcc_w.mem_start_addr, fcc_w.mem_size_bytes, fcc_w.mem_data };
+	assign req_ctrl_in[7] = {39'b0, cnn_w.mem_req, cnn_w.mem_start_addr, cnn_w.mem_size_bytes, cnn_w.mem_data };
+	assign req_ctrl_in[8] = {39'b0, pool_w.mem_req, pool_w.mem_start_addr, pool_w.mem_size_bytes, pool_w.mem_data };
+	assign req_ctrl_in[15:9] = 'b0;
+
+	assign req_ctrl_out[0] = {fcc_pic_r.mem_valid, fcc_pic_r.mem_data, 1'b0};
+	assign req_ctrl_out[1] = {fcc_wgt_r.mem_valid, fcc_wgt_r.mem_data, 1'b0};
+	assign req_ctrl_out[2] = {fcc_bias_r.mem_valid, fcc_bias_r.mem_data, 1'b0};
+	assign req_ctrl_out[3] = {cnn_pic_r.mem_valid, cnn_pic_r.mem_data, 1'b0};
+	assign req_ctrl_out[4] = {cnn_wgt_r.mem_valid, cnn_wgt_r.mem_data, 1'b0};
+	assign req_ctrl_out[5] = {pool_r.mem_valid, pool_r.mem_data, 1'b0};
+
+	assign req_ctrl_out[6] = {257'b0, fcc_w.mem_ack};
+	assign req_ctrl_out[7] = {257'b0, cnn_w.mem_ack};
+	assign req_ctrl_out[8] = {257'b0, pool_w.mem_ack};
+	assign req_ctrl_out[15:9] = 'b0;
+
 	mem_demux i_mem_demux(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -92,8 +127,10 @@ module mannix_mem_farm (
 				.addr(addr_sram[i]),
 				.write(cs[i]),
 				.data_out(data_out_sram[i]),
-				.debug_mem(debug_mem[i])
-			);
+				.mask_enable(mask_enable[i]),
+				.mask(mask[i]),
+				.debug_mem(debug_mem[i])	
+				);
 
 			mem_align i_mem_align(
 				.clk(clk),
@@ -102,8 +139,30 @@ module mannix_mem_farm (
 				.num_bytes(num_bytes_valid[i]),
 				.data_out(data_to_client[i])
 			);
+			mem_arbiter #(.PORTS(16)) i_mem_arbiter(
+				.clk(clk),
+				.rst_n(rst_n),
+				.req(req_arb[i]),
+				.gnt(gnt_arb[i])
+			);
+			
+			
+
+				
 		end
 	endgenerate
+			mem_req_ctrl i_req_ctrl(
+				.clk(clk),
+				.rst_n(rst_n),
+				.intf_in(req_ctrl_in),
+				.intf_out(req_ctrl_out),
+				.req(req_arb),
+				.gnt(gnt_arb),
+				.data_in(data_out_sram),
+				.data_out(data_req_ctrl_to_sram),
+				.mask(mask),
+				.mask_enable(mask_enable)
+			);  
 	mem_ctrl i_mem_ctrl(
 		.clk(clk),
 		.rst_n(rst_n),

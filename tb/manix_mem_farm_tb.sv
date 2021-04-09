@@ -26,6 +26,7 @@ module manix_mem_farm_tb ();
 	logic odd;
 	integer which_part, which_bank, which_addr,mem_start_addr_fixed;
 	logic [16383:0][255:0] values_of_memory;
+	logic mem_ack;
   
   	//interfaces
   	mem_intf_read mem_intf_read_wgt_fcc();
@@ -69,6 +70,15 @@ module manix_mem_farm_tb ();
 
 	always #5 clk = !clk;
 
+	always @(posedge clk or negedge rst_n)
+		if (!rst_n) begin
+			mem_ack<='0;
+		end
+		else if(write_sw_req.mem_ack)
+				mem_ack<=1'b1;
+			else
+				mem_ack<=1'b0;
+
 	initial begin
 		//initial values and reset
       	clk= 1'b1;
@@ -87,15 +97,16 @@ module manix_mem_farm_tb ();
       	#31 rst_n= 1'b1;
       	//send req and data
       	#19
-/////////////////////////////////////////
-//             part 1                 //
-////////////////////////////////////////
+//////////////////////////////////////////////////////////
+//             part 1                 					//
+//writing to addresses 0-15 the values 0-15 respectively//
+//////////////////////////////////////////////////////////
 		//send req and data
 		write_sw_req.mem_req=1'b1;
 		write_sw_req.mem_start_addr=1'b0;
 		$display("writing to addresses 0-15 the values 0-15 respectively");
 		for (int j=0; j < 16; j++) begin
-			write_sw_req.mem_data[j]=0;
+			write_sw_req.mem_data[j]=j;
 		end
 	
 		wait (write_sw_req.mem_ack==1'b1) @(posedge clk)
@@ -113,14 +124,18 @@ module manix_mem_farm_tb ();
 			//check for fail
 			if (manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:255]!=write_sw_req.mem_data[i])begin
 				$display("TEST FAIL\nloop=%d bank=%d, addr=%d \n expected:%d, actual:%d",
-				i,which_bank,which_addr,write_sw_req.mem_data[i],manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:255]);
+				i,which_bank,which_addr,write_sw_req.mem_data[i][31:0],manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:31]);
 				$finish();
 			end
+			else
+				$display("check passed\nloop=%d bank=%d, addr=%d \n expected:%d, actual:%d",
+				i,which_bank,which_addr,write_sw_req.mem_data[i][31:0],manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:31]);
 		end
 		$display("PASS");
-/////////////////////////////////////////
-//             part 2                 //
-////////////////////////////////////////
+////////////////////////////////////////////
+//                 part 2                 //
+//writing to addresses 1-16 random numbers//
+////////////////////////////////////////////
 		#10
 		//send req and data
 		write_sw_req.mem_req=1'b1;
@@ -145,14 +160,18 @@ module manix_mem_farm_tb ();
 			//check for fail
 			if (manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:255]!=write_sw_req.mem_data[i])begin
 				$display("TEST FAIL\nloop=%d bank=%d, addr=%d \n expected:%d, actual:%d",
-				i,which_bank,which_addr,write_sw_req.mem_data[i],manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:255]);
+				i,which_bank,which_addr,write_sw_req.mem_data[i][31:0],manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:31]);
 				$finish();
 			end
+			else
+				$display("check passed\nloop=%d bank=%d, addr=%d \n expected:%d, actual:%d",
+				i,which_bank,which_addr,write_sw_req.mem_data[i][31:0],manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:31]);
 		end
 		$display("PASS");
-/////////////////////////////////////////
-//             part 3                 //
-////////////////////////////////////////
+/////////////////////////////////////////////////////////////////
+//                         part 3                              //
+//writing to addresses 2045-2060 the values 0-15 respectively //
+////////////////////////////////////////////////////////////////
 		#10
 		//send req and data
 		write_sw_req.mem_req=1'b1;
@@ -177,14 +196,18 @@ module manix_mem_farm_tb ();
 			//check for fail
 			if (manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:255]!=write_sw_req.mem_data[i])begin
 				$display("TEST FAIL\nloop=%d bank=%d, addr=%d \n expected:%d, actual:%d",
-				i,which_bank,which_addr,write_sw_req.mem_data[i],manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:255]);
+				i,which_bank,which_addr,write_sw_req.mem_data[i][31:0],manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:31]);
 				$finish();
 			end
+			else
+				$display("check passed\nloop=%d bank=%d, addr=%d \n expected:%d, actual:%d",
+				i,which_bank,which_addr,write_sw_req.mem_data[i][31:0],manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:31]);
 		end
 		$display("PASS");
-/////////////////////////////////////////
-//             part 4                 //
-////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+//                                        part 4                                         //
+// writing to addresses 2045-2076 the values 0-31 respectively req after req immedietly //
+//////////////////////////////////////////////////////////////////////////////////////////
 		#10
 		//send req and data
 		write_sw_req.mem_req=1'b1;
@@ -192,37 +215,42 @@ module manix_mem_farm_tb ();
 		$display("writing to addresses 2045-2076 the values 0-31 respectively req after req immedietly");
 		for (int j=0; j < 16; j++) begin
 			write_sw_req.mem_data[j]=j;
+			values_of_memory[j]=write_sw_req.mem_data[j];
 		end
-	
-		wait (write_sw_req.mem_ack==1'b1) @(posedge clk)
+		wait (mem_ack) @(posedge clk)
 		write_sw_req.mem_start_addr=write_sw_req.mem_start_addr+16;
 		for (int j=0; j < 16; j++) begin
 			write_sw_req.mem_data[j]=j+16;
+			values_of_memory[16+j]=write_sw_req.mem_data[j];
 		end
 		write_sw_req.mem_req=1'b1;
-		wait (write_sw_req.mem_ack==1'b1) @(posedge clk)
+		wait (mem_ack) @(posedge clk)
 		write_sw_req.mem_req=1'b0;
 		#130
 		$display("check for correct values");
 		for (int i=0; i < 32; i++) begin
-			if ((i+write_sw_req.mem_start_addr)%2==0)
+			if ((i+write_sw_req.mem_start_addr-16)%2==0)
 				odd=0;
 			else
 				odd=1;
-			which_part= (i+write_sw_req.mem_start_addr)/2048;
+			which_part= (i+write_sw_req.mem_start_addr-16)/2048;
 			which_bank=which_part*2+odd;
-			which_addr=((i+write_sw_req.mem_start_addr)%2048-odd)/2;
+			which_addr=((i+write_sw_req.mem_start_addr-16)%2048-odd)/2;
 			//check for fail
-			if (manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:255]!=write_sw_req.mem_data[i])begin
+			if (manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:255]!=values_of_memory[i])begin
 				$display("TEST FAIL\nloop=%d bank=%d, addr=%d \n expected:%d, actual:%d",
-				i,which_bank,which_addr,write_sw_req.mem_data[i],manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:255]);
+				i,which_bank,which_addr,values_of_memory[i][31:0],manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:31]);
 				$finish();
 			end
+			else
+				$display("check passed\nloop=%d bank=%d, addr=%d \n expected:%d, actual:%d",
+				i,which_bank,which_addr,values_of_memory[i][31:0],manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:31]);
 		end
 		$display("PASS");
-/////////////////////////////////////////
-//             part 5                 //
-////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+//                                part 5                                          //
+// writing to all the memory start from addr 0 with numbers in increasing order   //
+////////////////////////////////////////////////////////////////////////////////////
 		#10
 		//send req and data
 		write_sw_req.mem_req=1'b1;
@@ -256,14 +284,19 @@ module manix_mem_farm_tb ();
 			//check for fail
 			if (manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:255]!=write_sw_req.mem_data[i])begin
 				$display("TEST FAIL\nloop=%d bank=%d, addr=%d \n expected:%d, actual:%d",
-				i,which_bank,which_addr,write_sw_req.mem_data[i],manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:255]);
+				i,which_bank,which_addr,write_sw_req.mem_data[i][31:0],manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:31]);
 				$finish();
 			end
+			else
+				$display("check passed\nloop=%d bank=%d, addr=%d \n expected:%d, actual:%d",
+				i,which_bank,which_addr,write_sw_req.mem_data[i][31:0],manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:31]);
 		end
 		$display("PASS");
-/////////////////////////////////////////
-//             part 6                 //
-////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+//                                    part 6                               //
+//   writing to all the memory (except the first and the 15 last addresses)// 
+//  start from addr 1 with numbers in increasing order                     //
+/////////////////////////////////////////////////////////////////////////////
 /*
 		#10
 		//send req and data
@@ -299,9 +332,12 @@ module manix_mem_farm_tb ();
 			//check for fail
 			if (manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:255]!=values_of_memory[i])begin
 				$display("TEST FAIL\nloop=%d bank=%d, addr=%d \n expected:%d, actual:%d",
-				i,which_bank,which_addr,values_of_memory[i],manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:255]);
+				i,which_bank,which_addr,values_of_memory[i],manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:31]);
 				$finish();
 			end
+			else
+				$display("check passed\nloop=%d bank=%d, addr=%d \n expected:%d, actual:%d",
+				i,which_bank,which_addr,write_sw_req.mem_data[i][31:0],manix_mem_farm_tb.i_mannix_mem_farm.debug_mem[which_bank][which_addr*256+:31]);
 		end
 		$display("PASS");
 		*/

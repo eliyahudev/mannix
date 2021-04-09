@@ -17,7 +17,3 @@ interface mem_intf_write
 		modport memory_write (input mem_req, mem_start_addr, mem_size_bytes, last, mem_data, mem_last_valid,
 	   					 output mem_ack);
 endinterface
-	   					
-
-
-

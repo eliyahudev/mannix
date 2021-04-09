@@ -160,7 +160,8 @@ module mannix #(
         .sw_cnn_go(sw_cnn_go),
         .sw_cnn_done(sw_cnn_done),
         //Debug output - Internal use
-        .data2write_out()
+        .data2write_out(),
+		.activation_out_smpl()
 	);
 
 	mannix_mem_farm i_mannix_mem_farm (
