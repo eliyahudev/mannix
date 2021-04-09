@@ -30,20 +30,20 @@ module acc_cnn_tb ();
   parameter LOG2_MAX_BYTES_TO_WR=$clog2(MAX_BYTES_TO_WR);
   parameter MEM_DATA_BUS=128;
 
-  parameter X_ROWS_NUM=128;
-  parameter X_COLS_NUM=128;
+  parameter X_ROWS_NUM=28;
+  parameter X_COLS_NUM=28;
                      
   parameter X_LOG2_ROWS_NUM =$clog2(X_ROWS_NUM);
   parameter X_LOG2_COLS_NUM =$clog2(X_COLS_NUM); 
   
 
-  parameter Y_ROWS_NUM=4;
-  parameter Y_COLS_NUM=4;
+  parameter Y_ROWS_NUM=5;
+  parameter Y_COLS_NUM=5;
                      
   parameter Y_LOG2_ROWS_NUM =$clog2(Y_ROWS_NUM);
   parameter Y_LOG2_COLS_NUM =$clog2(Y_COLS_NUM);
 
-  parameter DP_DEPTH=4;
+  parameter DP_DEPTH=5;
 
   reg         clk;
   reg         rst_n;
@@ -119,15 +119,15 @@ assign clk = clk_enable ? clk_config_tb : 1'b0;
   initial
     begin
 
-      // dta = $fopen("/u/e2017/dabushn3/project_4th/proj/mannix/vfiles_text_files_for_cnn/data.txt", "r");
-      // wgt = $fopen("/u/e2017/dabushn3/project_4th/proj/mannix/vfiles_text_files_for_cnn/weights.txt", "r");
-      // res_real = $fopen("/u/e2017/dabushn3/project_4th/proj/mannix/vfiles_text_files_for_cnn/res_real.txt", "r");
-      // res = $fopen("/u/e2017/dabushn3/project_4th/proj/mannix/vfiles_text_files_for_cnn/results_after_activation.txt", "r");
+      dta = $fopen("/nfs/site/stod/areas/d/w.dabushni.102/PROJECT_4TH_YEAR/data.txt", "r");
+      wgt = $fopen("/nfs/site/stod/areas/d/w.dabushni.102/PROJECT_4TH_YEAR/weights.txt", "r");
+      res_real = $fopen("/nfs/site/stod/areas/d/w.dabushni.102/PROJECT_4TH_YEAR/res_real.txt", "r");
+      res = $fopen("/nfs/site/stod/areas/d/w.dabushni.102/PROJECT_4TH_YEAR/results_after_activation.txt", "r");
       
-      dta = $fopen("/u/e2017/dabushn3/project_4th/proj/mannix/vfiles_text_files_for_cnn/128x128/data.txt", "r");
-      wgt = $fopen("/u/e2017/dabushn3/project_4th/proj/mannix/vfiles_text_files_for_cnn/128x128/weights.txt", "r");
-      res_real = $fopen("/u/e2017/dabushn3/project_4th/proj/mannix/vfiles_text_files_for_cnn/128x128/res_real.txt", "r");
-      res = $fopen("/u/e2017/dabushn3/project_4th/proj/mannix/vfiles_text_files_for_cnn/128x128/results_after_activation.txt", "r");
+      // dta = $fopen("/nfs/site/stod/areas/d/w.dabushni.102/PROJECT_4TH_YEAR/128x128/data.txt", "r");
+      // wgt = $fopen("/nfs/site/stod/areas/d/w.dabushni.102/PROJECT_4TH_YEAR/128x128/weights.txt", "r");
+      // res_real = $fopen("/nfs/site/stod/areas/d/w.dabushni.102/PROJECT_4TH_YEAR/128x128/res_real.txt", "r");
+      // res = $fopen("/nfs/site/stod/areas/d/w.dabushni.102/PROJECT_4TH_YEAR/128x128/results_after_activation.txt", "r");
       
       clk_enable = 1'b1;
       clk_config_tb   = 1'b0;
@@ -454,7 +454,7 @@ endtask // MEM_PIC_READ_REQ_FRST
       MEM_PIC_READ_REQ(sw_cnn_x_n,Y_ROWS_NUM);
       MEM_PIC_READ_REQ(sw_cnn_x_n*2,Y_ROWS_NUM);
       MEM_PIC_READ_REQ(sw_cnn_x_n*3,Y_ROWS_NUM);
-      //MEM_PIC_READ_REQ(sw_cnn_x_n*4,Y_ROWS_NUM);
+      MEM_PIC_READ_REQ(sw_cnn_x_n*4,Y_ROWS_NUM);
       wait(data2write_out==results_real[0])
         $monitor ("index: 0 equal, Value: %d",results_real[0]);
 

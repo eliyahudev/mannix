@@ -14,9 +14,9 @@ module dot_product_parallel (a, b, res);
   input signed [7:0] b [0:DEPTH-1];
   output signed [31:0] res ;
 
-  wire signed [31:0] res_sum [0:DEPTH-1];
+  wire signed [31:0] res_sum [0:DEPTH-1+1];
 
-  wire signed [31:0] res_tmp [0:DEPTH-1];
+  wire signed [31:0] res_tmp [0:DEPTH-1+2];
   
   genvar       i;
 generate
