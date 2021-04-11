@@ -232,10 +232,10 @@ assign clk = clk_enable ? clk_config_tb : 1'b0;
       // res_real = $fopen("/nfs/site/stod/areas/d/w.dabushni.102/PROJECT_4TH_YEAR/res_real.txt", "r");
       // res = $fopen("/nfs/site/stod/areas/d/w.dabushni.102/PROJECT_4TH_YEAR/results_after_activation.txt", "r");
       
-      dta = $fopen("/nfs/site/stod/areas/d/w.dabushni.102/PROJECT_4TH_YEAR/128x128/data.txt", "r");
-      wgt = $fopen("/nfs/site/stod/areas/d/w.dabushni.102/PROJECT_4TH_YEAR/128x128/weights.txt", "r");
-      res_real = $fopen("/nfs/site/stod/areas/d/w.dabushni.102/PROJECT_4TH_YEAR/128x128/res_real.txt", "r");
-      res = $fopen("/nfs/site/stod/areas/d/w.dabushni.102/PROJECT_4TH_YEAR/128x128/results_after_activation.txt", "r");
+      dta = $fopen("../txt_files/128x128/data.txt", "r");
+      wgt = $fopen("../txt_files/128x128/weights.txt", "r");
+      res_real = $fopen("../txt_files/128x128/res_real.txt", "r");
+      res = $fopen("../txt_files/128x128/results_after_activation.txt", "r");
       
       clk_enable = 1'b1;
       clk_config_tb   = 1'b0;
@@ -279,10 +279,10 @@ assign clk = clk_enable ? clk_config_tb : 1'b0;
 //FCC
       $monitor("START FCC TEST\n");
 
-	  fcc_dta = $fopen("../vfiles_text_files_for_cnn/data_bin.txt", "r");
-      fcc_wgt = $fopen("../vfiles_text_files_for_cnn/weights_bin.txt", "r");
-      fcc_b   = $fopen("../vfiles_text_files_for_cnn/bias_bin.txt", "r");
-      fcc_res = $fopen("../vfiles_text_files_for_cnn/result_bin.txt", "r");
+	  fcc_dta = $fopen("../txt_files/data_bin.txt", "r");
+      fcc_wgt = $fopen("../txt_files/weights_bin.txt", "r");
+      fcc_b   = $fopen("../txt_files/bias_bin.txt", "r");
+      fcc_res = $fopen("../txt_files/result_bin.txt", "r");
 
 	
       FCC_RESET_VALUES();
