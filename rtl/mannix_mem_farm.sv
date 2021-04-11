@@ -22,10 +22,12 @@ module mannix_mem_farm #(
 	mem_intf_read.memory_read fcc_bias_r,
 	mem_intf_read.memory_read cnn_pic_r,
 	mem_intf_read.memory_read cnn_wgt_r,
+	mem_intf_read.memory_read cnn_bias_r,
 	mem_intf_read.memory_read pool_r,
 	mem_intf_write.memory_write fcc_w,
 	mem_intf_write.memory_write cnn_w,
 	mem_intf_write.memory_write pool_w,
+	mem_intf_write.memory_write sw_w, //req dor writing the memory -intf like the clients
 	mem_intf_read.client_read read_ddr_req, //req for reading from the ddr to this memory farm
 	mem_intf_write.client_write write_ddr_req, //req for writing to the ddr from this memory farm
 	mem_intf_write.client_write write_sw_req, //the sotware req for writing directly to this memory farm
@@ -47,7 +49,7 @@ module mannix_mem_farm #(
 	logic [15:0][255:0] data_out_sram, data_to_align, data_to_client, data_in_demux;
 	logic [15:0][255:0] data_in_sram, data_req_ctrl_to_sram;
 	logic [15:0][4:0] num_bytes_valid;
-	logic [15:0] cs;
+	logic [15:0] cs, cs_req, cs_init;
 	logic [15:0] client_read_req;
 	logic [15:0][18:0] client_read_addr;
 	logic data_valid_demux, valid_to_demux;
@@ -72,11 +74,13 @@ module mannix_mem_farm #(
 	assign req_ctrl_in[3] = {cnn_pic_r.mem_req, cnn_pic_r.mem_start_addr, cnn_pic_r.mem_size_bytes, 295'b0 };
 	assign req_ctrl_in[4] = {cnn_wgt_r.mem_req, cnn_wgt_r.mem_start_addr, cnn_wgt_r.mem_size_bytes, 295'b0 };
 	assign req_ctrl_in[5] = {pool_r.mem_req, pool_r.mem_start_addr, pool_r.mem_size_bytes, 295'b0 };
+	assign req_ctrl_in[6] = {cnn_bias_r.mem_req, cnn_bias_r.mem_start_addr, cnn_bias_r.mem_size_bytes, 295'b0 };
 
-	assign req_ctrl_in[6] = {39'b0, fcc_w.mem_req, fcc_w.mem_start_addr, fcc_w.mem_size_bytes, fcc_w.mem_data };
-	assign req_ctrl_in[7] = {39'b0, cnn_w.mem_req, cnn_w.mem_start_addr, cnn_w.mem_size_bytes, cnn_w.mem_data };
-	assign req_ctrl_in[8] = {39'b0, pool_w.mem_req, pool_w.mem_start_addr, pool_w.mem_size_bytes, pool_w.mem_data };
-	assign req_ctrl_in[15:9] = 'b0;
+	assign req_ctrl_in[7] = {39'b0, fcc_w.mem_req, fcc_w.mem_start_addr, fcc_w.mem_size_bytes, fcc_w.mem_data };
+	assign req_ctrl_in[8] = {39'b0, cnn_w.mem_req, cnn_w.mem_start_addr, cnn_w.mem_size_bytes, cnn_w.mem_data };
+	assign req_ctrl_in[9] = {39'b0, pool_w.mem_req, pool_w.mem_start_addr, pool_w.mem_size_bytes, pool_w.mem_data };
+	assign req_ctrl_in[10] = {39'b0, sw_w.mem_req, sw_w.mem_start_addr, sw_w.mem_size_bytes, sw_w.mem_data };
+	assign req_ctrl_in[15:11] = 'b0;
 
 	assign req_ctrl_out[0] = {fcc_pic_r.mem_valid, fcc_pic_r.mem_data, 1'b0};
 	assign req_ctrl_out[1] = {fcc_wgt_r.mem_valid, fcc_wgt_r.mem_data, 1'b0};
@@ -84,11 +88,13 @@ module mannix_mem_farm #(
 	assign req_ctrl_out[3] = {cnn_pic_r.mem_valid, cnn_pic_r.mem_data, 1'b0};
 	assign req_ctrl_out[4] = {cnn_wgt_r.mem_valid, cnn_wgt_r.mem_data, 1'b0};
 	assign req_ctrl_out[5] = {pool_r.mem_valid, pool_r.mem_data, 1'b0};
+	assign req_ctrl_out[6] = {cnn_bias_r.mem_valid, cnn_bias_r.mem_data, 1'b0};
 
-	assign req_ctrl_out[6] = {257'b0, fcc_w.mem_ack};
-	assign req_ctrl_out[7] = {257'b0, cnn_w.mem_ack};
-	assign req_ctrl_out[8] = {257'b0, pool_w.mem_ack};
-	assign req_ctrl_out[15:9] = 'b0;
+	assign req_ctrl_out[7] = {257'b0, fcc_w.mem_ack};
+	assign req_ctrl_out[8] = {257'b0, cnn_w.mem_ack};
+	assign req_ctrl_out[9] = {257'b0, pool_w.mem_ack};
+	assign req_ctrl_out[10] = {257'b0, sw_w.mem_ack};
+	assign req_ctrl_out[15:11] = 'b0;
 
 	mem_demux i_mem_demux(
 		.clk(clk),
@@ -99,13 +105,14 @@ module mannix_mem_farm #(
 		.last (last_demux),
 		.num_of_last_valid(num_of_last_valid_demux),
 		.data_out(data_in_sram),
-		.cs(cs),
+		.cs(cs_init),
 		.addr_sram(addr_sram),
 		.demux_busy(demux_busy)
 	);
 	assign req_from_sw = write_sw_req.mem_req;
-	assign data_valid_demux= req_from_sw ? valid_to_demux : read_ddr_req.mem_valid;
+	assign data_valid_demux= |cs_req ? data_req_ctrl_to_sram : req_from_sw ? valid_to_demux : read_ddr_req.mem_valid;
 	assign data_in_demux = req_from_sw ? write_sw_req.mem_data : read_ddr_req.mem_data;
+	assign cs= |cs_req ? cs_req : cs_init;
 
 	mem_fabric i_mem_fabric(
 		.clk(clk),
@@ -161,7 +168,8 @@ module mannix_mem_farm #(
 				.data_in(data_out_sram),
 				.data_out(data_req_ctrl_to_sram),
 				.mask(mask),
-				.mask_enable(mask_enable)
+				.mask_enable(mask_enable),
+				.req_sram(cs_req)
 			);  
 	mem_ctrl i_mem_ctrl(
 		.clk(clk),

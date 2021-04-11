@@ -62,6 +62,13 @@ module cnn (
   parameter JUMP_COL=1;
   parameter JUMP_ROW=1;
 
+  parameter MEM_DATA_BUS=128;
+  parameter MAX_BYTES_TO_RD=20;
+  parameter LOG2_MAX_BYTES_TO_RD=$clog2(MAX_BYTES_TO_RD);  
+  parameter MAX_BYTES_TO_WR=5;  
+  parameter LOG2_MAX_BYTES_TO_WR=$clog2(MAX_BYTES_TO_WR);
+
+
 
 //===============================================================================
 //                              FSM STATES

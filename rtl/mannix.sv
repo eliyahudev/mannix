@@ -40,6 +40,7 @@ module mannix #(
 	input 				read_from_ddr,
 	input 				write_to_ddr,
 	input [4:0] 		client_priority,
+	mem_intf_write.memory_write mem_intf_write_sw,
 
 	//port for fcc
 	input [31:0] 		fc_addrx, 
@@ -172,6 +173,8 @@ module mannix #(
 		.fcc_bias_r(mem_intf_read_bias_fcc),
 		.cnn_pic_r(mem_intf_read_pic_cnn),
 		.cnn_wgt_r(mem_intf_read_wgt_cnn),
+		.cnn_bias_r(mem_intf_read_bias_cnn),
+		.sw_w(mem_intf_write_sw),
 		.pool_r(mem_intf_read_mx_pool),
 		.fcc_w(mem_intf_write_fcc),
 		.pool_w(mem_intf_write_pool),
