@@ -6,7 +6,6 @@
 //                    
 //
 //======================================================================================================
-`timescale 1ns/1ps
 
 module acc_pool_tb ();
 
@@ -86,8 +85,8 @@ assign clk = clk_enable ? clk_config_tb : 1'b0;
   
   initial
     begin
-      dta = $fopen("/u/e2017/lalazan/Desktop/Final_project/files2run/data.txt", "r");
-      res = $fopen("/u/e2017/lalazan/Desktop/Final_project/files2run/results.txt", "r");
+      dta = $fopen("/u/e2017/lalazan/Desktop/Final_project/mannix/txt_files/pool_data.txt", "r");
+      res = $fopen("/u/e2017/lalazan/Desktop/Final_project/mannix/txt_files/pool_results.txt", "r");
       clk_enable      = 1'b1;
       clk_config_tb   = 1'b0;
       pool_go         = 1'b1;

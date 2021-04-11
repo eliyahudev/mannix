@@ -6,4 +6,6 @@ workspace/*
 *irun.history
 *irun.log
 *irun.key
+*.nfs*
+
 
