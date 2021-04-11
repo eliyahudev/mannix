@@ -15,7 +15,7 @@ module acc_mem_wrap_tb ();
 
   parameter DEPTH=4;
 
-  parameter   CLK_PERIOD = 6.25; //80Mhz
+  parameter   CLK_PERIOD = 5;
 
 
   parameter JUMP_COL=1;
@@ -209,7 +209,7 @@ module acc_mem_wrap_tb ();
 	logic [18:0] read_addr_sram;
 	logic [18:0] write_addr_sram;
 	logic odd;
-	integer which_part, which_bank, which_addr,mem_start_addr_fixed;
+	integer which_part, which_bank, which_addr,mem_start_addr_fixed, start_addr;
 	logic [16383:0][255:0] values_of_memory;
 	logic mem_ack;
 	mem_intf_write mem_intf_write_sw();
@@ -271,6 +271,9 @@ assign clk = clk_enable ? clk_config_tb : 1'b0;
       
       RESET_VALUES();
       ASYNC_RESET();
+	  MEM_LOAD();
+	  
+	 
       @(posedge clk)
       cnn_go=1'b0;
      // TEST_128X128_4X4();
@@ -363,6 +366,14 @@ assign clk = clk_enable ? clk_config_tb : 1'b0;
  //DUMMY I/F
   mem_intf_read pool_r();
   mem_intf_write pool_w();
+  initial begin
+  pool_r.mem_req=1'b0;
+  pool_r.mem_start_addr='0;
+  pool_r.mem_size_bytes='0;
+  pool_w.mem_req=1'b0;
+  pool_w.mem_start_addr='0;
+  pool_w.mem_size_bytes='0;
+  end
 
 	mem_intf_read #(.ADDR_WIDTH(32),.NUM_WORDS_IN_LINE(16), .WORD_WIDTH(256))  read_ddr_req();
 	mem_intf_write #(.ADDR_WIDTH(32),.NUM_WORDS_IN_LINE(16), .WORD_WIDTH(256)) write_ddr_req ();
@@ -376,7 +387,7 @@ mannix_mem_farm mannix_mem_farm_ins (
 	.fcc_bias_r(fcc_mem_intf_read_bias),
     .cnn_pic_r(mem_intf_read_pic),
     .cnn_wgt_r(mem_intf_read_wgt),
-	.cnn_bias_r(mem_intf_read_bias_cnn),
+	.cnn_bias_r(mem_intf_read_bias),
 	.sw_w(mem_intf_write_sw),
     .pool_r(pool_r),//DUMMY
     .fcc_w(fcc_mem_intf_write),
@@ -549,7 +560,17 @@ task RESET_VALUES();
    mem_intf_read_bias_mem_data='d0;
    mem_intf_read_bias_mem_last_valid='d0;    
  
-   
+    write_to_ddr=1'b0;
+	read_from_ddr=1'b0;
+	read_ddr_req.mem_valid=1'b0;
+	write_addr_sram=0;
+	write_sw_req.mem_req=1'b0;
+	write_sw_req.last=1'b1;
+	write_sw_req.mem_last_valid = 1'b0;
+	mem_intf_write_sw.mem_req=1'b0;
+    mem_intf_write_sw.mem_start_addr='0;
+    mem_intf_write_sw.mem_size_bytes='0;
+
   
      sw_cnn_addr_bias={ADDR_WIDTH{1'b0}}; // CNN Bias value address 		
      sw_cnn_addr_x={ADDR_WIDTH{1'b0}};	// CNN Data window FIRST address
@@ -565,6 +586,39 @@ task RESET_VALUES();
     end
   endtask // ASYNC_RESET
 
+  task MEM_LOAD();
+	  begin
+	#4
+	#5
+	#10
+	  $display("writing to addresses 0 the values 256'b1111");
+	  mem_intf_write_sw.mem_start_addr='0;
+	  mem_intf_write_sw.mem_size_bytes=6'd32;
+	  mem_intf_write_sw.mem_req=1'b1;
+	  mem_intf_write_sw.mem_data=256'b1111;
+	  wait (mem_intf_write_sw.mem_ack)
+     @(posedge clk)
+	 mem_intf_write_sw.mem_req=1'b0;
+	 if (start_addr[0]==0)
+				odd=0;
+			else
+				odd=1;
+			which_part= start_addr/2048;
+			which_bank=which_part*2+odd;
+			which_addr=((start_addr+mem_intf_write_sw.mem_start_addr)%2048-odd)/2;
+			//check for fail
+			if (acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*256+:255]!=mem_intf_write_sw.mem_data[start_addr])begin
+				$display("TEST FAIL\nloop=%d bank=%d, addr=%d \n expected:%d, actual:%d",
+				start_addr,which_bank,which_addr,mem_intf_write_sw.mem_data[start_addr][31:0],acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*256+:31]);
+				$finish();
+			end
+			else begin
+				$display("check passed\nloop=%d bank=%d, addr=%d \n expected:%d, actual:%d",
+				start_addr,which_bank,which_addr,mem_intf_write_sw.mem_data[start_addr][31:0],acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*256+:31]);
+		end
+		$display("PASS");
+	end
+  endtask //// MEM_LOAD
   integer j;
 
  

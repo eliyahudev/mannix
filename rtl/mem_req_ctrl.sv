@@ -464,13 +464,17 @@ module mem_req_ctrl
 						if (read_prior[i])
 							if (two_read_req[i] && !two_read_req_need_one[i])
 								next_state[i]=READ_TWO;
-							else
-								next_state[i]=READ_ONE;
+							else if (intf_in[i].read_mem_req)
+									next_state[i]=READ_ONE;
+								else
+									next_state[i]=IDLE;
 						else
 							if (two_write_req[i])
 								next_state[i]=WRITE_TWO;
-							else
-								next_state[i]=WRITE_ONE;
+							else if (intf_in[i].write_mem_req)
+									next_state[i]=WRITE_ONE;
+								else
+									next_state[i]=IDLE;
 					READ_TWO:
 						if (read_gnt_cnt[i] ==2'd3)
 							if (!intf_in[i].read_mem_req && !intf_in[i].write_mem_req)
