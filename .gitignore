@@ -5,4 +5,5 @@ workspace/*
 */INCA_libs/
 *irun.history
 *irun.log
+*irun.key
 
