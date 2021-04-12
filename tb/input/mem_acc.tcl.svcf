@@ -1,0 +1,234 @@
+# SimVision Command Script (Mon Apr 12 01:19:42 AM IDT 2021)
+#
+# Version 19.03.s013
+#
+# You can restore this configuration with:
+#
+#      xrun -sv activation.sv cnn_activation.sv cnn.sv dot_product_parallel.sv dot_product.sv fcc.sv fifo.sv mannix_mem_farm.sv mannix.sv mem_align.sv mem_arbiter.sv mem_ctrl.sv mem_demux.sv mem_fabric.sv mem_intf_read.sv mem_intf_write.sv mem_req_ctrl.sv mem_sram.sv pool.sv sort_4.sv sort_8.sv sort_xy.sv mem_intf.svh ../tb/acc_mem_wrap_tb.sv -debug -input /project/generic/users/gerners/ws/mannix/tb/restore.tcl
+#
+
+
+#
+# Preferences
+#
+preferences set plugin-enable-svdatabrowser-new 1
+preferences set toolbar-Standard-Console {
+  usual
+  position -pos 1
+}
+preferences set toolbar-Search-Console {
+  usual
+  position -pos 2
+}
+preferences set toolbar-Standard-WaveWindow {
+  usual
+  position -pos 1
+}
+preferences set plugin-enable-groupscope 0
+preferences set plugin-enable-interleaveandcompare 0
+preferences set plugin-enable-waveformfrequencyplot 0
+
+#
+# Simulator
+#
+database require simulator -hints {
+	simulator "xrun -sv activation.sv cnn_activation.sv cnn.sv dot_product_parallel.sv dot_product.sv fcc.sv fifo.sv mannix_mem_farm.sv mannix.sv mem_align.sv mem_arbiter.sv mem_ctrl.sv mem_demux.sv mem_fabric.sv mem_intf_read.sv mem_intf_write.sv mem_req_ctrl.sv mem_sram.sv pool.sv sort_4.sv sort_8.sv sort_xy.sv mem_intf.svh ../tb/acc_mem_wrap_tb.sv -gui -debug -input restore.tcl"
+}
+
+#
+# Mnemonic Maps
+#
+mmap new  -reuse -name {Boolean as Logic} -radix %b -contents {{%c=FALSE -edgepriority 1 -shape low}
+{%c=TRUE -edgepriority 1 -shape high}}
+mmap new  -reuse -name {Example Map} -radix %x -contents {{%b=11???? -bgcolor orange -label REG:%x -linecolor yellow -shape bus}
+{%x=1F -bgcolor red -label ERROR -linecolor white -shape EVENT}
+{%x=2C -bgcolor red -label ERROR -linecolor white -shape EVENT}
+{%x=* -label %x -linecolor gray -shape bus}}
+
+#
+# Design Browser windows
+#
+if {[catch {window new WatchList -name "Design Browser 1" -geometry 1920x914+-1+27}] != ""} {
+    window geometry "Design Browser 1" 1920x914+-1+27
+}
+window target "Design Browser 1" on
+browser using {Design Browser 1}
+browser set -scope [subst  {simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl}]} ]
+browser set \
+    -signalsort name
+browser yview see [subst  {simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl}]} ]
+browser timecontrol set -lock 0
+
+#
+# Waveform windows
+#
+if {[catch {window new WaveWindow -name "Waveform 1" -geometry 1920x914+-1+27}] != ""} {
+    window geometry "Waveform 1" 1920x914+-1+27
+}
+window target "Waveform 1" on
+waveform using {Waveform 1}
+waveform sidebar visibility partial
+waveform set \
+    -primarycursor TimeA \
+    -signalnames name \
+    -signalwidth 175 \
+    -units ns \
+    -valuewidth 75
+waveform baseline set -time 0
+
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.addr_temp_buf[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.clk}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.rst_n}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.data_in[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.data_out[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.data_read_align[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.data_write_align[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.first_data_out[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.first_data_out_mask[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.first_read_gnt[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.first_read_gnt_s[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.first_write_gnt[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.first_write_gnt_s[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.fsm}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.intf_in[10]}]}
+	} ]]
+waveform hierarchy collapse $id
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.intf_out[10]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.gnt[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.mask[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.mask_enable[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.new_read_req[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.new_write_req[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.next_state[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.num_bytes_first_data_out[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.num_bytes_second_data_out[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.num_bytes_temp_buf[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.read_bytes_s[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.read_gnt_cnt[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.read_gnt_cnt_s[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.read_prior[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.read_sram[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.req[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.req_data_stored_temp_buf[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.req_sram[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.second_data_out[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.second_read_gnt[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.second_read_gnt_s[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.second_write_gnt[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.second_write_gnt_s[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.state[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.two_read_req[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.two_read_req_need_one[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.two_write_req[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.which_sram[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.which_sram_sec[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.write_gnt_cnt[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.write_sram[15:0]}]}
+	} ]]
+
+waveform xview limits 0 500ns
+
+#
+# Waveform Window Links
+#
+
+#
+# Console windows
+#
+console set -windowname Console
+window geometry Console 730x250+251+556
+
+#
+# Layout selection
+#
+

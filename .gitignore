@@ -7,5 +7,9 @@ workspace/*
 *irun.log
 *irun.key
 *.nfs*
+*xrun.*
+*simvision*
+*waves.shm
+*xcelium*
 
 

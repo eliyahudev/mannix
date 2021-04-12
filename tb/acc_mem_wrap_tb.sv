@@ -596,9 +596,9 @@ task RESET_VALUES();
 	  mem_intf_write_sw.mem_size_bytes=6'd32;
 	  mem_intf_write_sw.mem_req=1'b1;
 	  mem_intf_write_sw.mem_data=256'b1111;
-	  wait (mem_intf_write_sw.mem_ack)
-     @(posedge clk)
+	  wait (mem_intf_write_sw.mem_ack ==1'b1)@(posedge clk)
 	 mem_intf_write_sw.mem_req=1'b0;
+	start_addr=mem_intf_write_sw.mem_start_addr;
 	 if (start_addr[0]==0)
 				odd=0;
 			else
@@ -609,12 +609,12 @@ task RESET_VALUES();
 			//check for fail
 			if (acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*256+:255]!=mem_intf_write_sw.mem_data[start_addr])begin
 				$display("TEST FAIL\nloop=%d bank=%d, addr=%d \n expected:%d, actual:%d",
-				start_addr,which_bank,which_addr,mem_intf_write_sw.mem_data[start_addr][31:0],acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*256+:31]);
+				start_addr,which_bank,which_addr,mem_intf_write_sw.mem_data,acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*256+:256]);
 				$finish();
 			end
 			else begin
 				$display("check passed\nloop=%d bank=%d, addr=%d \n expected:%d, actual:%d",
-				start_addr,which_bank,which_addr,mem_intf_write_sw.mem_data[start_addr][31:0],acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*256+:31]);
+				start_addr,which_bank,which_addr,mem_intf_write_sw.mem_data,acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*256+:256]);
 		end
 		$display("PASS");
 	end
