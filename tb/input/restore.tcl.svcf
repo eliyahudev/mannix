@@ -1,10 +1,10 @@
-# SimVision Command Script (Wed Apr 14 02:03:59 PM IDT 2021)
+# SimVision Command Script (Thu Apr 15 10:02:09 PM IDT 2021)
 #
 # Version 19.03.s013
 #
 # You can restore this configuration with:
 #
-#      xrun -sv ../rtl/activation.sv ../rtl/cnn_activation.sv ../rtl/cnn.sv ../rtl/dot_product_parallel.sv ../rtl/dot_product.sv ../rtl/fcc.sv ../rtl/fifo.sv ../rtl/mannix_mem_farm.sv ../rtl/mannix.sv ../rtl/mem_align.sv ../rtl/mem_arbiter.sv ../rtl/mem_ctrl.sv ../rtl/mem_demux.sv ../rtl/mem_fabric.sv ../rtl/mem_intf_read.sv ../rtl/mem_intf_write.sv ../rtl/mem_req_ctrl.sv ../rtl/mem_sram.sv ../rtl/pool.sv ../rtl/sort_4.sv ../rtl/sort_8.sv ../rtl/sort_xy.sv ../rtl/mem_intf.svh ../tb/acc_mem_wrap_tb.sv +incdir+../rtl/ -debug -input input/mem_acc.tcl -input /project/generic/users/gerners/ws/mannix/tb/input/restore.tcl
+#      xrun -sv ../rtl/activation.sv ../rtl/cnn_activation.sv ../rtl/cnn.sv ../rtl/dot_product_parallel.sv ../rtl/dot_product.sv ../rtl/fcc.sv ../rtl/fifo.sv ../rtl/mannix_mem_farm.sv ../rtl/mannix.sv ../rtl/mem_align.sv ../rtl/mem_arbiter.sv ../rtl/mem_ctrl.sv ../rtl/mem_demux.sv ../rtl/mem_fabric.sv ../rtl/mem_intf_read.sv ../rtl/mem_intf_write.sv ../rtl/mem_req_ctrl.sv ../rtl/mem_sram.sv ../rtl/pool.sv ../rtl/sort_4.sv ../rtl/sort_8.sv ../rtl/sort_xy.sv ../rtl/mem_intf.svh ../tb/acc_mem_wrap_tb.sv +incdir+../rtl/ -debug -input input/restore.tcl -input /project/generic/users/gerners/ws/mannix/tb/input/restore.tcl
 #
 
 
@@ -37,7 +37,7 @@ preferences set plugin-enable-waveformfrequencyplot 0
 # Simulator
 #
 database require simulator -hints {
-	simulator "xrun -sv ../rtl/activation.sv ../rtl/cnn_activation.sv ../rtl/cnn.sv ../rtl/dot_product_parallel.sv ../rtl/dot_product.sv ../rtl/fcc.sv ../rtl/fifo.sv ../rtl/mannix_mem_farm.sv ../rtl/mannix.sv ../rtl/mem_align.sv ../rtl/mem_arbiter.sv ../rtl/mem_ctrl.sv ../rtl/mem_demux.sv ../rtl/mem_fabric.sv ../rtl/mem_intf_read.sv ../rtl/mem_intf_write.sv ../rtl/mem_req_ctrl.sv ../rtl/mem_sram.sv ../rtl/pool.sv ../rtl/sort_4.sv ../rtl/sort_8.sv ../rtl/sort_xy.sv ../rtl/mem_intf.svh ../tb/acc_mem_wrap_tb.sv +incdir+../rtl/ -gui -debug -input restore.tcl"
+	simulator "xrun -sv ../rtl/activation.sv ../rtl/cnn_activation.sv ../rtl/cnn.sv ../rtl/dot_product_parallel.sv ../rtl/dot_product.sv ../rtl/fcc.sv ../rtl/fifo.sv ../rtl/mannix_mem_farm.sv ../rtl/mannix.sv ../rtl/mem_align.sv ../rtl/mem_arbiter.sv ../rtl/mem_ctrl.sv ../rtl/mem_demux.sv ../rtl/mem_fabric.sv ../rtl/mem_intf_read.sv ../rtl/mem_intf_write.sv ../rtl/mem_req_ctrl.sv ../rtl/mem_sram.sv ../rtl/pool.sv ../rtl/sort_4.sv ../rtl/sort_8.sv ../rtl/sort_xy.sv ../rtl/mem_intf.svh ../tb/acc_mem_wrap_tb.sv +incdir+../rtl/ -gui -debug -input input/restore.tcl -input restore.tcl"
 }
 
 #
@@ -67,8 +67,8 @@ browser timecontrol set -lock 0
 #
 # Waveform windows
 #
-if {[catch {window new WaveWindow -name "Waveform 1" -geometry 1920x977+-1+27}] != ""} {
-    window geometry "Waveform 1" 1920x977+-1+27
+if {[catch {window new WaveWindow -name "Waveform 1" -geometry 1920x914+-1+27}] != ""} {
+    window geometry "Waveform 1" 1920x914+-1+27
 }
 window target "Waveform 1" on
 waveform using {Waveform 1}
@@ -124,6 +124,12 @@ set id [waveform add -signals [subst  {
 	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.addr_to_sram[15:0]}]}
 	} ]]
 set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.intf_in[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.intf_out[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
 	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.state[15:0]}]}
 	} ]]
 set id [waveform add -signals [subst  {
@@ -164,9 +170,6 @@ set id [waveform add -signals [subst  {
 	} ]]
 set id [waveform add -signals [subst  {
 	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.num_bytes_second_data_out[15:0]}]}
-	} ]]
-set id [waveform add -signals [subst  {
-	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.read_bytes_s[15:0]}]}
 	} ]]
 set id [waveform add -signals [subst  {
 	{simulator::[format {acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.read_gnt_cnt[15:0]}]}
@@ -236,7 +239,7 @@ waveform xview limits 5230ns 5285ns
 # Console windows
 #
 console set -windowname Console
-window geometry Console 1920x977+-1+27
+window geometry Console 1920x914+-1+27
 
 #
 # Layout selection

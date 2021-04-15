@@ -76,9 +76,9 @@ module mannix_mem_farm #(
 	assign req_ctrl_in[3] = {cnn_pic_r.mem_req, cnn_pic_r.mem_start_addr, cnn_pic_r.mem_size_bytes, 295'b0 };
 	//assign req_ctrl_in[4] = '0;
 	assign req_ctrl_in[4] = {cnn_wgt_r.mem_req, cnn_wgt_r.mem_start_addr, cnn_wgt_r.mem_size_bytes, 295'b0 };
-	assign req_ctrl_in[5] = {pool_r.mem_req, pool_r.mem_start_addr, pool_r.mem_size_bytes, 295'b0 };
+	assign req_ctrl_in[5] = {cnn_bias_r.mem_req, cnn_bias_r.mem_start_addr, cnn_bias_r.mem_size_bytes, 295'b0 };
+	assign req_ctrl_in[6] = {pool_r.mem_req, pool_r.mem_start_addr, pool_r.mem_size_bytes, 295'b0 };
 	//assign req_ctrl_in[6] = '0;
-	assign req_ctrl_in[6] = {39'b0, cnn_bias_r.mem_req, cnn_bias_r.mem_start_addr, cnn_bias_r.mem_size_bytes, cnn_bias_r.mem_data };
 	assign req_ctrl_in[7] = {39'd0, fcc_w.mem_req, fcc_w.mem_start_addr, fcc_w.mem_size_bytes, fcc_w.mem_data };
 	assign req_ctrl_in[8] = {39'd0, cnn_w.mem_req, cnn_w.mem_start_addr, cnn_w.mem_size_bytes, cnn_w.mem_data };
 	assign req_ctrl_in[9] = {39'd0, pool_w.mem_req, pool_w.mem_start_addr, pool_w.mem_size_bytes, pool_w.mem_data };
@@ -91,8 +91,8 @@ module mannix_mem_farm #(
 	assign  {fcc_bias_r.mem_valid, fcc_bias_r.mem_data} = req_ctrl_out[2][257:1];
 	assign  {cnn_pic_r.mem_valid, cnn_pic_r.mem_data} = req_ctrl_out[3][257:1];
 	assign  {cnn_wgt_r.mem_valid, cnn_wgt_r.mem_data} = req_ctrl_out[4][257:1];
-	assign  {pool_r.mem_valid, pool_r.mem_data} = req_ctrl_out[5][257:1];
-	assign  {cnn_bias_r.mem_valid, cnn_bias_r.mem_data} = req_ctrl_out[6][257:1];
+	assign  {cnn_bias_r.mem_valid, cnn_bias_r.mem_data} = req_ctrl_out[5][257:1];
+	assign  {pool_r.mem_valid, pool_r.mem_data} = req_ctrl_out[6][257:1];
 
 	assign fcc_w.mem_ack = req_ctrl_out[7][0];
 	assign cnn_w.mem_ack = req_ctrl_out[8][0];

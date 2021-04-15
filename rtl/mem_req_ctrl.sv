@@ -144,8 +144,8 @@ module mem_req_ctrl
 					addr_temp_buf[i]<='0;
 				end
 				else if (new_read_req[i]) begin
-						num_bytes_temp_buf[i]<=(read_mem_start_addr[i][4:0] + read_mem_size_bytes[i][5:0]) >=6'd32 ? 
-						(read_mem_start_addr[i][4:0] + read_mem_size_bytes[i][5:0] -6'd32) : (7'd64 - read_mem_start_addr[i][4:0] - read_mem_size_bytes[i][5:0]);
+						num_bytes_temp_buf[i]<=(read_mem_start_addr[i][4:0] + read_mem_size_bytes[i][5:0]) >6'd32 ? 
+						(7'd64 - read_mem_start_addr[i][4:0] - read_mem_size_bytes[i][5:0]) : (6'd32 - read_mem_start_addr[i][4:0] - read_mem_size_bytes[i][5:0]);
 						addr_temp_buf[i]<=read_mem_start_addr[i] + read_mem_size_bytes[i][5:0];
 				end
 
@@ -161,7 +161,7 @@ module mem_req_ctrl
 				req[i]='0;
 			//	case (state[i])
 					begin
-						if ((next_state[i]!=IDLE) && (!req_data_stored_temp_buf[i] && read_mem_req || write_mem_req))
+						if ((next_state[i]!=IDLE) && (!req_data_stored_temp_buf[i] && read_mem_req[i] || write_mem_req[i]))
 							req[which_sram[i]][i]=1'b1;
 						else
 							req[which_sram[i]][i]=1'b0;
