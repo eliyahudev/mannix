@@ -90,7 +90,9 @@ reg         clk_config_tb;
 reg         clk_enable;
 
 reg [((X_COLS_NUM*X_ROWS_NUM)-1):0] [7:0]  a_data; 
-reg signed [7:0]  w_data [0:((Y_COLS_NUM*Y_ROWS_NUM)-1)];
+//reg signed [7:0]  w_data [0:((Y_COLS_NUM*Y_ROWS_NUM)-1)];
+reg signed [((Y_COLS_NUM*Y_ROWS_NUM)-1):0][7:0]  w_data; 
+reg [31:0][7:0] bias_data;
 
 //====================      
 // Software Interface
@@ -265,7 +267,7 @@ begin
 		scan=$fscanf(res_real,"%d\n",results_real[r1]);
 		sum_res_real=sum_res_real+results_real[r1];
 	end
-
+	bias_data='d0;
 	avrg=sum_res_real/15625;
 
 	$monitor("START CNN TEST\n");
@@ -273,13 +275,15 @@ begin
 	RESET_VALUES();
 	ASYNC_RESET();
 	MEM_LOAD(a_data, X_ROWS_NUM*X_COLS_NUM, 0);
-	MEM_READ(a_data, X_ROWS_NUM*X_COLS_NUM, 0);
+	MEM_LOAD(w_data, Y_ROWS_NUM*Y_COLS_NUM, 65536);
+	MEM_LOAD(bias_data, 32, 1<<16);
+	//MEM_READ(a_data, X_ROWS_NUM*X_COLS_NUM, 0);
 
 
 
 	@(posedge clk)
-	cnn_go=1'b0;
-	// TEST_128X128_4X4();
+	cnn_go=1'b1;
+	TEST_128X128_4X4();
 	//cnn_go=1'b0;
 	#100;
 	//FCC
@@ -383,17 +387,17 @@ mem_intf_write #(.ADDR_WIDTH(32),.NUM_WORDS_IN_LINE(16), .WORD_WIDTH(256)) write
 mem_intf_write #(.ADDR_WIDTH(32),.NUM_WORDS_IN_LINE(16), .WORD_WIDTH(256)) write_sw_req ();
 
 mannix_mem_farm mannix_mem_farm_ins (
-	.clk(clk), // Clock
-	.rst_n(rst_n), // Reset
-	.fcc_pic_r(fcc_mem_intf_read_pic),
-	.fcc_wgt_r(fcc_mem_intf_read_wgt),
-	.fcc_bias_r(fcc_mem_intf_read_bias),
-	.cnn_pic_r(mem_intf_read_pic),
-	.cnn_wgt_r(mem_intf_read_wgt),
-	.cnn_bias_r(mem_intf_read_bias),
-	.sw_w(mem_intf_write_sw),
-	.pool_r(pool_r),//DUMMY
-	.fcc_w(fcc_mem_intf_write),
+		.clk(clk), // Clock
+		.rst_n(rst_n), // Reset
+		.fcc_pic_r(fcc_mem_intf_read_pic),
+		.fcc_wgt_r(fcc_mem_intf_read_wgt),
+		.fcc_bias_r(fcc_mem_intf_read_bias),
+		.cnn_pic_r(mem_intf_read_pic),
+		.cnn_wgt_r(mem_intf_read_wgt),
+		.cnn_bias_r(mem_intf_read_bias),
+		.sw_w(mem_intf_write_sw),
+		.pool_r(pool_r),//DUMMY
+		.fcc_w(fcc_mem_intf_write),
 		.cnn_w(mem_intf_write),
 		.pool_w(pool_w),//DUMMY
 
@@ -575,9 +579,11 @@ task RESET_VALUES();
 		mem_intf_write_sw.mem_size_bytes='0;
 
 
-		sw_cnn_addr_bias={ADDR_WIDTH{1'b0}}; // CNN Bias value address 		
+		//sw_cnn_addr_bias={ADDR_WIDTH{1'b0}}; // CNN Bias value address 		
+		sw_cnn_addr_bias=1<<16; // CNN Bias value address 		
 		sw_cnn_addr_x={ADDR_WIDTH{1'b0}};	// CNN Data window FIRST address
-		sw_cnn_addr_y={ADDR_WIDTH{1'b0}};	// CNN  weights window FIRST address
+		//sw_cnn_addr_y={ADDR_WIDTH{1'b0}};	// CNN  weights window FIRST address
+		sw_cnn_addr_y='d65536;	// CNN  weights window FIRST address
 		sw_cnn_addr_z={ADDR_WIDTH{1'b0}};	// CNN return address
 		sw_cnn_x_m=X_ROWS_NUM;  	        // CNN data matrix num of rows
 		sw_cnn_x_n=X_COLS_NUM;	        // CNN data matrix num of columns
@@ -734,7 +740,7 @@ task MEM_PIC_READ_REQ (input [ADDR_WIDTH-1:0] addr,input [7:0] num_of_bytes );//
 endtask // MEM_PIC_READ_REQ
 
 
-task MEM_WGT_READ_REQ (input [ADDR_WIDTH-1:0] addr, input signed [7:0] data [0:((Y_COLS_NUM*Y_ROWS_NUM)-1)]);
+task MEM_WGT_READ_REQ (input [ADDR_WIDTH-1:0] addr, input signed [((Y_COLS_NUM*Y_ROWS_NUM)-1):0][7:0] data );
 	begin
 		wait ((mem_intf_read_wgt.mem_req==1'b1)&&(mem_intf_read_wgt.mem_start_addr=={ADDR_WIDTH{1'b0}}))  
 		for(j=0;j<(Y_COLS_NUM*Y_ROWS_NUM);j++)
