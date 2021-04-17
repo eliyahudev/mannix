@@ -167,16 +167,10 @@ module mannix #(
 		.ADDR_WIDTH(ADDR_WIDTH),
 		.X_ROWS_NUM(X_ROWS_NUM),
 		.X_COLS_NUM(X_COLS_NUM),
-					 
-		.X_LOG2_ROWS_NUM (X_LOG2_ROWS_NUM),
-		.X_LOG2_COLS_NUM (X_LOG2_COLS_NUM), 
-  
+					  
 		.Y_ROWS_NUM(Y_ROWS_NUM),
-		.Y_COLS_NUM(Y_COLS_NUM),
+		.Y_COLS_NUM(Y_COLS_NUM)
 					 
-		.Y_LOG2_ROWS_NUM (Y_LOG2_ROWS_NUM),
-		.Y_LOG2_COLS_NUM (Y_LOG2_COLS_NUM)
-
 	)i_cnn (
 		.clk(clk),
 	       	.rst_n(rst_n),

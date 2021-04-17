@@ -44,30 +44,23 @@ module cnn (
   // parameter MAX_BYTES_TO_WR=5;  
   // parameter LOG2_MAX_BYTES_TO_WR=$clog2(MAX_BYTES_TO_WR);
   // parameter MEM_DATA_BUS=128;
-  parameter BYTES_TO_WRITE=4;
+  //parameter BYTES_TO_WRITE=4;
 
   parameter X_ROWS_NUM=128;
   parameter X_COLS_NUM=128;
                      
-  parameter X_LOG2_ROWS_NUM =$clog2(X_ROWS_NUM);
-  parameter X_LOG2_COLS_NUM =$clog2(X_COLS_NUM); 
+  localparam X_LOG2_ROWS_NUM =$clog2(X_ROWS_NUM);
+  localparam X_LOG2_COLS_NUM =$clog2(X_COLS_NUM); 
   
 
   parameter Y_ROWS_NUM=4;
   parameter Y_COLS_NUM=4;
                      
-  parameter Y_LOG2_ROWS_NUM =$clog2(Y_ROWS_NUM);
-  parameter Y_LOG2_COLS_NUM =$clog2(Y_COLS_NUM);
+  localparam Y_LOG2_ROWS_NUM =$clog2(Y_ROWS_NUM);
+  localparam Y_LOG2_COLS_NUM =$clog2(Y_COLS_NUM);
   
   parameter JUMP_COL=1;
   parameter JUMP_ROW=1;
-
-  parameter MEM_DATA_BUS=128;
-  parameter MAX_BYTES_TO_RD=20;
-  parameter LOG2_MAX_BYTES_TO_RD=$clog2(MAX_BYTES_TO_RD);  
-  parameter MAX_BYTES_TO_WR=5;  
-  parameter LOG2_MAX_BYTES_TO_WR=$clog2(MAX_BYTES_TO_WR);
-
 
 
 //===============================================================================
@@ -115,7 +108,7 @@ module cnn (
   output reg                        cnn_sw_busy_ind;	// An output to the software - 1 – CNN unit is busy CNN is available (Default)
 
   input                             sw_cnn_go;          //Input from Software to start calculation
-  output reg                        sw_cnn_done;        //Output to Softare to inform on end of calculation
+  output reg                        sw_cnn_done;        //Output to Software to inform on end of calculation
 
   //========================== Debug ==============================
   output reg signed [31:0]                    data2write_out;    //Output for debug onlt - outputs the result of each window calculation before activation.
@@ -123,7 +116,7 @@ module cnn (
   //===============================================================
   reg        [7:0]                 cut_data_pic [0:DP_DEPTH-1] ; //Single byte to send to dot_product from the picture matrix (big one)                 
   reg signed [7:0]                 data_wgt [0:DP_DEPTH-1] ;     //Single byte to send to dot_product from the weight matrix  (small one)
-  reg [ADDR_WIDTH-1:0]             current_read_addr;            //Calculation of read addr from memory. 
+  //reg [ADDR_WIDTH-1:0]             current_read_addr;            //Calculation of read addr from memory. 
   reg [ADDR_WIDTH-1:0]             current_row_start_addr;
   wire signed [31:0]               dp_res;                       //Output of dot_product unit. 
 
@@ -140,8 +133,10 @@ module cnn (
   wire [31:0]                       shift_last;  //How many bits to shift when last writing happens
   wire [7:0]                        activation_out;
   reg                               first_read_of_weights; //In order to read only once the weights matrix and the bias value per 1 Picture matrix
+  reg                               first_read_of_bias;
   reg                               read_pic_data_vld;
   reg                               read_wgt_data_vld;
+  wire                              read_condition;
 
 //============================================
 //   For Debug Only !!!
@@ -229,7 +224,25 @@ always @(*)
       end // else: !if(!rst_n)
     end
   
- 
+//=======================================================================================================
+
+  assign read_condition = (state==READ); //&&(~((window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line>=Y_COLS_NUM-1'd1))))? 1'b1 : 1'b0;
+  
+assign mem_intf_read_wgt.mem_req =(mem_intf_read_wgt.mem_valid )? 1'b0 : (read_condition && first_read_of_weights )? 1'b1: 1'b0;
+assign mem_intf_read_wgt.mem_start_addr  = (mem_intf_read_wgt.mem_req && first_read_of_weights)? sw_cnn_addr_x : {ADDR_WIDTH{1'b0}};
+assign mem_intf_read_wgt.mem_size_bytes  = (mem_intf_read_wgt.mem_req && first_read_of_weights)? DP_DEPTH      : {ADDR_WIDTH{1'b0}};
+
+
+assign mem_intf_read_pic.mem_req = (mem_intf_read_pic.mem_valid)? 1'b0 : read_condition? 1'b1: 1'b0;              
+assign mem_intf_read_pic.mem_size_bytes = mem_intf_read_pic.mem_req ? DP_DEPTH : {ADDR_WIDTH{1'b0}};
+
+
+assign mem_intf_read_bias.mem_req = (mem_intf_read_bias.mem_valid )? 1'b0 : (read_condition && first_read_of_bias )? 1'b1: 1'b0;
+assign mem_intf_read_bias.mem_start_addr = (mem_intf_read_bias.mem_req && first_read_of_bias)? sw_cnn_addr_bias : {ADDR_WIDTH{1'b0}};
+assign mem_intf_read_bias.mem_size_bytes = (mem_intf_read_bias.mem_req && first_read_of_bias)? 'd4 : {ADDR_WIDTH{1'b0}};  
+  
+//=======================================================================================================
+  
 always @(posedge clk or negedge rst_n)
   begin
     if(!rst_n)
@@ -239,19 +252,13 @@ always @(posedge clk or negedge rst_n)
         mem_intf_write.mem_start_addr <= {ADDR_WIDTH{1'b0}};
         mem_intf_write.mem_size_bytes <= {ADDR_WIDTH{1'b0}};  
         
-        mem_intf_read_pic.mem_req<=1'b0;
-        mem_intf_read_pic.mem_size_bytes<={ADDR_WIDTH{1'b0}};
-
-        mem_intf_read_wgt.mem_req<=1'b0;
-        mem_intf_read_wgt.mem_start_addr<={ADDR_WIDTH{1'b0}};
-        mem_intf_read_wgt.mem_size_bytes<={ADDR_WIDTH{1'b0}};
+        // mem_intf_read_bias.mem_req<=1'b0;
+        // mem_intf_read_bias.mem_start_addr<={ADDR_WIDTH{1'b0}};
+        // mem_intf_read_bias.mem_size_bytes<={ADDR_WIDTH{1'b0}};  
         
-        mem_intf_read_bias.mem_req<=1'b0;
-        mem_intf_read_bias.mem_start_addr<={ADDR_WIDTH{1'b0}};
-        mem_intf_read_bias.mem_size_bytes<={ADDR_WIDTH{1'b0}};          
         counter_calc<=8'd0;        
         first_read_of_weights<=1'b1;
-       
+       first_read_of_bias<=1'b1;
       end
     else
       begin
@@ -262,43 +269,30 @@ always @(posedge clk or negedge rst_n)
                 mem_intf_write.mem_req<=1'b0;
               end
           end             
-        //else if((state==READ)&&(calc_line!=Y_COLS_NUM-1'd1)&&              (~((window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line>=Y_COLS_NUM-1'd1))))
      else if((state==READ)&&              (~((window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line>=Y_COLS_NUM-1'd1))))   
           begin
-            if(read_pic_data_vld)
-              mem_intf_read_pic.mem_req <=1'b0;
-            else
-              mem_intf_read_pic.mem_req <=1'b1;
-              
-            mem_intf_read_pic.mem_size_bytes <= DP_DEPTH;
+;
             
             if(first_read_of_weights)
               begin
-               if(~read_wgt_data_vld) 
-                mem_intf_read_wgt.mem_req <=1'b1;
-               else
-                mem_intf_read_wgt.mem_req <=1'b0;
- 
-                mem_intf_read_wgt.mem_start_addr <= sw_cnn_addr_x;
-                mem_intf_read_wgt.mem_size_bytes <= DP_DEPTH;
-               // read_wgt_data_vld<=1'b0;
+
                 
-                mem_intf_read_bias.mem_req <=1'b1;
-                mem_intf_read_bias.mem_start_addr <= sw_cnn_addr_bias;
-                mem_intf_read_bias.mem_size_bytes <= 'd4; //TODO: CHANGE TO ACTUAL WIDTH
+
+                if(mem_intf_read_wgt.mem_valid) 
                 first_read_of_weights<=1'b0;
               end
             else
               begin                
-                mem_intf_read_wgt.mem_req <=1'b0;
-                mem_intf_read_wgt.mem_start_addr <= {ADDR_WIDTH{1'b0}};
-                mem_intf_read_wgt.mem_size_bytes <= 'd0;  //TODO: CHANGE TO ACTUAL WIDTH
 
-                mem_intf_read_bias.mem_req <=1'b1; //TODO: change to 0 and debug TB to behave right
-                mem_intf_read_bias.mem_start_addr <= {ADDR_WIDTH{1'b0}};
-                mem_intf_read_bias.mem_size_bytes <= 'd0;  //TODO: CHANGE TO ACTUAL WIDTH
-                end
 
+                // mem_intf_read_bias.mem_req <=1'b1; //TODO: change to 0 and debug TB to behave right
+                // mem_intf_read_bias.mem_start_addr <= {ADDR_WIDTH{1'b0}};
+                // mem_intf_read_bias.mem_size_bytes <= 'd0;  //TODO: CHANGE TO ACTUAL WIDTH
+              end // else: !if(first_read_of_weights)
+            if(mem_intf_read_bias.mem_valid)
+              first_read_of_bias<=1'b0;
+
+            
             counter_calc<=8'd0;
 
             if((calc_line==4'd0)&&(counter_calc==8'd0))
@@ -321,7 +315,7 @@ always @(posedge clk or negedge rst_n)
           begin
             mem_intf_write.mem_start_addr <=sw_cnn_addr_z;
             mem_intf_write.mem_req<=1'b1;
-            mem_intf_write.mem_size_bytes<=BYTES_TO_WRITE;
+            mem_intf_write.mem_size_bytes<=calc_load_of_wr_bus-1'd1;
             end
         
       end    
@@ -393,7 +387,7 @@ endgenerate
               window_cols_index<=window_cols_index+1'b1;   ///TODO: zero when end of matrix
             end
           
-          else if((state==SHIFT && counter_calc==DP_DEPTH) || (state==READ && counter_calc==1))  //The first one never happens, second one does. 
+          else if (state==SHIFT)
             begin
               mem_intf_read_pic.mem_start_addr<=mem_intf_read_pic.mem_start_addr+sw_cnn_x_n;
               calc_line <= calc_line+1'b1;
@@ -480,7 +474,7 @@ endgenerate
             begin
             calc_load_of_wr_bus <= 6'd1;   
             end 
-          else if(((calc_load_of_wr_bus==6'd33)&&(state==SHIFT)))
+          else if(((calc_load_of_wr_bus==6'd33)&&(state==WRITE)&&(mem_intf_write.mem_ack==1'd1)))
             calc_load_of_wr_bus <= 6'd0;
           else if(calc_line==Y_COLS_NUM)
             calc_load_of_wr_bus <= calc_load_of_wr_bus+1'd1;
