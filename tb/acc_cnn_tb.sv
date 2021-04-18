@@ -8,6 +8,7 @@
 // Original Date     : 22-Nov-2020
 //
 //======================================================================================================
+`timescale 1ns/1ps
 
 module acc_cnn_tb ();
 
@@ -206,24 +207,12 @@ cnn #(
   .JUMP_ROW(JUMP_ROW),    
   .ADDR_WIDTH(ADDR_WIDTH),
                        
-  .MAX_BYTES_TO_RD(MAX_BYTES_TO_RD),
-  .LOG2_MAX_BYTES_TO_RD(LOG2_MAX_BYTES_TO_RD),  
-  .MAX_BYTES_TO_WR(MAX_BYTES_TO_WR),  
-  .LOG2_MAX_BYTES_TO_WR(LOG2_MAX_BYTES_TO_WR),
-  .MEM_DATA_BUS(MEM_DATA_BUS),
-
   .X_ROWS_NUM(X_ROWS_NUM),
   .X_COLS_NUM(X_COLS_NUM),
-                     
-  .X_LOG2_ROWS_NUM(X_LOG2_ROWS_NUM),
-  .X_LOG2_COLS_NUM(X_LOG2_COLS_NUM), 
-  
 
   .Y_ROWS_NUM(Y_ROWS_NUM),
-  .Y_COLS_NUM(Y_COLS_NUM),
+  .Y_COLS_NUM(Y_COLS_NUM)
                      
-  .Y_LOG2_ROWS_NUM(Y_LOG2_ROWS_NUM),
-  .Y_LOG2_COLS_NUM(Y_LOG2_COLS_NUM)
 
       )cnn_ins(
             .clk(clk),
@@ -383,7 +372,7 @@ endtask // MEM_PIC_READ_REQ_FRST
     
       mem_intf_read_bias_mem_gnt=1'b1;
 
-    repeat (2) begin
+    repeat (1) begin
       @ (posedge clk) ;
     end
 //Need to verify if gnt de-asserted after 1 cycle or not
