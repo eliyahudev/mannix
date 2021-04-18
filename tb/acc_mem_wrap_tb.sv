@@ -571,7 +571,7 @@ task RESET_VALUES();
 		sw_cnn_addr_x={ADDR_WIDTH{1'b0}};	// CNN Data window FIRST address
 		//sw_cnn_addr_y={ADDR_WIDTH{1'b0}};	// CNN  weights window FIRST address
 		sw_cnn_addr_y='d65536;	// CNN  weights window FIRST address
-		sw_cnn_addr_z={ADDR_WIDTH{1'b0}};	// CNN return address
+		sw_cnn_addr_z=(1<<15)*3;	// CNN return address
 		sw_cnn_x_m=X_ROWS_NUM;  	        // CNN data matrix num of rows
 		sw_cnn_x_n=X_COLS_NUM;	        // CNN data matrix num of columns
 		sw_cnn_y_m=Y_ROWS_NUM;	        // CNN weight matrix num of rows
@@ -589,7 +589,7 @@ task MEM_LOAD(input reg [((X_COLS_NUM*X_ROWS_NUM)-1):0] [7:0] data_8_bit, input 
 	addr_sram=0;
 	clk_enable = 1'b1;
 
-		repeat (1) begin
+		repeat (2) begin
 			@ (posedge clk) ;
 		end
 	for (integer out=0;out<(size/32)+((size%32)!=0);out=out+1) begin
@@ -816,8 +816,8 @@ end
 
   task TEST_128X128_4X4();//input [ADDR_WIDTH-1:0] start_addr);
 	  begin      
-		  MEM_PIC_READ_REQ_FRST({ADDR_WIDTH{1'b0}},Y_ROWS_NUM);
-		  MEM_WGT_READ_REQ({ADDR_WIDTH{1'b0}},w_data);
+		  MEM_PIC_READ_REQ_FRST(sw_cnn_addr_x,Y_ROWS_NUM);
+		  MEM_WGT_READ_REQ(sw_cnn_addr_y,w_data);
 		  MEM_BIAS_READ_REQ(sw_cnn_addr_bias,avrg); 
 		  //==============================================
 		  MEM_PIC_READ_REQ(sw_cnn_x_n,Y_ROWS_NUM);

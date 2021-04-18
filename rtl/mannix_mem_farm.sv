@@ -123,10 +123,10 @@ module mannix_mem_farm #(
 	assign req_for_sw_demux = write_sw_req.mem_req;
 	assign data_valid_demux= req_for_sw_demux ? valid_to_demux : read_ddr_req.mem_valid;
 	assign data_in_demux = req_for_sw_demux ? write_sw_req.mem_data : read_ddr_req.mem_data;
-	assign cs= |cs_req ? cs_req : cs_init; 
-	assign write_sram = |cs_req ? write_req_ctrl : cs_init;
 	assign data_in_sram = sw_w.mem_req ? data_req_ctrl_to_sram : data_from_demux;
 	assign addr_sram = write_sw_req.mem_req ?  addr_sram_from_demux : addr_sram_from_req_ctrl; 
+	assign cs= |cs_req ? cs_req : cs_init; 
+	assign write_sram = |cs_req ? write_req_ctrl : cs_init;
 
 	mem_fabric i_mem_fabric(
 		.clk(clk),
@@ -144,7 +144,7 @@ module mannix_mem_farm #(
 				.cs(cs[i]),
 				.id(i[3:0]),
 				.data_in(data_in_sram[i]),
-				.read(read_req_ctrl),
+				.read(read_req_ctrl[i]),
 				.addr(addr_sram[i]),
 				.write(write_sram[i]),
 				.data_out(data_out_sram[i]),
