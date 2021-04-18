@@ -136,8 +136,9 @@ module cnn (
   reg                               first_read_of_bias;
   reg                               read_pic_data_vld;
   reg                               read_wgt_data_vld;
+  reg                               read_bias_data_vld;
   wire                              read_condition;
-
+  reg [ADDR_WIDTH-1:0]              calc_addr_to_wr; //Calc the current addr to write to
 //============================================
 //   For Debug Only !!!
 //============================================
@@ -183,7 +184,7 @@ always @(*)
         begin
           if((window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line==Y_ROWS_NUM)) //If end of calculation
              nx_state = WRITE; 
-          else if(read_pic_data_vld && read_wgt_data_vld)
+          else if(read_pic_data_vld && read_wgt_data_vld && read_bias_data_vld)
              nx_state = CALC;
           else
              nx_state = READ; 
@@ -226,11 +227,11 @@ always @(*)
   
 //=======================================================================================================
 
-  assign read_condition = (state==READ); //&&(~((window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line>=Y_COLS_NUM-1'd1))))? 1'b1 : 1'b0;
+assign read_condition = (state==READ); //&&(~((window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line>=Y_COLS_NUM-1'd1))))? 1'b1 : 1'b0;
   
-assign mem_intf_read_wgt.mem_req =(mem_intf_read_wgt.mem_valid )? 1'b0 : (read_condition && first_read_of_weights )? 1'b1: 1'b0;
-assign mem_intf_read_wgt.mem_start_addr  = (mem_intf_read_wgt.mem_req && first_read_of_weights)? sw_cnn_addr_x : {ADDR_WIDTH{1'b0}};
-assign mem_intf_read_wgt.mem_size_bytes  = (mem_intf_read_wgt.mem_req && first_read_of_weights)? DP_DEPTH      : {ADDR_WIDTH{1'b0}};
+assign mem_intf_read_wgt.mem_req =(mem_intf_read_wgt.mem_valid )? 1'b0 : ( read_condition && first_read_of_weights )? 1'b1: 1'b0;
+assign mem_intf_read_wgt.mem_start_addr  = (mem_intf_read_wgt.mem_req && first_read_of_weights)? sw_cnn_addr_y : {ADDR_WIDTH{1'b0}};
+assign mem_intf_read_wgt.mem_size_bytes  = (mem_intf_read_wgt.mem_req && first_read_of_weights)? DP_DEPTH*DP_DEPTH      : {ADDR_WIDTH{1'b0}};
 
 
 assign mem_intf_read_pic.mem_req = (mem_intf_read_pic.mem_valid)? 1'b0 : read_condition? 1'b1: 1'b0;              
@@ -239,56 +240,32 @@ assign mem_intf_read_pic.mem_size_bytes = mem_intf_read_pic.mem_req ? DP_DEPTH :
 
 assign mem_intf_read_bias.mem_req = (mem_intf_read_bias.mem_valid )? 1'b0 : (read_condition && first_read_of_bias )? 1'b1: 1'b0;
 assign mem_intf_read_bias.mem_start_addr = (mem_intf_read_bias.mem_req && first_read_of_bias)? sw_cnn_addr_bias : {ADDR_WIDTH{1'b0}};
-assign mem_intf_read_bias.mem_size_bytes = (mem_intf_read_bias.mem_req && first_read_of_bias)? 'd4 : {ADDR_WIDTH{1'b0}};  
-  
+assign mem_intf_read_bias.mem_size_bytes = (mem_intf_read_bias.mem_req && first_read_of_bias)? 'd4 : {ADDR_WIDTH{1'b0}}; 
+
+assign mem_intf_write.mem_req        = mem_intf_write.mem_ack ? 1'b0: (state==WRITE)? 1'b1 : 1'b0;
+assign mem_intf_write.mem_start_addr = (state==WRITE)? calc_addr_to_wr :{ADDR_WIDTH{1'b0}};
+assign mem_intf_write.mem_size_bytes = (state==WRITE)? calc_load_of_wr_bus-1'b1 :{ADDR_WIDTH{1'b0}};
 //=======================================================================================================
   
 always @(posedge clk or negedge rst_n)
   begin
     if(!rst_n)
       begin
-
-        mem_intf_write.mem_req <= 1'b0;
-        mem_intf_write.mem_start_addr <= {ADDR_WIDTH{1'b0}};
-        mem_intf_write.mem_size_bytes <= {ADDR_WIDTH{1'b0}};  
-        
-        // mem_intf_read_bias.mem_req<=1'b0;
-        // mem_intf_read_bias.mem_start_addr<={ADDR_WIDTH{1'b0}};
-        // mem_intf_read_bias.mem_size_bytes<={ADDR_WIDTH{1'b0}};  
-        
         counter_calc<=8'd0;        
         first_read_of_weights<=1'b1;
-       first_read_of_bias<=1'b1;
+        first_read_of_bias<=1'b1;
+        calc_addr_to_wr <=sw_cnn_addr_z; //CHECK THAT VALUE IS AVILABLE AT THIS POINT
       end
     else
       begin
-        if(state==IDLE)
-          begin            
-            if(mem_intf_write.mem_ack)
-              begin
-                mem_intf_write.mem_req<=1'b0;
-              end
-          end             
-     else if((state==READ)&&              (~((window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line>=Y_COLS_NUM-1'd1))))   
-          begin
-;
             
-            if(first_read_of_weights)
-              begin
-
-                
-
-                if(mem_intf_read_wgt.mem_valid) 
+        if((state==READ)&&              (~((window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line>=Y_COLS_NUM-1'd1))))   
+          begin
+           
+            if(first_read_of_weights && mem_intf_read_wgt.mem_valid) 
                 first_read_of_weights<=1'b0;
-              end
-            else
-              begin                
 
-
-                // mem_intf_read_bias.mem_req <=1'b1; //TODO: change to 0 and debug TB to behave right
-                // mem_intf_read_bias.mem_start_addr <= {ADDR_WIDTH{1'b0}};
-                // mem_intf_read_bias.mem_size_bytes <= 'd0;  //TODO: CHANGE TO ACTUAL WIDTH
-              end // else: !if(first_read_of_weights)
+ 
             if(mem_intf_read_bias.mem_valid)
               first_read_of_bias<=1'b0;
 
@@ -298,12 +275,7 @@ always @(posedge clk or negedge rst_n)
             if((calc_line==4'd0)&&(counter_calc==8'd0))
               wgt_mem_data<=mem_intf_read_wgt.mem_data;
             
-            
-            if(mem_intf_write.mem_ack)
-              begin
-                mem_intf_write.mem_req<=1'b0;
-              end
-                      
+                                 
             end
         else if (state==CALC)
           begin
@@ -311,11 +283,9 @@ always @(posedge clk or negedge rst_n)
             counter_calc<=counter_calc+1'b1;
 
           end 
-        else if (state==WRITE)
+        else if (state==WRITE && mem_intf_write.mem_ack)
           begin
-            mem_intf_write.mem_start_addr <=sw_cnn_addr_z;
-            mem_intf_write.mem_req<=1'b1;
-            mem_intf_write.mem_size_bytes<=calc_load_of_wr_bus-1'd1;
+            calc_addr_to_wr <= sw_cnn_addr_z+calc_addr_to_wr+calc_load_of_wr_bus-1'd1;
             end
         
       end    
@@ -458,7 +428,7 @@ endgenerate
       end
   end // always @ (posedge clk or negedge rst_n)
 
-  assign data2activation = (calc_line==Y_ROWS_NUM)? (data2write + mem_intf_read_bias.mem_data[3:0]) : 32'd0;
+  assign data2activation = (calc_line==Y_ROWS_NUM && (read_bias_data_vld) )? (data2write + mem_intf_read_bias.mem_data[3:0]) : 32'd0;
                            
  activation activation_ins (.in(data2activation), .out(activation_out));
 
@@ -489,18 +459,25 @@ endgenerate
       begin
         read_pic_data_vld<=1'b0;
         read_wgt_data_vld<=1'b0;
+        read_bias_data_vld<=1'b0;
       end
     else
       begin
         if(mem_intf_read_pic.mem_valid==1'b1)
           read_pic_data_vld<=1'b1;        
-        else if(mem_intf_read_pic.mem_req==1'b1)
+        else if(state==CALC)
           read_pic_data_vld<=1'b0;
 
         if(mem_intf_read_wgt.mem_valid==1'b1)
           read_wgt_data_vld<=1'b1;
         else if(mem_intf_read_wgt.mem_req==1'b1)
-          read_wgt_data_vld<=1'b0; 
+          read_wgt_data_vld<=1'b0;
+
+        if(mem_intf_read_bias.mem_valid==1'b1)
+          read_bias_data_vld<=1'b1;
+        else if(mem_intf_read_bias.mem_req==1'b1)
+          read_bias_data_vld<=1'b0;
+ 
 
       end
   end // always @ (posedge clk or negedge rst_n)
