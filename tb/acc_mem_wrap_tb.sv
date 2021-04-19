@@ -177,7 +177,7 @@ reg                         			   fcc_mem_intf_write_mem_ack;
 reg                             		   fcc_mem_intf_read_pic_mem_valid;
 reg                             		   fcc_mem_intf_read_pic_last;
 
-reg signed [31:0][WORD_WIDTH - 1:0]  		   fcc_mem_intf_read_pic_mem_data;
+reg [31:0][WORD_WIDTH - 1:0]  		   fcc_mem_intf_read_pic_mem_data;
 
 reg [$clog2(NUM_WORDS_IN_LINE*WORD_WIDTH/8)-1:0] fcc_mem_intf_read_pic_mem_last_valid ;
 
@@ -1117,9 +1117,11 @@ end
   //===================================================================
   task FCC_MEM_BIAS_READ_REQ (input [ADDR_WIDTH-1:0] addr, input [31:0] data);
 	  begin
+
 		  wait ((fcc_mem_intf_read_bias.mem_req==1'b1))//&&(mem_intf_read_bias.mem_start_addr==addr))
-		  @(posedge clk)
+		  @(negedge clk)
 		  //mem_intf_read_bias_mem_data ='d0;
+
 		  fcc_mem_intf_read_bias_mem_data=fcc_bias_data[addr/32]; 
 
 		  fcc_mem_intf_read_bias_mem_last_valid=8'd31;
@@ -1151,13 +1153,14 @@ end
  task FCC_TEST_128X128();//input [ADDR_WIDTH-1:0] start_addr);
 	 begin
 		 p=0;
-		 fc_go = 1'b1;
+		// fc_go = 1'b1;
 		 fcc_address = {ADDR_WIDTH{1'b0}};
 		 repeat (FCC_X_ROWS_NUM) begin //128
 			 p=p+1;
 			 @(posedge clk) begin
-				 fcc_scan=$fscanf(fcc_b,"%d\n",fcc_bias);
-				 FCC_MEM_BIAS_READ_REQ(fcc_address,fcc_bias);
+				// fcc_scan=$fscanf(fcc_b,"%d\n",fcc_bias);
+				$display("FCC_BIAS");				 
+				FCC_MEM_BIAS_READ_REQ(fcc_address,fcc_bias);
 				 repeat(FCC_CNT_32_MAX) begin
 					 for (j=0;j<32;j=j+1)begin
 						 fcc_scan=$fscanf(fcc_dta,"%d\n",fcc_a_data[j]);
