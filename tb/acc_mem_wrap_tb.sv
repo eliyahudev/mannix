@@ -246,82 +246,82 @@ begin
 	res_real = $fopen("../txt_files/128x128/res_real.txt", "r");
 	res = $fopen("../txt_files/128x128/results_after_activation.txt", "r");
 
-//***************************************CNN*************************************
-fc_go =1'b0; 
+	//***************************************CNN*************************************
+	fc_go =1'b0; 
 	clk_enable = 1'b1;
 	clk_config_tb   = 1'b0;
 	cnn_go=1'b0;
-	
+
 	sum_res_real=35'd0;
 	avrg=32'd0;
-//----cnn : reading all files to arrays ------
-/*	for (integer k=0;k<(X_ROWS_NUM*X_COLS_NUM);k=k+1)
-	begin
-		scan=$fscanf(dta,"%d\n",a_data[k]);
-	end
+	//----cnn : reading all files to arrays ------
+	/*	for (integer k=0;k<(X_ROWS_NUM*X_COLS_NUM);k=k+1)
+begin
+	scan=$fscanf(dta,"%d\n",a_data[k]);
+end
 
-	for (integer s=0;s<(Y_ROWS_NUM*Y_COLS_NUM);s=s+1)
-	begin
-		scan=$fscanf(wgt,"%d\n",w_data[s]);
-	end
+for (integer s=0;s<(Y_ROWS_NUM*Y_COLS_NUM);s=s+1)
+begin
+	scan=$fscanf(wgt,"%d\n",w_data[s]);
+end
 
-	for (integer r=0;r<((X_ROWS_NUM-3'd3)*(X_COLS_NUM-3'd3));r=r+1)
-	begin
-		scan=$fscanf(res,"%d\n",results[r]);
+for (integer r=0;r<((X_ROWS_NUM-3'd3)*(X_COLS_NUM-3'd3));r=r+1)
+begin
+	scan=$fscanf(res,"%d\n",results[r]);
 
-	end
+end
 
-	for (integer r1=0;r1<((X_ROWS_NUM-3'd3)*(X_COLS_NUM-3'd3));r1=r1+1)
-	begin
-		scan=$fscanf(res_real,"%d\n",results_real[r1]);
-		sum_res_real=sum_res_real+results_real[r1];
-	end
-	bias_data='d0;
-	avrg=sum_res_real/15625;
+for (integer r1=0;r1<((X_ROWS_NUM-3'd3)*(X_COLS_NUM-3'd3));r1=r1+1)
+begin
+	scan=$fscanf(res_real,"%d\n",results_real[r1]);
+	sum_res_real=sum_res_real+results_real[r1];
+end
+bias_data='d0;
+avrg=sum_res_real/15625;
 
-	$monitor("START CNN TEST\n");
+$monitor("START CNN TEST\n");
 
-	RESET_VALUES();
-	ASYNC_RESET();
-	MEM_LOAD(a_data, X_ROWS_NUM*X_COLS_NUM, 0);
-	MEM_LOAD(w_data, Y_ROWS_NUM*Y_COLS_NUM, 65536);
-	MEM_LOAD(bias_data, 32, 1<<16);
-	//MEM_READ(a_data, X_ROWS_NUM*X_COLS_NUM, 0);
+RESET_VALUES();
+ASYNC_RESET();
+MEM_LOAD(a_data, X_ROWS_NUM*X_COLS_NUM, 0);
+MEM_LOAD(w_data, Y_ROWS_NUM*Y_COLS_NUM, 65536);
+MEM_LOAD(bias_data, 32, 1<<16);
+//MEM_READ(a_data, X_ROWS_NUM*X_COLS_NUM, 0);
 
 
 
-	@(posedge clk)
-	cnn_go=1'b1;
-	//TEST_128X128_4X4();
-	cnn_go=1'b0;
-	//#100;
-	//wait(cnn_done);*/
+@(posedge clk)
+cnn_go=1'b1;
+//TEST_128X128_4X4();
+cnn_go=1'b0;
+//#100;
+//wait(cnn_done);*/
 //***************************************FCC*************************************
-	$monitor("START FCC TEST\n");
-	$display("START FCC TEST\n");
-	fcc_dta = $fopen("../txt_files/fcc_files/data.txt", "r");
-	fcc_wgt = $fopen("../txt_files/fcc_files/weights.txt", "r");
-	fcc_res = $fopen("../txt_files/fcc_files/result.txt", "r");
-	fcc_b   = $fopen("../txt_files/fcc_files/bias.txt", "r");
-	
+$monitor("START FCC TEST\n");
+$display("START FCC TEST\n");
+fcc_dta = $fopen("../txt_files/fcc_files/data.txt", "r");
+fcc_wgt = $fopen("../txt_files/fcc_files/weights.txt", "r");
+fcc_res = $fopen("../txt_files/fcc_files/result.txt", "r");
+fcc_b   = $fopen("../txt_files/fcc_files/bias.txt", "r");
+
 //----fcc : reading all files to arrays ------
-	fc_go=1'b0; 
-	for (integer k=0;k<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);k=k+1)
-	begin
-		scan=$fscanf(fcc_dta,"%d\n",fcc_a_data[k]);
-	end
+fc_go=1'b0; 
+for (integer k=0;k<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);k=k+1)
+begin
+	scan=$fscanf(fcc_dta,"%d\n",fcc_a_data[k]);
+end
 
-	for (integer s=0;s<(FCC_Y_ROWS_NUM*FCC_Y_COLS_NUM);s=s+1)
-	begin
-		scan=$fscanf(fcc_wgt,"%d\n",fcc_w_data[s]);
-	end
-	for (integer u=0;u<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);u=u+1)
-	begin
-		scan=$fscanf(fcc_b,"%d\n",fcc_bias_data[u]);
-	end
+for (integer s=0;s<(FCC_Y_ROWS_NUM*FCC_Y_COLS_NUM);s=s+1)
+begin
+	scan=$fscanf(fcc_wgt,"%d\n",fcc_w_data[s]);
+end
+for (integer u=0;u<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);u=u+1)
+begin
+	scan=$fscanf(fcc_b,"%d\n",fcc_bias_data[u]);
+end
 
 
-	/*for (integer r=0;r<((FCC_X_ROWS_NUM-3'd3)*(FCC_X_COLS_NUM-3'd3));r=r+1)
+/*for (integer r=0;r<((FCC_X_ROWS_NUM-3'd3)*(FCC_X_COLS_NUM-3'd3));r=r+1)
 	begin
 		scan=$fscanf(fcc_res,"%d\n",fcc_results[r]);
 
@@ -332,30 +332,30 @@ fc_go =1'b0;
 		scan=$fscanf(fcc_res_real,"%d\n",fcc_results_real[r1]);
 		//fcc_sum_res_real=fcc_sum_res_real+fcc_results_real[r1];
 	end*/
-//---------------------------------------------
+   //---------------------------------------------
 
-	FCC_RESET_VALUES();
-	ASYNC_RESET();
-	//FCC_READ_RESULT();
-
-
-
-	FCC_MEM_LOAD(fcc_a_data, FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 196608);//3*2^16
-		$display("Finished data - now wgt\n");
-	FCC_MEM_LOAD(fcc_w_data, FCC_Y_ROWS_NUM*FCC_Y_COLS_NUM, 262144);//4*2^16
-		$display("Finished wgt - now bias\n");	
-	FCC_MEM_LOAD(fcc_bias_data, 32, 327680);//5*2^16
-	//MEM_READ(a_data, X_ROWS_NUM*X_COLS_NUM, 0);
+   FCC_RESET_VALUES();
+   ASYNC_RESET();
+   //FCC_READ_RESULT();
 
 
 
-	@(posedge clk)
-	fc_go=1'b1;
-	FCC_TEST_128X128();	//The task that start it all!
-	fc_go=1'b0;
-	#100;
+   FCC_MEM_LOAD(fcc_a_data, FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 196608);//3*2^16
+   $display("Finished data - now wgt\n");
+   FCC_MEM_LOAD(fcc_w_data, FCC_Y_ROWS_NUM*FCC_Y_COLS_NUM, 262144);//4*2^16
+   $display("Finished wgt - now bias\n");	
+   FCC_MEM_LOAD(fcc_bias_data, 32, 327680);//5*2^16
+   //MEM_READ(a_data, X_ROWS_NUM*X_COLS_NUM, 0);
 
-	$stop;
+
+
+   @(posedge clk)
+   fc_go=1'b1;
+   FCC_TEST_128X128();	//The task that start it all!
+   fc_go=1'b0;
+   #100;
+
+   $stop;
 end // initial begin
 
 
@@ -437,32 +437,30 @@ mem_intf_write #(.ADDR_WIDTH(32),.NUM_WORDS_IN_LINE(16), .WORD_WIDTH(256)) write
 mem_intf_write #(.ADDR_WIDTH(32),.NUM_WORDS_IN_LINE(16), .WORD_WIDTH(256)) write_sw_req ();
 
 mannix_mem_farm mannix_mem_farm_ins (
-		.clk(clk), // Clock
-		.rst_n(rst_n), // Reset
-		.fcc_pic_r(fcc_mem_intf_read_pic),
-		.fcc_wgt_r(fcc_mem_intf_read_wgt),
-		.fcc_bias_r(fcc_mem_intf_read_bias),
-		.cnn_pic_r(mem_intf_read_pic),
-		.cnn_wgt_r(mem_intf_read_wgt),
-		.cnn_bias_r(mem_intf_read_bias),
-		.sw_w(mem_intf_write_sw),
-		.pool_r(pool_r),//DUMMY
-		.fcc_w(fcc_mem_intf_write),
-		.cnn_w(mem_intf_write),
-		.pool_w(pool_w),//DUMMY
-
-		.read_from_ddr(read_from_ddr),
-			.write_to_ddr(write_to_ddr),
-			.read_addr_sram(read_addr_sram),
-			.write_addr_sram(write_addr_sram),
-			.write_sw_req(write_sw_req),
-
-			.read_ddr_req(read_ddr_req),
-			.write_ddr_req(write_ddr_req),
-			.read_addr_ddr(read_addr_ddr),
-			.write_addr_ddr(write_addr_ddr),
-			.client_priority(client_priority)
-		);
+	.clk(clk), // Clock
+	.rst_n(rst_n), // Reset
+	.fcc_pic_r(fcc_mem_intf_read_pic),
+	.fcc_wgt_r(fcc_mem_intf_read_wgt),
+	.fcc_bias_r(fcc_mem_intf_read_bias),
+	.cnn_pic_r(mem_intf_read_pic),
+	.cnn_wgt_r(mem_intf_read_wgt),
+	.cnn_bias_r(mem_intf_read_bias),
+	.sw_w(mem_intf_write_sw),
+	.pool_r(pool_r), //DUMMY
+	.fcc_w(fcc_mem_intf_write),
+	.cnn_w(mem_intf_write),
+	.pool_w(pool_w), //DUMMY
+	.read_from_ddr(read_from_ddr),
+	.write_to_ddr(write_to_ddr),
+	.read_addr_sram(read_addr_sram),
+	.write_addr_sram(write_addr_sram),
+	.write_sw_req(write_sw_req),
+	.read_ddr_req(read_ddr_req),
+	.write_ddr_req(write_ddr_req),
+	.read_addr_ddr(read_addr_ddr),
+	.write_addr_ddr(write_addr_ddr),
+	.client_priority(client_priority)
+);
 
 
 
@@ -634,19 +632,19 @@ endtask // ASYNC_RESET
 integer data_mem,scan_mem;
 integer addr_sram;
 //**************************CNN MEM_LOAD***********************************8
-task MEM_LOAD(input reg [((X_COLS_NUM*X_ROWS_NUM)-1):0] [7:0] data_8_bit, input integer size, integer start_addr);
+task MEM_LOAD(input reg [((128*128)-1):0] [7:0] data_8_bit, input integer size, integer start_addr);
 	data_mem = $fopen("../txt_files/data_bin.txt", "r");
 	addr_sram=0;
 	clk_enable = 1'b1;
 
-		repeat (2) begin
-			@ (posedge clk) ;
-		end
-	for (integer out=0;out<(size/32)+((size%32)!=0);out=out+1) begin
-	for (integer k=0;k<32;k=k+1)
-	begin
-		scan_mem=$fscanf(data_mem,"%b\n",load_data[k]);
+	repeat (2) begin
+		@ (posedge clk) ;
 	end
+	for (integer out=0;out<(size/32)+((size%32)!=0);out=out+1) begin
+		for (integer k=0;k<32;k=k+1)
+		begin
+			scan_mem=$fscanf(data_mem,"%b\n",load_data[k]);
+		end
 		begin
 			$display("writing to addresses 0 the values 256'b1111");
 			addr_sram=start_addr+out*32;
@@ -669,16 +667,16 @@ task MEM_LOAD(input reg [((X_COLS_NUM*X_ROWS_NUM)-1):0] [7:0] data_8_bit, input 
 			if (acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*8+:256]!=mem_intf_write_sw.mem_data)begin
 				$display("TEST FAIL\ntime=%d loop=%d bank=%d, addr=%d \n expected:%h, actual:%h",
 					$time,out,which_bank,which_addr,mem_intf_write_sw.mem_data,acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*8+:256]);
-			//	$finish();
+				//	$finish();
 			end
 			else begin
 				$display("check passed\ntime=%d loop=%d bank=%d, addr=%d \n expected:%h, actual:%h",
 					$time,out,which_bank,which_addr,mem_intf_write_sw.mem_data,acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*8+:256]);
 			end
-		//	$display("PASS");
+			//	$display("PASS");
 		end
 	end
-			mem_intf_write_sw.mem_req=1'b0;
+	mem_intf_write_sw.mem_req=1'b0;
 endtask //// MEM_LOAD
 
 task MEM_READ(input reg [((X_COLS_NUM*X_ROWS_NUM)-1):0] [7:0] data_8_bit, input integer size, integer start_addr);
@@ -686,15 +684,15 @@ task MEM_READ(input reg [((X_COLS_NUM*X_ROWS_NUM)-1):0] [7:0] data_8_bit, input 
 	addr_sram=0;
 	clk_enable = 1'b1;
 
-		repeat (10) begin
-			@ (posedge clk) ;
-		end
+	repeat (10) begin
+		@ (posedge clk) ;
+	end
 	//for (integer out=0;out<(size/32)+((size%32)!=0);out=out+1) begin
 	for (integer out=0;out<2;out=out+1) begin
-	for (integer k=0;k<32;k=k+1)
-	begin
-		scan_mem=$fscanf(data_mem,"%b\n",load_data[k]);
-	end
+		for (integer k=0;k<32;k=k+1)
+		begin
+			scan_mem=$fscanf(data_mem,"%b\n",load_data[k]);
+		end
 		begin
 			$display("writing to addresses 0 the values 256'b1111");
 			addr_sram=start_addr+out*32+1;
@@ -717,31 +715,31 @@ task MEM_READ(input reg [((X_COLS_NUM*X_ROWS_NUM)-1):0] [7:0] data_8_bit, input 
 			if (acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*8+:256]!=pool_r.mem_data)begin
 				$display("TEST FAIL\ntime=%d loop=%d bank=%d, addr=%d \n expected:%h, actual:%h",
 					$time,out,which_bank,which_addr,pool_r.mem_data,acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*8+:256]);
-			//	$finish();
+				//	$finish();
 			end
 			else begin
 				$display("check passed\ntime=%d loop=%d bank=%d, addr=%d \n expected:%h, actual:%h",
 					$time,out,which_bank,which_addr,pool_r.mem_data,acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*8+:256]);
 			end
-		//	$display("PASS");
+			//	$display("PASS");
 		end
 	end
-			pool_r.mem_req=1'b0;
+	pool_r.mem_req=1'b0;
 endtask //// MEM_READ
 //**************************FCC MEM_LOAD***********************************
-task FCC_MEM_LOAD(input reg [((FCC_X_COLS_NUM*FCC_X_ROWS_NUM)-1):0] [7:0] data_8_bit, input integer size, integer start_addr);
+task FCC_MEM_LOAD(input reg [((128*128)-1):0] [7:0] data_8_bit, input integer size, integer start_addr);
 	data_mem = $fopen("../txt_files/data_bin.txt", "r");
 	addr_sram=0;
 	clk_enable = 1'b1;
 
-		repeat (2) begin
-			@ (posedge clk) ;
-		end
-	for (integer out=0;out<(size/32)+((size%32)!=0);out=out+1) begin
-	for (integer k=0;k<32;k=k+1)
-	begin
-		scan_mem=$fscanf(data_mem,"%b\n",load_data[k]);
+	repeat (2) begin
+		@ (posedge clk) ;
 	end
+	for (integer out=0;out<(size/32)+((size%32)!=0);out=out+1) begin
+		for (integer k=0;k<32;k=k+1)
+		begin
+			scan_mem=$fscanf(data_mem,"%b\n",load_data[k]);
+		end
 		begin
 			$display("writing to addresses 0 the values 256'b1111");
 			addr_sram=start_addr+out*32;
@@ -764,16 +762,16 @@ task FCC_MEM_LOAD(input reg [((FCC_X_COLS_NUM*FCC_X_ROWS_NUM)-1):0] [7:0] data_8
 			if (acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*8+:256]!=mem_intf_write_sw.mem_data)begin
 				$display("TEST FAIL\ntime=%d loop=%d bank=%d, addr=%d \n expected:%h, actual:%h",
 					$time,out,which_bank,which_addr,mem_intf_write_sw.mem_data,acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*8+:256]);
-			//	$finish();
+				//	$finish();
 			end
 			else begin
 				$display("check passed\ntime=%d loop=%d bank=%d, addr=%d \n expected:%h, actual:%h",
 					$time,out,which_bank,which_addr,mem_intf_write_sw.mem_data,acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*8+:256]);
 			end
-		//	$display("PASS");
+			//	$display("PASS");
 		end
 	end
-			mem_intf_write_sw.mem_req=1'b0;
+	mem_intf_write_sw.mem_req=1'b0;
 endtask //// MEM_LOAD
 
 task FCC_MEM_READ(input reg [((FCC_X_COLS_NUM*FCC_X_ROWS_NUM)-1):0] [7:0] data_8_bit, input integer size, integer start_addr);
@@ -781,15 +779,15 @@ task FCC_MEM_READ(input reg [((FCC_X_COLS_NUM*FCC_X_ROWS_NUM)-1):0] [7:0] data_8
 	addr_sram=0;
 	clk_enable = 1'b1;
 
-		repeat (10) begin
-			@ (posedge clk) ;
-		end
+	repeat (10) begin
+		@ (posedge clk) ;
+	end
 	//for (integer out=0;out<(size/32)+((size%32)!=0);out=out+1) begin
 	for (integer out=0;out<2;out=out+1) begin
-	for (integer k=0;k<32;k=k+1)
-	begin
-		scan_mem=$fscanf(data_mem,"%b\n",load_data[k]);
-	end
+		for (integer k=0;k<32;k=k+1)
+		begin
+			scan_mem=$fscanf(data_mem,"%b\n",load_data[k]);
+		end
 		begin
 			$display("writing to addresses 0 the values 256'b1111");
 			addr_sram=start_addr+out*32+1;
@@ -812,16 +810,16 @@ task FCC_MEM_READ(input reg [((FCC_X_COLS_NUM*FCC_X_ROWS_NUM)-1):0] [7:0] data_8
 			if (acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*8+:256]!=pool_r.mem_data)begin
 				$display("TEST FAIL\ntime=%d loop=%d bank=%d, addr=%d \n expected:%h, actual:%h",
 					$time,out,which_bank,which_addr,pool_r.mem_data,acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*8+:256]);
-			//	$finish();
+				//	$finish();
 			end
 			else begin
 				$display("check passed\ntime=%d loop=%d bank=%d, addr=%d \n expected:%h, actual:%h",
 					$time,out,which_bank,which_addr,pool_r.mem_data,acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*8+:256]);
 			end
-		//	$display("PASS");
+			//	$display("PASS");
 		end
 	end
-			pool_r.mem_req=1'b0;
+	pool_r.mem_req=1'b0;
 endtask //// MEM_READ
 integer j;
 
@@ -944,7 +942,7 @@ task WINDOWS_IN_RAW(input [15:0] times , input [7:0] row_num);
 
 		//  data=data+3'd4;
 		index=index+1'b1;
-	//	wait(data2write_out==results_real[index_res]); //TODO: uncomment
+		//	wait(data2write_out==results_real[index_res]); //TODO: uncomment
 		$display ("index: %d, Value res: %d , RTL val: %d \n",index_res,results[index_res],activation_out_smpl) ;
 		if(results[index_res]==activation_out_smpl)
 			$display("Yay");
@@ -955,7 +953,7 @@ task WINDOWS_IN_RAW(input [15:0] times , input [7:0] row_num);
 end
   endtask
 
-//********************************************************************************************************
+  //********************************************************************************************************
 
 
   task TEST_128X128_4X4();//input [ADDR_WIDTH-1:0] start_addr);
@@ -986,7 +984,7 @@ end
 
 	  end
   endtask
-//********************************************************************************************************
+  //********************************************************************************************************
   always @(posedge clk)
   begin
 	  if(mem_intf_write.mem_req) //&& mem_intf_read_pic.mem_start_addr==mem_intf_read_pic.mem_size_bytes)
@@ -1036,6 +1034,17 @@ end
 		  fc_go = 1'b0;
 		  cnn_bn = 'd128 ;
 
+		  write_to_ddr=1'b0;
+		  read_from_ddr=1'b0;
+		  read_ddr_req.mem_valid=1'b0;
+		  write_addr_sram=0;
+		  write_sw_req.mem_req=1'b0;
+		  write_sw_req.last=1'b1;
+		  write_sw_req.mem_last_valid = 1'b0;
+		  mem_intf_write_sw.mem_req=1'b0;
+		  mem_intf_write_sw.mem_start_addr='0;
+		  mem_intf_write_sw.mem_size_bytes='0;
+
 
 	  end
   endtask // ASYNC_RESET
@@ -1058,7 +1067,7 @@ end
 		  fcc_mem_intf_read_pic_mem_last_valid=8'd31;
 
 		  fcc_mem_intf_read_pic_mem_valid=1'b1;  
-		
+
 		  #6.25
 		  fcc_mem_intf_read_pic_mem_valid=1'b0; 
 
@@ -1087,8 +1096,8 @@ end
 		  fcc_mem_intf_read_wgt_mem_last_valid=8'd31;
 
 		  fcc_mem_intf_read_wgt_mem_valid=1'b1;  
-					
-	          #6.25
+
+		  #6.25
 
 		  fcc_mem_intf_read_wgt_mem_valid=1'b0;
 	  end
