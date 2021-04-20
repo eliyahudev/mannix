@@ -47,6 +47,7 @@ module mem_req_ctrl
 	/*AUTOLOGIC*/
 	logic [15:0] read_prior; //is read or write in priority
 	logic [15:0][3:0] which_sram, read_sram, write_sram, which_sram_sec; //wich number of the sram the addres belong to, sec - second req 
+	logic [15:0][3:0] which_sram_s, which_sram_sec_s; //sample these signal for map the data when it's come 
 	logic [15:0] two_read_req, two_write_req;//is to req neccessery
 	logic [15:0] data_read_align, data_write_align; //is the addr aligned
 	logic [15:0][511:0] temp_buf; //temporary buf, conatain the data that came from the sram and not written to the clients
@@ -283,6 +284,22 @@ module mem_req_ctrl
 
 			always @(posedge clk or negedge rst_n)
 					if (!rst_n) begin
+						which_sram_s[i]<='0;
+					end
+					else begin
+						which_sram_s[i]<=which_sram[i];
+					end
+
+			always @(posedge clk or negedge rst_n)
+					if (!rst_n) begin
+						which_sram_sec_s[i]<='0;
+					end
+					else begin
+						which_sram_sec_s[i]<=which_sram_sec[i];
+					end
+
+			always @(posedge clk or negedge rst_n)
+					if (!rst_n) begin
 						read_gnt_cnt_s[i]<='0;
 					end
 					else begin
@@ -329,51 +346,6 @@ module mem_req_ctrl
 					endcase
 				end
 
-			always_comb begin
-				case (state[i])
-					IDLE: begin
-						read_mem_data[i]='0;
-					end
-					READ_ONE: 
-						if (!req_data_stored_temp_buf[i])
-								if (data_read_align[i])
-									if (read_gnt_cnt[i]==2'd1) 
-										read_mem_data[i]=data_in[which_sram[i]];
-									else
-										read_mem_data[i]='0;
-								else if (read_gnt_cnt[i]==2'd1) 
-										read_mem_data[i]<= data_in[which_sram[i]] >> (read_mem_start_addr[i][4:0]<<3);
-									else
-										read_mem_data[i]='0;
-						else
-							read_mem_data[i]=temp_buf[i][255:0];
-					READ_TWO: begin
-						case ({read_gnt_cnt_s[i], read_gnt_cnt[i]})
-							4'b0011: begin
-								read_mem_data[i]={data_in[which_sram_sec[i]],data_in[which_sram[i]]} >> ((start_addr_s[i])<<3);
-							end
-							4'b0111: begin
-								read_mem_data[i]={data_in[which_sram_sec[i]],temp_buf[i][255:0]} >> ((start_addr_s[i])<<3);
-							end
-							4'b1011: begin
-								read_mem_data[i]={temp_buf[i][511:256],data_in[which_sram[i]]} >> ((start_addr_s[i])<<3);
-							end
-							default: begin
-							read_mem_data[i]='0;
-							end
-						endcase
-					end
-					WRITE_ONE: begin
-						read_mem_data[i]='0;
-					end
-					WRITE_TWO: begin
-						read_mem_data[i]='0;
-					end
-					default: begin
-						read_mem_data[i]='0;
-					end
-				endcase
-			end
 			/*
 			case template
 			always_comb begin
@@ -474,26 +446,6 @@ module mem_req_ctrl
 								default: write_gnt_cnt[i]<=write_gnt_cnt[i];
 							endcase
 					end
-			always_comb begin
-				for (integer j=0; j < 16; j++) 
-					if (gnt[i][j]) begin
-						data_out[i]= i[3:0]==which_sram[j] ? first_data_out[j] : second_data_out[j]; 
-						addr_to_sram[i] = read_prior[j] ? 
-							((i[3:0]==which_sram[j] ? {read_mem_start_addr[j][18:16],read_mem_start_addr[j][5],read_mem_start_addr[j][15:6],read_mem_start_addr[j][4:0]} :
-							{second_addr_read[j][18:16],second_addr_read[j][5],second_addr_read[j][15:6],second_addr_read[j][4:0]}))
-							:
-							(i[3:0]==which_sram[j] ? {write_mem_start_addr[j][18:16],write_mem_start_addr[j][5],write_mem_start_addr[j][15:6],write_mem_start_addr[j][4:0]} :
-							{second_addr_write[j][18:16],second_addr_write[j][5],second_addr_write[j][15:6],second_addr_write[j][4:0]});
-						mask_sec[i]= ((257'd1<<256)-1) >> (256-(num_bytes_second_data_out[j]<<3));
-						mask[i] =i[3:0]==which_sram[j] ? (~((256'd1 << (write_mem_start_addr[j][4:0]<<3))-1'b1)) & 
-							(((257'd1<<256)-1) >> (256-(({3'd0,write_mem_start_addr[j][4:0]}<<3)+(num_bytes_first_data_out[j]<<3)))) : mask_sec[i]; 
-						mask_enable[i] = !data_write_align[j]|| (num_bytes_first_data_out[j]<32);
-						read[i]= read_prior[j]==1'b1;
-						write[i]= read_prior[j]==1'b0;
-
-					end
-					
-			end
 			//the transition of the fsm:
 			//the fsm move from IDLE to another state and wait for gnt.
 			//when gnt is come if there is another req the FSM move to the appropriate state else it move back to IDLE  
@@ -614,7 +566,81 @@ module mem_req_ctrl
 					end
 				end
 	
+			always_comb begin
+				data_out='0;
+				addr_to_sram='0;
+				mask_sec='0;
+				mask_enable='0;
+				read='0;
+				write='0;
+				for (integer kk=0; kk < 16; kk++)
+					for (integer j=0; j < 16; j++) 
+						if (gnt[kk][j]) begin
+							data_out[kk]= kk[3:0]==which_sram[j] ? first_data_out[j] : second_data_out[j]; 
+							addr_to_sram[kk] = read_prior[j] ? 
+								((kk[3:0]==which_sram[j] ? {read_mem_start_addr[j][18:16],read_mem_start_addr[j][5],read_mem_start_addr[j][15:6],read_mem_start_addr[j][4:0]} :
+								{second_addr_read[j][18:16],second_addr_read[j][5],second_addr_read[j][15:6],second_addr_read[j][4:0]}))
+								:
+								(kk[3:0]==which_sram[j] ? {write_mem_start_addr[j][18:16],write_mem_start_addr[j][5],write_mem_start_addr[j][15:6],write_mem_start_addr[j][4:0]} :
+								{second_addr_write[j][18:16],second_addr_write[j][5],second_addr_write[j][15:6],second_addr_write[j][4:0]});
+							mask_sec[kk]= ((257'd1<<256)-1) >> (256-(num_bytes_second_data_out[j]<<3));
+							mask[kk] =kk[3:0]==which_sram[j] ? (~((256'd1 << (write_mem_start_addr[j][4:0]<<3))-1'b1)) & 
+								(((257'd1<<256)-1) >> (256-(({3'd0,write_mem_start_addr[j][4:0]}<<3)+(num_bytes_first_data_out[j]<<3)))) : mask_sec[kk]; 
+							mask_enable[kk] = !data_write_align[j]|| (num_bytes_first_data_out[j]<32);
+							read[kk]= read_prior[j]==1'b1;
+							write[kk]= read_prior[j]==1'b0;
 
+						end
+			end
+
+			always_comb begin
+			read_mem_data='0;
+		for (integer jj=0; jj < 16; jj++) begin
+				case (state[jj])
+					IDLE: begin
+						read_mem_data[jj]='0;
+					end
+					READ_ONE: 
+						if (!req_data_stored_temp_buf[jj])
+								if (data_read_align[jj])
+									if (read_gnt_cnt[jj]==2'd1) 
+										read_mem_data[jj]=data_in[which_sram_s[jj]];
+									else
+										read_mem_data[jj]='0;
+								else if (read_gnt_cnt[jj]==2'd1) 
+										read_mem_data[jj]<= data_in[which_sram_s[jj]] >> (read_mem_start_addr[jj][4:0]<<3);
+									else
+										read_mem_data[jj]='0;
+						else
+							read_mem_data[jj]=temp_buf[jj][255:0];
+					READ_TWO: begin
+						case ({read_gnt_cnt_s[jj], read_gnt_cnt[jj]})
+							4'b0011: begin
+								read_mem_data[jj]={data_in[which_sram_sec_s[jj]],data_in[which_sram_s[jj]]} >> ((start_addr_s[jj])<<3);
+							end
+							4'b0111: begin
+								read_mem_data[jj]={data_in[which_sram_sec_s[jj]],temp_buf[jj][255:0]} >> ((start_addr_s[jj])<<3);
+							end
+							4'b1011: begin
+								read_mem_data[jj]={temp_buf[jj][511:256],data_in[which_sram_s[jj]]} >> ((start_addr_s[jj])<<3);
+							end
+							default: begin
+							read_mem_data[jj]='0;
+							end
+						endcase
+					end
+					WRITE_ONE: begin
+						read_mem_data[jj]='0;
+					end
+					WRITE_TWO: begin
+						read_mem_data[jj]='0;
+					end
+					default: begin
+						read_mem_data[jj]='0;
+					end
+				endcase
+			end
+		end
 endmodule
 
 // Local Variables:
