@@ -154,6 +154,7 @@ reg signed [31:0] results_real [0:15624];
 integer dta;
 integer wgt;
 integer b;
+ 
 integer res;
 integer res_real;
 integer scan;
@@ -336,23 +337,22 @@ end
 
    FCC_RESET_VALUES();
    ASYNC_RESET();
-   //FCC_READ_RESULT();
 
 
-
-   FCC_MEM_LOAD(fcc_a_data, FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 196608);//3*2^16
+   FCC_MEM_LOAD(fcc_a_data, FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 262144);//4*2^16
    $display("Finished data - now wgt\n");
-   FCC_MEM_LOAD(fcc_w_data, FCC_Y_ROWS_NUM*FCC_Y_COLS_NUM, 262144);//4*2^16
+   FCC_MEM_LOAD(fcc_w_data, FCC_Y_ROWS_NUM*FCC_Y_COLS_NUM, 327680);//5*2^16
    $display("Finished wgt - now bias\n");	
-   FCC_MEM_LOAD(fcc_bias_data, 32, 327680);//5*2^16
+   FCC_MEM_LOAD(fcc_bias_data, FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 393216);//6*2^16
    //MEM_READ(a_data, X_ROWS_NUM*X_COLS_NUM, 0);
 
 
 
    @(posedge clk)
    fc_go=1'b1;
-   FCC_TEST_128X128();	//The task that start it all!
-   fc_go=1'b0;
+ wait(fc_done);
+ //  FCC_TEST_128X128();	//The task that start it all!
+ //  fc_go=1'b0;
    #100;
 
    $stop;
@@ -1020,11 +1020,15 @@ end
 		  fcc_mem_intf_read_bias_mem_data='d0;
 		  fcc_mem_intf_read_bias_mem_last_valid='d0;
 
-		  fc_addrx={ADDR_WIDTH{1'b0}};		// FC Data window FIRST address
+		 /* fc_addrx={ADDR_WIDTH{1'b0}};		// FC Data window FIRST address
 		  fc_addry={ADDR_WIDTH{1'b0}};		// FC  weighs FIRST address
 		  fc_addrz={ADDR_WIDTH{1'b0}};		// FC bias address
 		  fc_addrb={ADDR_WIDTH{1'b0}};		// FC return address
-
+						*/
+		  fc_addrx=19'd262144;		// FC Data window FIRST address
+		  fc_addry=19'd327680;		// FC  weighs FIRST address
+		  fc_addrz=19'd458752;		// FC bias address
+		  fc_addrb=19'd393216;	
 		  // fc_xm={X_LOG2_ROWS_NUM{1'b0}};  		// FC data matrix num of rows
 		  // fc_ym={Y_LOG2_ROWS_NUM{1'b0}};	        // FC weight matrix num of rows
 		  // fc_yn={Y_LOG2_COLS_NUM{1'b0}};	        // FC weight matrix num of columns
