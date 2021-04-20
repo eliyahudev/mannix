@@ -157,58 +157,62 @@ module mem_req_ctrl
 						start_addr_s[i]<=read_mem_start_addr[i][5:0];
 					end
 			//the srams of first and the second req
-			always_comb	begin
-				req[i]='0;
-			//	case (state[i])
-					begin
-						if ((next_state[i]!=IDLE) && (!req_data_stored_temp_buf[i] && read_mem_req[i] || write_mem_req[i]))
-							req[which_sram[i]][i]=1'b1;
-						else
-							req[which_sram[i]][i]=1'b0;
-						if (next_state[i]==WRITE_TWO || next_state[i]==READ_TWO)
-							req[which_sram_sec[i]][i]=1'b1;
-						else
-							req[which_sram_sec[i]][i]=1'b0;
-					end
-				/*	IDLE: 
-					READ_ONE: begin
-						if ((next_state[i]!=IDLE) && !req_data_stored_temp_buf[i])
-							req[which_sram[i]][i]=1'b1;
-						else
-							req[which_sram[i]][i]=1'b0;
-					end
-					READ_TWO: begin
-						if ( (read_gnt_cnt[i]=='0 || read_gnt_cnt[i]==2'd2)&& !req_data_stored_temp_buf[i] )
-							req[which_sram[i]][i]=1'b0;
-						else
-							req[which_sram[i]][i]=1'b1;
-						if (read_gnt_cnt[i]=='0 || read_gnt_cnt[i]==2'd1)
-							req[which_sram_sec[i]][i]=1'b1;
-						else
-							req[which_sram_sec[i]][i]=1'b0;
-					end
-					WRITE_ONE: begin
-						if (next_state[i]!=IDLE)
-							req[which_sram[i]][i]=1'b1;
-						else
-							req[which_sram[i]][i]=1'b0;
-					end
-					WRITE_TWO: begin
-						if (write_gnt_cnt[i]=='0 || write_gnt_cnt[i]==2'd2)
-							req[which_sram[i]][i]=1'b0;
-						else
-							req[which_sram[i]][i]=1'b1;
-						if (write_gnt_cnt[i]=='0 || write_gnt_cnt[i]==2'd1)
-							req[which_sram_sec[i]][i]=1'b1;
-						else
-							req[which_sram_sec[i]][i]=1'b0;
-					end
-					default: begin
-						req[which_sram[i]][i]=1'b0;
-						req[which_sram_sec[i]][i]=1'b0;
-					end
-				endcase*/
-			end
+	   // 	always_comb	begin
+	   // 		req[which_sram[i]]='0;
+	   // 	//	case (state[i])
+	   // 			begin
+	   // 				if ((next_state[i]!=IDLE) && (!req_data_stored_temp_buf[i] && read_mem_req[i] || write_mem_req[i]))
+	   // 					if ((next_state[i]==WRITE_TWO) || (next_state[i]==READ_TWO)) begin
+	   // 						req[which_sram[i]][i]=1'b1;
+	   // 						req[which_sram_sec[i]][i]=1'b1;
+	   // 					end
+	   // 					else begin
+	   // 						req[which_sram[i]][i]=1'b1;
+	   // 					end
+	   // 				else begin
+	   // 					req[which_sram_sec[i]][i]=1'b0;
+	   // 					req[which_sram[i]][i]=1'b0;
+	   // 				end
+	   // 			end
+	   // 		/*	IDLE: 
+	   // 			READ_ONE: begin
+	   // 				if ((next_state[i]!=IDLE) && !req_data_stored_temp_buf[i])
+	   // 					req[which_sram[i]][i]=1'b1;
+	   // 				else
+	   // 					req[which_sram[i]][i]=1'b0;
+	   // 			end
+	   // 			READ_TWO: begin
+	   // 				if ( (read_gnt_cnt[i]=='0 || read_gnt_cnt[i]==2'd2)&& !req_data_stored_temp_buf[i] )
+	   // 					req[which_sram[i]][i]=1'b0;
+	   // 				else
+	   // 					req[which_sram[i]][i]=1'b1;
+	   // 				if (read_gnt_cnt[i]=='0 || read_gnt_cnt[i]==2'd1)
+	   // 					req[which_sram_sec[i]][i]=1'b1;
+	   // 				else
+	   // 					req[which_sram_sec[i]][i]=1'b0;
+	   // 			end
+	   // 			WRITE_ONE: begin
+	   // 				if (next_state[i]!=IDLE)
+	   // 					req[which_sram[i]][i]=1'b1;
+	   // 				else
+	   // 					req[which_sram[i]][i]=1'b0;
+	   // 			end
+	   // 			WRITE_TWO: begin
+	   // 				if (write_gnt_cnt[i]=='0 || write_gnt_cnt[i]==2'd2)
+	   // 					req[which_sram[i]][i]=1'b0;
+	   // 				else
+	   // 					req[which_sram[i]][i]=1'b1;
+	   // 				if (write_gnt_cnt[i]=='0 || write_gnt_cnt[i]==2'd1)
+	   // 					req[which_sram_sec[i]][i]=1'b1;
+	   // 				else
+	   // 					req[which_sram_sec[i]][i]=1'b0;
+	   // 			end
+	   // 			default: begin
+	   // 				req[which_sram[i]][i]=1'b0;
+	   // 				req[which_sram_sec[i]][i]=1'b0;
+	   // 			end
+	   // 		endcase*/
+	   // 	end
 
 			always_comb begin
 				req_sram[i]='0;
@@ -590,6 +594,25 @@ module mem_req_ctrl
 		end
 	endgenerate
 
+			always_comb	begin
+				req='0;
+			//	case (state[i])
+	for (integer k=0; k < 16; k++) 
+				begin
+						if ((next_state[k]!=IDLE) && (!req_data_stored_temp_buf[k] && read_mem_req[k] || write_mem_req[k]))
+							if ((next_state[k]==WRITE_TWO) || (next_state[k]==READ_TWO)) begin
+								req[which_sram[k]][k]=1'b1;
+								req[which_sram_sec[k]][k]=1'b1;
+							end
+							else begin
+								req[which_sram[k]][k]=1'b1;
+							end
+						else begin
+							req[which_sram_sec[k]][k]=1'b0;
+							req[which_sram[k]][k]=1'b0;
+						end
+					end
+				end
 	
 
 endmodule
