@@ -174,6 +174,9 @@ module fcc (
  reg valid_data;
  reg valid_wgt;
  reg valid_bias;
+ //reg data_dp_ind;
+ //reg wgt_dp_ind;
+ reg bias_ind;
 //======================================================================================================
 //sm allocation
 //======================================================================================================
@@ -225,7 +228,7 @@ activation #(.WB_LOG2_SCALE(WB_LOG2_SCALE),.UINT_DATA_WIDTH(UINT_DATA_WIDTH),.LO
 
 	REQ: begin
 
-   			 if((valid_data ==1'b1) && (valid_wgt ==1'b1) && (valid_bias == 1'b1))
+   			 if((mem_intf_read_pic.mem_valid ==1'b1) && (mem_intf_read_pic.mem_valid ==1'b1) && ((mem_intf_read_pic.mem_valid == 1'b1)||(valid_bias)))
 				begin 
 					next_state = DP;
 				end
@@ -237,7 +240,7 @@ activation #(.WB_LOG2_SCALE(WB_LOG2_SCALE),.UINT_DATA_WIDTH(UINT_DATA_WIDTH),.LO
 		  end//REQ	
 
 	DP: begin
-		 if (counter_32 == CNT_32_MAX - 1)
+		 if (counter_32 == CNT_32_MAX - 1)//20_4 NEW CHANGE TO COMPENSATE FOR 5 request
 				begin
 					next_state = ACT;
 				end		
@@ -268,22 +271,33 @@ end
 //Request assigns
 //======================================================================================================
 			//------PIC-------
-		assign	mem_intf_read_pic.mem_req = (fc_done) ? 1'b0:((!valid_data)&&(state==REQ)) ? 1'b1:1'b0; 
+		//assign	mem_intf_read_pic.mem_req = (fc_done) ? 1'b0:((!mem_intf_read_pic.mem_valid)&&((state==REQ)||(state==DP))&&(!valid_data)) ? 1'b1:1'b0;		
+		//assign	mem_intf_read_pic.mem_req = (fc_done) ? 1'b0:(((!mem_intf_read_pic.mem_valid)&&(state==REQ))||((!mem_intf_read_pic.mem_valid)&&(state==DP))) ? 1'b1:1'b0;		
+		assign	mem_intf_read_pic.mem_req = (fc_done) ? 1'b0:(counter_32 == CNT_32_MAX -1) ? 1'b0 : (((!mem_intf_read_pic.mem_valid)&&(state==REQ))||((!mem_intf_read_pic.mem_valid)&&(state==DP))) ? 1'b1:1'b0;	
 		assign mem_intf_read_pic.mem_start_addr  = (mem_intf_read_pic.mem_req)	? (fc_addrx + current_read_addr_data) : {ADDR_WIDTH{1'b0}};
 		assign mem_intf_read_pic.mem_size_bytes  = (mem_intf_read_pic.mem_req)	? DP_DEPTH      : {ADDR_WIDTH{1'b0}};
 			//------WGT-------
-		assign	mem_intf_read_wgt.mem_req = (fc_done) ? 1'b0:(!valid_wgt)&&(state==REQ) ? 1'b1:1'b0;
+		//assign	mem_intf_read_wgt.mem_req = (fc_done) ? 1'b0:((!mem_intf_read_wgt.mem_valid)&&((state==REQ)||(state==DP))&&(!valid_wgt)) ? 1'b1:1'b0;
+		assign	mem_intf_read_wgt.mem_req = (fc_done) ? 1'b0:(counter_32 == CNT_32_MAX -1) ? 1'b0 : (((!mem_intf_read_wgt.mem_valid)&&(state==REQ))||((!mem_intf_read_wgt.mem_valid)&&(state==DP))) ? 1'b1:1'b0;		
 		assign mem_intf_read_wgt.mem_start_addr  = (mem_intf_read_wgt.mem_req)? (fc_addry + current_read_addr_wgt) : {ADDR_WIDTH{1'b0}};
 		assign mem_intf_read_wgt.mem_size_bytes  = (mem_intf_read_wgt.mem_req)	? DP_DEPTH      : {ADDR_WIDTH{1'b0}}; 
 			//------BIAS-------
-		assign	mem_intf_read_bias.mem_req = (fc_done) ? 1'b0:(!valid_bias)&&(state==REQ)&&(counter_32 == {CNT_32_MAX{1'b0}}) ? 1'b1:1'b0; 
+		//assign mem_intf_read_bias.mem_req = (fc_done) ? 1'b0:((!mem_intf_read_bias.mem_valid)&&((state==REQ)||(state==DP))&&(!valid_bias)) ? 1'b1:1'b0;		
+	//	assign	mem_intf_read_bias.mem_req = (fc_done) ? 1'b0:(((!mem_intf_read_bias.mem_valid)&&(state==REQ))||(((!mem_intf_read_bias.mem_valid)&&(state==DP)))) ? 1'b1: ((!valid_bias)&&(state!=IDLE)) ? 1'b1:1'b0;
+		assign	mem_intf_read_bias.mem_req = (fc_done) ? 1'b0: ((!(mem_intf_read_bias.mem_valid))&&(!(valid_bias))&&(state==REQ)) ? 1'b1:1'b0;	
 		assign mem_intf_read_bias.mem_start_addr = (mem_intf_read_bias.mem_req)? fc_addrb+current_read_addr_bias : {ADDR_WIDTH{1'b0}};
-		assign mem_intf_read_bias.mem_size_bytes = (mem_intf_read_bias.mem_req)? DP_DEPTH      : {ADDR_WIDTH{1'b0}};
+		assign mem_intf_read_bias.mem_size_bytes = (mem_intf_read_bias.mem_req)? DP_DEPTH>>3    : {ADDR_WIDTH{1'b0}};//only need 32 bits == 4 bytes instead of 32 bytes in data\wgt
+			//-----WRITE-------	
+		assign mem_intf_write.mem_req = ((state==ACT)&&(mem_intf_write.mem_ack)) ? 1'b0 : (state==ACT) ? 1'b1:1'b0;
+		assign mem_intf_write.mem_start_addr = (mem_intf_write.mem_req)? fc_addrz + current_write_addr : {ADDR_WIDTH{1'b0}};
+		assign mem_intf_write.mem_size_bytes = (mem_intf_write.mem_req)? DP_DEPTH>>5  : {ADDR_WIDTH{1'b0}};//only writing 8 bits == 1 byte
+
+
 		
 //======================================================================================================
 //IDLE
 //======================================================================================================
-reg bias_ind;
+
 always @(posedge clk or negedge rst_n)
   begin
 	if(!rst_n) //-----------rst_n actions----------
@@ -370,10 +384,7 @@ always @(posedge clk or negedge rst_n)
 	 		        current_read_addr_wgt<={ADDR_WIDTH{1'b0}};
 		   		current_read_addr_bias<={ADDR_WIDTH{1'b0}};
 				bias_ind<=1'b0;
-				//---ACT---
-				mem_intf_write.mem_req <= 1'b0;			
-				mem_intf_write.mem_start_addr <= {ADDR_WIDTH{1'b0}};    // First address is zero
-				mem_intf_write.mem_size_bytes <= {DP_DEPTH{1'd0}}; 	
+				//---ACT---	
 				mem_intf_write.mem_data <= 32'd0; 
 				counter_line <= {Y_LOG2_ROWS_NUM{1'b0}};
 				fc_done <= 1'b0;
@@ -391,8 +402,7 @@ always @(posedge clk or negedge rst_n)
 //REQ
 //======================================================================================================
 	else if(state == REQ )
-		begin
-
+		begin					
 					
 				if(mem_intf_read_pic.mem_valid==1'b1) begin	
 					mem_data[0]<= mem_intf_read_pic.mem_data[0];
@@ -427,7 +437,8 @@ always @(posedge clk or negedge rst_n)
 					mem_data[29]<= mem_intf_read_pic.mem_data[29];
 					mem_data[30]<= mem_intf_read_pic.mem_data[30];	
 					mem_data[31]<= mem_intf_read_pic.mem_data[31];	
-					
+				
+			  	        current_read_addr_data<=current_read_addr_data + 19'd32;
                			        valid_data <=1'b1;
 							
 				end
@@ -465,12 +476,14 @@ always @(posedge clk or negedge rst_n)
 					mem_wgt[30]<= mem_intf_read_wgt.mem_data[30];	
 					mem_wgt[31]<= mem_intf_read_wgt.mem_data[31];	
 
+				        current_read_addr_wgt<=current_read_addr_wgt + 19'd32;					
 					valid_wgt <= 1'b1;		
 						
 				end
 				if(mem_intf_read_bias.mem_valid==1'b1) begin	
 						mem_bias <= mem_intf_read_bias.mem_data[31:0];
 						valid_bias <= 1'b1;
+						current_read_addr_bias<=current_read_addr_bias + 19'd32;
 
 				end
 			//end
@@ -483,9 +496,9 @@ always @(posedge clk or negedge rst_n)
 
 				    counter_32 <= counter_32 + 1'd1;
 				    data_out_sum <= data_out_sum + dp_res;
-				    current_read_addr_data<=current_read_addr_data + 19'd32;
+				   /* current_read_addr_data<=current_read_addr_data + 19'd32;
 				    current_read_addr_wgt<=current_read_addr_wgt + 19'd32;
-			 	    current_read_addr_bias<=current_read_addr_bias + 19'd32;
+			 	    current_read_addr_bias<=current_read_addr_bias + 19'd32;*/
 				    bias_ind<=1'b0;
 				    valid_data <= 1'b0;
 				    valid_wgt  <= 1'b0;
@@ -501,10 +514,10 @@ always @(posedge clk or negedge rst_n)
 
        	 else if(state == ACT) 
 			begin	
-			    mem_intf_write.mem_start_addr <=fc_addrz + current_write_addr;    	//Address to write to
-			    mem_intf_write.mem_req<=1'b1;					//request to write
-			    mem_intf_write.mem_size_bytes<=BYTES_TO_WRITE;			//How many bytes to write
-			    mem_intf_write.mem_last_valid<= 1'b0;		
+			 //   mem_intf_write.mem_start_addr <=fc_addrz + current_write_addr;    	//Address to write to
+			   // mem_intf_write.mem_req<=1'b1;					//request to write/
+			  //  mem_intf_write.mem_size_bytes<=BYTES_TO_WRITE;			//How many bytes to write
+			  //  mem_intf_write.mem_last_valid<= 1'b0;		
 
 			    //Writing the data
 			    mem_intf_write.mem_data<=mem_write_post_act;
@@ -514,7 +527,7 @@ always @(posedge clk or negedge rst_n)
 				counter_32 <= {CNT_32_MAX{1'd0}};			//New 32 values DP start
 			    data_out_sum<=32'd0;					
 			    counter_line <= counter_line+1'b1;			//New line
-			    mem_intf_write.mem_req<=1'b0;				//No need to request until next value to write is ready
+			   // mem_intf_write.mem_req<=1'b0;				//No need to request until next value to write is ready
 		    	    current_write_addr<=current_write_addr+1'b1;
 				    if (counter_line == Y_ROWS_NUM-1)
 					begin
@@ -535,7 +548,7 @@ end
 
 
 //======================================================================================================
-// Busy unit
+// Busy unit - its just go .... TODO
 //======================================================================================================
   always @(posedge clk or negedge rst_n) begin
 	if(!rst_n) begin

@@ -294,7 +294,7 @@ integer m ;
   task MEM_PIC_READ_REQ_FRST (input [ADDR_WIDTH-1:0] addr, input [7:0] data [0:31] );//[0:31]);
   begin
     wait ((mem_intf_read_pic.mem_req==1'b1))//&&(mem_intf_read_pic.mem_start_addr==addr))
-    @(posedge clk)
+  //  @(negedge clk)
     for(m=0;m<32;m=m+1) begin
        mem_intf_read_pic_mem_data[m] = data[m] ; 
 	end        
@@ -318,7 +318,7 @@ integer l;
   task MEM_WGT_READ_REQ_FRST (input [ADDR_WIDTH-1:0] addr, input signed [7:0] data [0:31] );
   begin
     wait ((mem_intf_read_wgt.mem_req==1'b1))//&&(mem_intf_read_wgt.mem_start_addr==addr))
-      @(posedge clk)
+   //   @(negedge clk)
     for(l=0;l<32;l=l+1) begin
        mem_intf_read_wgt_mem_data[l] = data[l] ; 
 	end   
@@ -346,7 +346,7 @@ endtask // MEM_PIC_READ_REQ_FRST
  task MEM_BIAS_READ_REQ (input [ADDR_WIDTH-1:0] addr, input [31:0] data);
     begin
       wait ((mem_intf_read_bias.mem_req==1'b1))//&&(mem_intf_read_bias.mem_start_addr==addr))
-        @(posedge clk)
+     //   @(posedge clk)
       //mem_intf_read_bias_mem_data ='d0;
       mem_intf_read_bias_mem_data=data; 
 
