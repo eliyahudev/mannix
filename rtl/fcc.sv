@@ -228,7 +228,7 @@ activation #(.WB_LOG2_SCALE(WB_LOG2_SCALE),.UINT_DATA_WIDTH(UINT_DATA_WIDTH),.LO
 
 	REQ: begin
 
-   			 if((mem_intf_read_pic.mem_valid ==1'b1) && (mem_intf_read_pic.mem_valid ==1'b1) && ((mem_intf_read_pic.mem_valid == 1'b1)||(valid_bias)))
+   			 if(((mem_intf_read_pic.mem_valid ==1'b1)||(valid_data)) && ((mem_intf_read_wgt.mem_valid ==1'b1)||(valid_wgt)) && ((mem_intf_read_bias.mem_valid == 1'b1)||(valid_bias)))
 				begin 
 					next_state = DP;
 				end
@@ -273,7 +273,8 @@ end
 			//------PIC-------
 		//assign	mem_intf_read_pic.mem_req = (fc_done) ? 1'b0:((!mem_intf_read_pic.mem_valid)&&((state==REQ)||(state==DP))&&(!valid_data)) ? 1'b1:1'b0;		
 		//assign	mem_intf_read_pic.mem_req = (fc_done) ? 1'b0:(((!mem_intf_read_pic.mem_valid)&&(state==REQ))||((!mem_intf_read_pic.mem_valid)&&(state==DP))) ? 1'b1:1'b0;		
-		assign	mem_intf_read_pic.mem_req = (fc_done) ? 1'b0:(counter_32 == CNT_32_MAX -1) ? 1'b0 : (((!mem_intf_read_pic.mem_valid)&&(state==REQ))||((!mem_intf_read_pic.mem_valid)&&(state==DP))) ? 1'b1:1'b0;	
+		//assign	mem_intf_read_pic.mem_req = ((fc_done)||(counter_32 == CNT_32_MAX -1)) ? 1'b0: (((!mem_intf_read_pic.mem_valid)&&(state==REQ))||((!mem_intf_read_pic.mem_valid)&&(state==DP))) ? 1'b1:1'b0;	
+		assign	mem_intf_read_pic.mem_req = ((fc_done)||(counter_32 == CNT_32_MAX -1)) ? 1'b0: (((!mem_intf_read_pic.mem_valid)&&(state==REQ))||((!mem_intf_read_pic.mem_valid)&&(state==DP))) ? 1'b1:1'b0;	
 		assign mem_intf_read_pic.mem_start_addr  = (mem_intf_read_pic.mem_req)	? (fc_addrx + current_read_addr_data) : {ADDR_WIDTH{1'b0}};
 		assign mem_intf_read_pic.mem_size_bytes  = (mem_intf_read_pic.mem_req)	? DP_DEPTH      : {ADDR_WIDTH{1'b0}};
 			//------WGT-------
@@ -388,6 +389,7 @@ always @(posedge clk or negedge rst_n)
 				mem_intf_write.mem_data <= 32'd0; 
 				counter_line <= {Y_LOG2_ROWS_NUM{1'b0}};
 				fc_done <= 1'b0;
+				current_write_addr<={ADDR_WIDTH{1'b0}};
 			
 		end
 //======================================================================================================
@@ -483,7 +485,7 @@ always @(posedge clk or negedge rst_n)
 				if(mem_intf_read_bias.mem_valid==1'b1) begin	
 						mem_bias <= mem_intf_read_bias.mem_data[31:0];
 						valid_bias <= 1'b1;
-						current_read_addr_bias<=current_read_addr_bias + 19'd32;
+						current_read_addr_bias<=current_read_addr_bias + 19'd4;//4 bytes of bias value
 
 				end
 			//end
@@ -502,6 +504,7 @@ always @(posedge clk or negedge rst_n)
 				    bias_ind<=1'b0;
 				    valid_data <= 1'b0;
 				    valid_wgt  <= 1'b0;
+			            current_read_addr_data<={ADDR_WIDTH{1'b0}};
 				     if (counter_32 == CNT_32_MAX - 1)
 					begin
 						valid_bias<=1'b0;
