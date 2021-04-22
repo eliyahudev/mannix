@@ -174,8 +174,6 @@ module fcc (
  reg valid_data;
  reg valid_wgt;
  reg valid_bias;
- //reg data_dp_ind;
- //reg wgt_dp_ind;
  reg bias_ind;
 //======================================================================================================
 //sm allocation
@@ -398,7 +396,94 @@ always @(posedge clk or negedge rst_n)
 //======================================================================================================
 	else if(state == IDLE)	
 		begin	
+			//---REQ---
+			
+			//mem_data reset
+				mem_data[0]<= 8'd0;
+				mem_data[1]<= 8'd0;
+				mem_data[2]<= 8'd0;	
+				mem_data[3]<= 8'd0;
+				mem_data[4]<= 8'd0;
+				mem_data[5]<= 8'd0;
+				mem_data[6]<= 8'd0;	
+				mem_data[7]<= 8'd0;
+				mem_data[8]<= 8'd0;
+				mem_data[9]<= 8'd0;
+				mem_data[10]<= 8'd0;	
+				mem_data[11]<= 8'd0;
+				mem_data[12]<= 8'd0;
+				mem_data[13]<= 8'd0;
+				mem_data[14]<= 8'd0;	
+				mem_data[15]<= 8'd0;
+				mem_data[16]<= 8'd0;
+				mem_data[17]<= 8'd0;
+				mem_data[18]<= 8'd0;	
+				mem_data[19]<= 8'd0;
+				mem_data[20]<= 8'd0;
+				mem_data[21]<= 8'd0;
+				mem_data[22]<= 8'd0;	
+				mem_data[23]<= 8'd0;
+				mem_data[24]<= 8'd0;
+				mem_data[25]<= 8'd0;
+				mem_data[26]<= 8'd0;	
+				mem_data[27]<= 8'd0;
+				mem_data[28]<= 8'd0;
+				mem_data[29]<= 8'd0;
+				mem_data[30]<= 8'd0;	
+				mem_data[31]<= 8'd0;	
+		 	//mem_wgt reset
+				mem_wgt[0]<= 8'd0;
+				mem_wgt[1]<= 8'd0;
+				mem_wgt[2]<= 8'd0;	
+				mem_wgt[3]<= 8'd0;
+				mem_wgt[4]<= 8'd0;
+				mem_wgt[5]<= 8'd0;
+				mem_wgt[6]<= 8'd0;	
+				mem_wgt[7]<= 8'd0;
+				mem_wgt[8]<= 8'd0;
+				mem_wgt[9]<= 8'd0;
+				mem_wgt[10]<= 8'd0;	
+				mem_wgt[11]<= 8'd0;
+				mem_wgt[12]<= 8'd0;
+				mem_wgt[13]<= 8'd0;
+				mem_wgt[14]<= 8'd0;	
+				mem_wgt[15]<= 8'd0;
+				mem_wgt[16]<= 8'd0;
+				mem_wgt[17]<= 8'd0;
+				mem_wgt[18]<= 8'd0;	
+				mem_wgt[19]<= 8'd0;
+				mem_wgt[20]<= 8'd0;
+				mem_wgt[21]<= 8'd0;
+				mem_wgt[22]<= 8'd0;	
+				mem_wgt[23]<= 8'd0;
+				mem_wgt[24]<= 8'd0;
+				mem_wgt[25]<= 8'd0;
+				mem_wgt[26]<= 8'd0;	
+				mem_wgt[27]<= 8'd0;
+				mem_wgt[28]<= 8'd0;
+				mem_wgt[29]<= 8'd0;
+				mem_wgt[30]<= 8'd0;	
+				mem_wgt[31]<= 8'd0;
+			//mem_bias reset
+				mem_bias <= 32'd0;
+				valid_data<=1'b0;
+				valid_wgt<=1'b0;
+				valid_bias<=1'b0;
 
+				
+				//---DP---
+				counter_32 <= {CNT_32_MAX{1'b0}} ;			//Counter
+				data_out_sum <= 32'd0;					//The sum we write
+				current_read_addr_data<={ADDR_WIDTH{1'b0}};
+	 		        current_read_addr_wgt<={ADDR_WIDTH{1'b0}};
+		   		current_read_addr_bias<={ADDR_WIDTH{1'b0}};
+				bias_ind<=1'b0;
+				//---ACT---	
+				mem_intf_write.mem_data <= 32'd0; 
+				counter_line <= {Y_LOG2_ROWS_NUM{1'b0}};
+				fc_done <= 1'b0;
+				current_write_addr<={ADDR_WIDTH{1'b0}};
+			
 		end
 
 //======================================================================================================
@@ -499,9 +584,6 @@ always @(posedge clk or negedge rst_n)
 
 				    counter_32 <= counter_32 + 1'd1;
 				    data_out_sum <= data_out_sum + dp_res;
-				   /* current_read_addr_data<=current_read_addr_data + 19'd32;
-				    current_read_addr_wgt<=current_read_addr_wgt + 19'd32;
-			 	    current_read_addr_bias<=current_read_addr_bias + 19'd32;*/
 				    bias_ind<=1'b0;
 				    valid_data <= 1'b0;
 				    valid_wgt  <= 1'b0;
@@ -518,30 +600,26 @@ always @(posedge clk or negedge rst_n)
 
        	 else if(state == ACT) 
 			begin	
-			 //   mem_intf_write.mem_start_addr <=fc_addrz + current_write_addr;    	//Address to write to
-			   // mem_intf_write.mem_req<=1'b1;					//request to write/
-			  //  mem_intf_write.mem_size_bytes<=BYTES_TO_WRITE;			//How many bytes to write
-			  //  mem_intf_write.mem_last_valid<= 1'b0;		
 
 			    //Writing the data
-			    mem_intf_write.mem_data<=mem_write_post_act;
+			   	 mem_intf_write.mem_data<=mem_write_post_act;
 
-			//Starting again the calculation
-		    	    if (mem_intf_write.mem_ack) begin
-				counter_32 <= {CNT_32_MAX{1'd0}};			//New 32 values DP start
-			    data_out_sum<=32'd0;					
-			    counter_line <= counter_line+1'b1;			//New line
-			   // mem_intf_write.mem_req<=1'b0;				//No need to request until next value to write is ready
-		    	    current_write_addr<=current_write_addr+1'b1;
-				    if (counter_line == Y_ROWS_NUM-1)
-					begin
-						fc_done <= 1'b1;
-					end
-				    else
-					begin
-						fc_done <= 1'b0; 
-					end	
-		end	
+			    //Starting again the calculation
+			    	    if (mem_intf_write.mem_ack) begin
+					counter_32 <= {CNT_32_MAX{1'd0}};			//New 32 values DP start
+				        data_out_sum<=32'd0;					
+				        counter_line <= counter_line+1'b1;			//New line
+				        current_write_addr<=current_write_addr+1'b1;
+					   
+					    if (counter_line == Y_ROWS_NUM-1)
+						begin
+							fc_done <= 1'b1;
+						end
+					    else
+						begin
+							fc_done <= 1'b0; 
+						end	
+				    end	
 	 end
 
 
