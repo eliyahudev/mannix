@@ -262,8 +262,16 @@ always @(posedge clk or negedge rst_n)
       end
     else
       begin
-            
-        if((state==READ)&&              (~((window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line>=Y_COLS_NUM-1'd1))))   
+       if(state==IDLE)
+	   begin
+        counter_calc<=8'd0;     
+		first_read_of_pic<=1'b1;
+        first_read_of_weights<=1'b1;
+        first_read_of_bias<=1'b1;
+        calc_addr_to_wr <=sw_cnn_addr_z; //CHECK THAT VALUE IS AVILABLE AT THIS POINT
+	   end
+           
+        else if((state==READ)&&              (~((window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line>=Y_COLS_NUM-1'd1))))   
           begin
 
 		if(first_read_of_pic && mem_intf_read_pic.mem_valid) 
@@ -310,7 +318,12 @@ always @(posedge clk or negedge rst_n)
             cut_data_pic[c]<= 8'd0;
             data_wgt[c]<= 8'd0;
           end
-        else
+        else if (state==IDLE)
+			begin
+			 cut_data_pic[c]<= 8'd0;
+             data_wgt[c]<= 8'd0;
+			end
+		else
           begin
             if(mem_intf_read_pic.mem_valid)
               begin
@@ -341,9 +354,11 @@ endgenerate
         begin
           if(state==IDLE)
           begin
+			calc_line <= 4'd0;  
             mem_intf_read_pic.mem_start_addr <= sw_cnn_addr_x;
             window_cols_index<=8'd1;
-            window_rows_index<=8'd1;   
+            window_rows_index<=8'd1;  
+            current_row_start_addr<={ADDR_WIDTH{1'b0}};
           end
           else if((window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line==Y_ROWS_NUM))
             begin
@@ -377,9 +392,9 @@ endgenerate
   always @(posedge clk or negedge rst_n)
   begin
 	   if(!rst_n)
-        begin
 			sample_bias_val <= 32'd0;
-		end
+		else if(state==IDLE)
+            sample_bias_val <= 32'd0;
 		else if(mem_intf_read_bias.mem_valid)
 			sample_bias_val <= mem_intf_read_bias.mem_data[3:0];
   end
@@ -421,6 +436,11 @@ endgenerate
        mem_intf_write.mem_data <= 'd0;//TODO: change to num of bits
        data2write<=32'd0; 
       end
+    else if (state==IDLE)
+		begin
+         mem_intf_write.mem_data <= 'd0;//TODO: change to num of bits
+         data2write<=32'd0; 
+		end
     else
       begin
         if((state==WRITE) &&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(calc_load_of_wr_bus<6'd33)&&(mem_intf_write.mem_req==1'b0))
@@ -457,7 +477,9 @@ endgenerate
         begin
           calc_load_of_wr_bus <= 6'd1;
         end
-      else
+      else if (state==IDLE)
+          calc_load_of_wr_bus <= 6'd1;
+	  else
         begin
           if(((state==WRITE)&&(window_rows_index==8'd1)&&(calc_load_of_wr_bus<6'd33))||(state==IDLE))
             begin
@@ -480,7 +502,13 @@ endgenerate
         read_wgt_data_vld<=1'b0;
         read_bias_data_vld<=1'b0;
       end
-    else
+    else if(state==IDLE)
+		begin
+        read_pic_data_vld<=1'b0;
+        read_wgt_data_vld<=1'b0;
+        read_bias_data_vld<=1'b0;
+		end
+	else
       begin
         if(mem_intf_read_pic.mem_valid==1'b1)
           read_pic_data_vld<=1'b1;        
