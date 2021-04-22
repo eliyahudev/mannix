@@ -49,11 +49,11 @@ module mem_req_ctrl
 	logic [15:0][3:0] which_sram, read_sram, write_sram, which_sram_sec; //wich number of the sram the addres belong to, sec - second req 
 	logic [15:0][3:0] which_sram_s, which_sram_sec_s; //sample these signal for map the data when it's come 
 	logic [15:0] two_read_req, two_write_req;//is to req neccessery
-	logic [15:0] data_read_align, data_write_align; //is the addr aligned
+	logic [15:0] data_read_align, data_read_align_s, data_write_align; //is the addr aligned
 	logic [15:0][511:0] temp_buf; //temporary buf, conatain the data that came from the sram and not written to the clients
 	logic [15:0][5:0] num_bytes_temp_buf; //the number of the bytes that stored ib the temp_buf
 	logic [15:0][18:0] addr_temp_buf;//the address that stored in the temp_buf
-	logic [15:0] req_data_stored_temp_buf;//is the data for the first req exsist in the temp_buf
+	logic [15:0] req_data_stored_temp_buf, req_data_stored_temp_buf_s;//is the data for the first req exsist in the temp_buf
 	logic [15:0] two_read_req_need_one; //there are two req for the memory but the data for the first req exsit in the temp_buf
 	logic [15:0] first_read_gnt, first_write_gnt, second_read_gnt, second_write_gnt;// pulse when the gnt came
 	logic [15:0] first_read_gnt_s, first_write_gnt_s, second_read_gnt_s, second_write_gnt_s;//sampling the gnt for use in the next cycle
@@ -67,6 +67,7 @@ module mem_req_ctrl
 	fsm [15:0] state, next_state;
 	logic [15:0] read_mem_req, write_mem_req, read_mem_valid, write_mem_ack;
 	logic [15:0][18:0] read_mem_start_addr, write_mem_start_addr, read_mem_size_bytes, write_mem_size_bytes;
+	logic [15:0][18:0] read_mem_start_addr_s, write_mem_start_addr_s, read_mem_size_bytes_s, write_mem_size_bytes_s;
 	logic [15:0][31:0][7:0] read_mem_data, write_mem_data;
 	logic [15:0][18:0] second_addr_write,second_addr_read;
 
@@ -144,10 +145,10 @@ module mem_req_ctrl
 					num_bytes_temp_buf[i]<='0;
 					addr_temp_buf[i]<='0;
 				end
-				else if (new_read_req[i]) begin
-						num_bytes_temp_buf[i]<=(read_mem_start_addr[i][4:0] + read_mem_size_bytes[i][5:0]) >6'd32 ? 
-						(7'd64 - read_mem_start_addr[i][4:0] - read_mem_size_bytes[i][5:0]) : (6'd32 - read_mem_start_addr[i][4:0] - read_mem_size_bytes[i][5:0]);
-						addr_temp_buf[i]<=read_mem_start_addr[i] + read_mem_size_bytes[i][5:0];
+				else if (state[i]!=IDLE && (next_state[i]==IDLE || new_read_req[i])) begin
+						num_bytes_temp_buf[i]<=(read_mem_start_addr_s[i][4:0] + read_mem_size_bytes_s[i][5:0]) >6'd32 ? 
+						(7'd64 - read_mem_start_addr_s[i][4:0] - read_mem_size_bytes_s[i][5:0]) : (6'd32 - read_mem_start_addr_s[i][4:0] - read_mem_size_bytes_s[i][5:0]);
+						addr_temp_buf[i]<=read_mem_start_addr_s[i] + read_mem_size_bytes_s[i][5:0];
 				end
 
 			always @(posedge clk or negedge rst_n)
@@ -259,13 +260,13 @@ module mem_req_ctrl
 						read_mem_valid[i]=1'b0;
 					end
 					READ_ONE: begin
-						if (read_gnt_cnt[i]==2'd1 || req_data_stored_temp_buf[i])
+						if (read_gnt_cnt[i]==2'd1 || req_data_stored_temp_buf_s[i])
 							read_mem_valid[i]=1'b1;
 						else
 							read_mem_valid[i]=1'b0;
 					end
 					READ_TWO: begin
-						if (read_gnt_cnt[i]==2'd3 || (read_gnt_cnt[i]==2'd2) && req_data_stored_temp_buf[i])
+						if (read_gnt_cnt[i]==2'd3 || (read_gnt_cnt[i]==2'd2) && req_data_stored_temp_buf_s[i])
 							read_mem_valid[i]=1'b1;
 						else
 							read_mem_valid[i]=1'b0;
@@ -281,6 +282,24 @@ module mem_req_ctrl
 					end
 				endcase
 			end
+
+			always @(posedge clk or negedge rst_n)
+					if (!rst_n) begin
+						req_data_stored_temp_buf_s[i]<='0;
+						read_mem_start_addr_s[i]<='0;
+						write_mem_start_addr_s[i]<='0;
+						read_mem_size_bytes_s[i]<='0;
+						write_mem_size_bytes_s[i]<='0;
+						data_read_align_s[i]<='0;
+					end
+					else begin
+						req_data_stored_temp_buf_s[i]<=req_data_stored_temp_buf[i];
+						read_mem_start_addr_s[i]<=read_mem_start_addr[i];
+						write_mem_start_addr_s[i]<=write_mem_start_addr[i];
+						read_mem_size_bytes_s[i]<=read_mem_size_bytes[i];
+						write_mem_size_bytes_s[i]<=write_mem_size_bytes[i];
+						data_read_align_s[i]<=data_read_align[i];
+					end
 
 			always @(posedge clk or negedge rst_n)
 					if (!rst_n) begin
@@ -313,32 +332,38 @@ module mem_req_ctrl
 				else begin
 					case (state[i])
 						READ_ONE: begin
-							if (!req_data_stored_temp_buf[i])
-								if (data_read_align[i])
+							if (!req_data_stored_temp_buf_s[i])
+								if (data_read_align_s[i])
 									if (read_gnt_cnt[i]==2'd1) begin
-										temp_buf[i][255:0]<=data_in[which_sram[i]] >> (read_mem_size_bytes[i][5:0] <<3);
+										temp_buf[i][255:0]<=data_in[which_sram_s[i]] >> (read_mem_size_bytes_s[i][5:0] <<3);
 								end
+									else
+										temp_buf[i][255:0]<=temp_buf[i][255:0];
 								else if (read_gnt_cnt[i]==2'd1) begin
-										temp_buf[i][255:0]<= data_in[which_sram[i]] >> ((read_mem_start_addr[i][4:0]+read_mem_size_bytes[i][5:0])<<3);
-								end
+										temp_buf[i][255:0]<= data_in[which_sram_s[i]] >> ((read_mem_start_addr_s[i][4:0]+read_mem_size_bytes_s[i][5:0])<<3);
+									end
+									else
+											temp_buf[i][255:0]<=temp_buf[i][255:0];
+							else
+								temp_buf[i][255:0]<=temp_buf[i][255:0] >> (read_mem_size_bytes_s[i][5:0] <<3);
 						end
 						READ_TWO: begin
-							if (req_data_stored_temp_buf[i]) begin
+							if (req_data_stored_temp_buf_s[i]) begin
 								case ({read_gnt_cnt_s[i], read_gnt_cnt[i]})
 									4'b0001: begin
-										temp_buf[i][255:0]<= data_in[which_sram[i]]; 
+										temp_buf[i][255:0]<= data_in[which_sram_s[i]]; 
 									end
 									4'b0010: begin
-										temp_buf[i][511:256]<= data_in[which_sram_sec[i]]; 
+										temp_buf[i][511:256]<= data_in[which_sram_sec_s[i]]; 
 									end
 									4'b0011: begin
-										temp_buf[i][255:0]<= {data_in[which_sram_sec[i]],data_in[which_sram[i]]} >> ((6'd32+start_addr_s[i])<<3);
+										temp_buf[i][255:0]<= {data_in[which_sram_sec_s[i]],data_in[which_sram_s[i]]} >> ((6'd32+start_addr_s[i])<<3);
 									end
 									4'b0111: begin
-										temp_buf[i][255:0]<= {data_in[which_sram_sec[i]],temp_buf[i][255:0]} >> ((6'd32+start_addr_s[i])<<3);
+										temp_buf[i][255:0]<= {data_in[which_sram_sec_s[i]],temp_buf[i][255:0]} >> ((6'd32+start_addr_s[i])<<3);
 									end
 									4'b1011: begin
-										temp_buf[i][255:0]<= {temp_buf[i][511:256],data_in[which_sram[i]]} >> ((6'd32+start_addr_s[i])<<3);
+										temp_buf[i][255:0]<= {temp_buf[i][511:256],data_in[which_sram_s[i]]} >> ((6'd32+start_addr_s[i])<<3);
 									end
 								endcase
 							end
@@ -368,7 +393,7 @@ module mem_req_ctrl
 
 			always_comb
 					begin
-						if (gnt[which_sram[i]][i])
+						if (gnt[which_sram[i]][i] || read_prior[i] && req_data_stored_temp_buf[i] )
 							if (read_prior[i])
 								first_read_gnt[i]=1'b1;
 							else
@@ -601,14 +626,14 @@ module mem_req_ctrl
 						read_mem_data[jj]='0;
 					end
 					READ_ONE: 
-						if (!req_data_stored_temp_buf[jj])
-								if (data_read_align[jj])
+						if (!req_data_stored_temp_buf_s[jj])
+								if (data_read_align_s[jj])
 									if (read_gnt_cnt[jj]==2'd1) 
 										read_mem_data[jj]=data_in[which_sram_s[jj]];
 									else
 										read_mem_data[jj]='0;
 								else if (read_gnt_cnt[jj]==2'd1) 
-										read_mem_data[jj]<= data_in[which_sram_s[jj]] >> (read_mem_start_addr[jj][4:0]<<3);
+										read_mem_data[jj]<= data_in[which_sram_s[jj]] >> (read_mem_start_addr_s[jj][4:0]<<3);
 									else
 										read_mem_data[jj]='0;
 						else
