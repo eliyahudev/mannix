@@ -133,12 +133,14 @@ module cnn (
   wire [31:0]                       shift_last;  //How many bits to shift when last writing happens
   wire [7:0]                        activation_out;
   reg                               first_read_of_weights; //In order to read only once the weights matrix and the bias value per 1 Picture matrix
+  reg                               first_read_of_pic; 
   reg                               first_read_of_bias;
   reg                               read_pic_data_vld;
   reg                               read_wgt_data_vld;
   reg                               read_bias_data_vld;
   wire                              read_condition;
   reg [ADDR_WIDTH-1:0]              calc_addr_to_wr; //Calc the current addr to write to
+  reg [31:0]                        sample_bias_val; 
 //============================================
 //   For Debug Only !!!
 //============================================
@@ -234,7 +236,8 @@ assign mem_intf_read_wgt.mem_start_addr  = (mem_intf_read_wgt.mem_req && first_r
 assign mem_intf_read_wgt.mem_size_bytes  = (mem_intf_read_wgt.mem_req && first_read_of_weights)? DP_DEPTH*DP_DEPTH      : {ADDR_WIDTH{1'b0}};
 
 
-assign mem_intf_read_pic.mem_req = (mem_intf_read_pic.mem_valid)? 1'b0 : read_condition? 1'b1: 1'b0;              
+//assign mem_intf_read_pic.mem_req = (mem_intf_read_pic.mem_valid)? 1'b0 : read_condition? 1'b1: 1'b0;
+assign mem_intf_read_pic.mem_req = (mem_intf_read_pic.mem_valid)? 1'b0 : (read_condition && first_read_of_pic) ? 1'b1 :(state==CALC)? 1'b1: 1'b0;    
 assign mem_intf_read_pic.mem_size_bytes = mem_intf_read_pic.mem_req ? DP_DEPTH : {ADDR_WIDTH{1'b0}};
 
 
@@ -251,7 +254,8 @@ always @(posedge clk or negedge rst_n)
   begin
     if(!rst_n)
       begin
-        counter_calc<=8'd0;        
+        counter_calc<=8'd0;     
+		first_read_of_pic<=1'b1;
         first_read_of_weights<=1'b1;
         first_read_of_bias<=1'b1;
         calc_addr_to_wr <=sw_cnn_addr_z; //CHECK THAT VALUE IS AVILABLE AT THIS POINT
@@ -261,6 +265,10 @@ always @(posedge clk or negedge rst_n)
             
         if((state==READ)&&              (~((window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line>=Y_COLS_NUM-1'd1))))   
           begin
+
+		if(first_read_of_pic && mem_intf_read_pic.mem_valid) 
+			  first_read_of_pic<=1'b0;
+
            
             if(first_read_of_weights && mem_intf_read_wgt.mem_valid) 
                 first_read_of_weights<=1'b0;
@@ -304,11 +312,11 @@ always @(posedge clk or negedge rst_n)
           end
         else
           begin
-            if(state==READ && read_pic_data_vld)
+            if(mem_intf_read_pic.mem_valid)
               begin
                 cut_data_pic[c]<= mem_intf_read_pic.mem_data[c];
               end
-            if(state==READ && read_wgt_data_vld)
+            if(mem_intf_read_wgt.mem_valid)
               begin
                 data_wgt[c]<= wgt_mem_data[c];
               end
@@ -365,6 +373,17 @@ endgenerate
         end
     end
 
+
+  always @(posedge clk or negedge rst_n)
+  begin
+	   if(!rst_n)
+        begin
+			sample_bias_val <= 32'd0;
+		end
+		else if(mem_intf_read_bias.mem_valid)
+			sample_bias_val <= mem_intf_read_bias.mem_data[3:0];
+  end
+	
   always @(posedge clk or negedge rst_n)
     begin
       if(!rst_n)
@@ -428,7 +447,7 @@ endgenerate
       end
   end // always @ (posedge clk or negedge rst_n)
 
-  assign data2activation = (calc_line==Y_ROWS_NUM && (read_bias_data_vld) )? (data2write + mem_intf_read_bias.mem_data[3:0]) : 32'd0;
+  assign data2activation = (calc_line==Y_ROWS_NUM && (read_bias_data_vld) )? (data2write + sample_bias_val) : 32'd0;
                            
  activation activation_ins (.in(data2activation), .out(activation_out));
 

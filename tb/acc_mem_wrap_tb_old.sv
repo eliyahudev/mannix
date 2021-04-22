@@ -283,7 +283,8 @@ begin
 
 	@(posedge clk)
 	cnn_go=1'b1;
-	TEST_128X128_4X4();
+//	TEST_128X128_4X4();
+	wait(cnn_done)
 	cnn_go=1'b0;
 	#100;
 	//FCC
@@ -566,12 +567,11 @@ task RESET_VALUES();
 		mem_intf_write_sw.mem_size_bytes='0;
 
 
-		//sw_cnn_addr_bias={ADDR_WIDTH{1'b0}}; // CNN Bias value address 		
-		sw_cnn_addr_bias=1<<16; // CNN Bias value address 		
+		//sw_cnn_addr_bias={ADDR_WIDTH{1'b0}}; // CNN Bias value address 
 		sw_cnn_addr_x={ADDR_WIDTH{1'b0}};	// CNN Data window FIRST address
-		//sw_cnn_addr_y={ADDR_WIDTH{1'b0}};	// CNN  weights window FIRST address
-		sw_cnn_addr_y='d65536;	// CNN  weights window FIRST address
-		sw_cnn_addr_z=(1<<15)*3;	// CNN return address
+		sw_cnn_addr_y='d65536;	//2^16 CNN  weights window FIRST address
+		sw_cnn_addr_bias='d131072; //2*2^16==d131072 CNN Bias value address
+		sw_cnn_addr_z='d196608;	//3*2^16==196608 CNN return address
 		sw_cnn_x_m=X_ROWS_NUM;  	        // CNN data matrix num of rows
 		sw_cnn_x_n=X_COLS_NUM;	        // CNN data matrix num of columns
 		sw_cnn_y_m=Y_ROWS_NUM;	        // CNN weight matrix num of rows
