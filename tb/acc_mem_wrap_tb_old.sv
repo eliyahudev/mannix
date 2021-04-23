@@ -276,7 +276,7 @@ begin
 	ASYNC_RESET();
 	MEM_LOAD(a_data, X_ROWS_NUM*X_COLS_NUM, 0);
 	MEM_LOAD(w_data, Y_ROWS_NUM*Y_COLS_NUM, 65536);
-	MEM_LOAD(bias_data, 32, 1<<16);
+	MEM_LOAD(bias_data, 32, 1<<17);
 	//MEM_READ(a_data, X_ROWS_NUM*X_COLS_NUM, 0);
 
 
