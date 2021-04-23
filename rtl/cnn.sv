@@ -129,6 +129,7 @@ module cnn (
   reg signed [31:0]                 data2write;        
   reg signed [31:0]                 data2activation;
   reg signed [31:0][7:0]            wgt_mem_data;     //Small memory for the weights
+  reg signed [31:0][7:0]            wgt_mem_data_smpl;     //Small memory for the weights
 
   wire [31:0]                       shift_last;  //How many bits to shift when last writing happens
   wire [7:0]                        activation_out;
@@ -259,6 +260,8 @@ always @(posedge clk or negedge rst_n)
         first_read_of_weights<=1'b1;
         first_read_of_bias<=1'b1;
         calc_addr_to_wr <=sw_cnn_addr_z; //CHECK THAT VALUE IS AVILABLE AT THIS POINT
+		wgt_mem_data <= 'd0;
+		wgt_mem_data_smpl<= 'd0;
       end
     else
       begin
@@ -269,6 +272,10 @@ always @(posedge clk or negedge rst_n)
         first_read_of_weights<=1'b1;
         first_read_of_bias<=1'b1;
         calc_addr_to_wr <=sw_cnn_addr_z; //CHECK THAT VALUE IS AVILABLE AT THIS POINT
+		wgt_mem_data <= 'd0;
+		wgt_mem_data_smpl<= 'd0;
+
+
 	   end
            
         else if((state==READ)&&              (~((window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line>=Y_COLS_NUM-1'd1))))   
@@ -279,7 +286,15 @@ always @(posedge clk or negedge rst_n)
 
            
             if(first_read_of_weights && mem_intf_read_wgt.mem_valid) 
+			begin
                 first_read_of_weights<=1'b0;
+                wgt_mem_data<=mem_intf_read_wgt.mem_data;
+				wgt_mem_data_smpl<=mem_intf_read_wgt.mem_data;
+			end
+		//	else if (read_wgt_data_vld && (calc_line==4'd0))
+		//	begin
+			//	wgt_mem_data_smpl<=wgt_mem_data;
+		//	end
 
  
             if(mem_intf_read_bias.mem_valid)
@@ -288,14 +303,22 @@ always @(posedge clk or negedge rst_n)
             
             counter_calc<=8'd0;
 
-            if((calc_line==4'd0)&&(counter_calc==8'd0))
-              wgt_mem_data<=mem_intf_read_wgt.mem_data;
+         //   if((calc_line==4'd0)&&(counter_calc==8'd0))
+       //  if(mem_intf_read_wgt.mem_valid)
+          //    wgt_mem_data<=mem_intf_read_wgt.mem_data;
             
                                  
             end
         else if (state==CALC)
           begin
+			if(calc_line==4'd4)
+			begin
+	          wgt_mem_data<=wgt_mem_data_smpl;
+			end
+			else
+			begin
             wgt_mem_data<=wgt_mem_data>>(DP_DEPTH*8);
+	     	end
             counter_calc<=counter_calc+1'b1;
 
           end 
@@ -329,9 +352,11 @@ always @(posedge clk or negedge rst_n)
               begin
                 cut_data_pic[c]<= mem_intf_read_pic.mem_data[c];
               end
-            if(mem_intf_read_wgt.mem_valid)
+          //  if(mem_intf_read_wgt.mem_valid)
+		  if(read_wgt_data_vld && (state==READ))
               begin
-                data_wgt[c]<= wgt_mem_data[c];
+                 data_wgt[c]<= wgt_mem_data[c];
+				//data_wgt[c]<= mem_intf_read_wgt.mem_data[c];
               end
           end
       end // always @ (posedge clk or negedge rst_n)
@@ -380,7 +405,8 @@ endgenerate
               window_cols_index<=window_cols_index+1'b1;   ///TODO: zero when end of matrix
             end
           
-          else if (state==SHIFT)
+          //else if (state==SHIFT)
+			  else if (nx_state==CALC)
             begin
               mem_intf_read_pic.mem_start_addr<=mem_intf_read_pic.mem_start_addr+sw_cnn_x_n;
               calc_line <= calc_line+1'b1;
@@ -451,14 +477,20 @@ endgenerate
           begin
            mem_intf_write.mem_data<= mem_intf_write.mem_data>>8;
             end
-        else if((calc_line==Y_COLS_NUM))
-          begin
-          mem_intf_write.mem_data[31] <= activation_out;
-          data2write<=32'd0;
+        else if((calc_line==4'd0)&&(state==READ))
+        //else if (calc_line==4'd0) 
+	 // else if (calc_line==Y_ROWS_NUM)
+		begin
+        mem_intf_write.mem_data[31] <= activation_out;
+         data2write<=32'd0;
+		// data2write<=data2write+dp_res;   
             end
         else if (state==SHIFT)   
           begin  
-            data2write<=data2write+dp_res;                                
+         data2write<=data2write+dp_res;  
+		// mem_intf_write.mem_data[31] <= activation_out;
+         //data2write<=32'd0;
+
           end
         else if((state==WRITE) && (mem_intf_write.mem_ack==1'b1))
           begin
@@ -467,7 +499,9 @@ endgenerate
       end
   end // always @ (posedge clk or negedge rst_n)
 
-  assign data2activation = (calc_line==Y_ROWS_NUM && (read_bias_data_vld) )? (data2write + sample_bias_val) : 32'd0;
+//  assign data2activation = (calc_line==Y_ROWS_NUM && (read_bias_data_vld) )? (data2write + sample_bias_val) : 32'd0;
+ assign data2activation = (calc_line==4'd0 && (read_bias_data_vld) && (state==READ) )? (data2write + sample_bias_val) : 32'd0;
+
                            
  activation activation_ins (.in(data2activation), .out(activation_out));
 
