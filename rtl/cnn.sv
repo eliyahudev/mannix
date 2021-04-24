@@ -153,7 +153,7 @@ module cnn (
           activation_out_smpl<=8'd0;
         end      
       else
-        if(calc_line==Y_ROWS_NUM)
+        if(calc_line=='d0 && (state==READ))
           begin
             data2write_out<= data2write;
             activation_out_smpl<=activation_out;
@@ -398,12 +398,17 @@ endgenerate
               window_rows_index<=window_rows_index+1'b1;
               window_cols_index<=8'd1;
               end           
-          else if(calc_line==Y_COLS_NUM)
+          else if((calc_line==Y_COLS_NUM-1'b1)&&(state==READ))
             begin
               mem_intf_read_pic.mem_start_addr<=current_row_start_addr+JUMP_COL*window_cols_index;
-              calc_line <= 4'd0;
+              //calc_line <= 4'd0;
+			  calc_line <= calc_line+1'b1;
               window_cols_index<=window_cols_index+1'b1;   ///TODO: zero when end of matrix
             end
+			else if (calc_line==Y_COLS_NUM)
+			begin
+				calc_line <= 4'd0;
+			end
           
           //else if (state==SHIFT)
 			  else if (nx_state==CALC)
