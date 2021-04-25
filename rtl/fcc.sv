@@ -139,7 +139,7 @@ module fcc (
    
 
   input [ADDR_WIDTH-1:0] 	fc_addrz;
-  output reg			fc_done;
+  output 			fc_done;
   output reg           		fc_sw_busy_ind;
   reg [ADDR_WIDTH-1:0]          current_read_addr_data;
   reg [ADDR_WIDTH-1:0]          current_read_addr_wgt;
@@ -149,9 +149,9 @@ module fcc (
 //======================================================================================================
 // Data and Weights simulation 
 //======================================================================================================
-  reg signed [7:0] mem_wgt    [DP_DEPTH-1:0]; //The weights we read the memory weights - DP_DEPTH values of 8 bit signed
-  reg signed [31:0] mem_bias ;		      //The biases we read
-  reg [7:0] mem_data  [DP_DEPTH-1:0]; 	      //The data we read - - DP_DEPTH values of 8 bit unsigned
+  reg signed [7:0]      mem_wgt    [DP_DEPTH-1:0]; //The weights we read the memory weights - DP_DEPTH values of 8 bit signed
+  reg signed [31:0]     mem_bias ;		      //The biases we read
+  reg [7:0] 		mem_data  [DP_DEPTH-1:0]; 	      //The data we read - - DP_DEPTH values of 8 bit unsigned
 
                 
 //======================================================================================================
@@ -266,6 +266,19 @@ end
       end
   end
 //======================================================================================================
+//Size bytes to request
+//======================================================================================================
+wire [X_LOG2_ROWS_NUM-1:0] size_data;
+wire [X_LOG2_ROWS_NUM-1:0] size_wgt;
+wire [X_LOG2_ROWS_NUM-1:0] size_bias;
+reg  [X_LOG2_ROWS_NUM-1:0] size_left_data;
+reg  [X_LOG2_ROWS_NUM-1:0] size_left_wgt;
+
+
+	assign size_data = (fc_xm % DP_DEPTH == 0) ? DP_DEPTH : (fc_xm - size_left_data < DP_DEPTH) ? (fc_xm - size_left_data) : DP_DEPTH;  
+	assign size_wgt = (fc_ym % DP_DEPTH == 0) ? DP_DEPTH : (fc_ym - size_left_wgt < DP_DEPTH) ? (fc_ym - size_left_data) : DP_DEPTH;
+	assign size_bias = DP_DEPTH>>3;
+//======================================================================================================
 //Request assigns
 //======================================================================================================
 			//------PIC-------
@@ -274,26 +287,29 @@ end
 		//assign	mem_intf_read_pic.mem_req = ((fc_done)||(counter_32 == CNT_32_MAX -1)) ? 1'b0: (((!mem_intf_read_pic.mem_valid)&&(state==REQ))||((!mem_intf_read_pic.mem_valid)&&(state==DP))) ? 1'b1:1'b0;	
 		assign	mem_intf_read_pic.mem_req = ((fc_done)||(counter_32 == CNT_32_MAX -1)) ? 1'b0:((valid_data)&&(state==DP)) ? 1'b1:((!valid_data)&&(state == REQ)&&(!mem_intf_read_pic.mem_valid)) ? 1'b1:1'b0;
 		assign mem_intf_read_pic.mem_start_addr  = (mem_intf_read_pic.mem_req)	? (fc_addrx + current_read_addr_data) : {ADDR_WIDTH{1'b0}};
-		assign mem_intf_read_pic.mem_size_bytes  = (mem_intf_read_pic.mem_req)	? DP_DEPTH      : {ADDR_WIDTH{1'b0}};
+		assign mem_intf_read_pic.mem_size_bytes  = (mem_intf_read_pic.mem_req)	? size_data      : {ADDR_WIDTH{1'b0}};
 			//------WGT-------
 		//assign	mem_intf_read_wgt.mem_req = (fc_done) ? 1'b0:((!mem_intf_read_wgt.mem_valid)&&((state==REQ)||(state==DP))&&(!valid_wgt)) ? 1'b1:1'b0;
 	//	assign	mem_intf_read_wgt.mem_req = (fc_done) ? 1'b0:(counter_32 == CNT_32_MAX -1) ? 1'b0 : (((!mem_intf_read_wgt.mem_valid)&&(state==REQ))||((!mem_intf_read_wgt.mem_valid)&&(state==DP))) ? 1'b1:1'b0;
 		assign	mem_intf_read_wgt.mem_req = ((fc_done)||(counter_32 == CNT_32_MAX -1)) ? 1'b0:((valid_wgt)&&(state==DP)) ? 1'b1:((!valid_wgt)&&(state == REQ)&&(!mem_intf_read_wgt.mem_valid)) ? 1'b1:1'b0;		
 		assign mem_intf_read_wgt.mem_start_addr  = (mem_intf_read_wgt.mem_req)? (fc_addry + current_read_addr_wgt) : {ADDR_WIDTH{1'b0}};
-		assign mem_intf_read_wgt.mem_size_bytes  = (mem_intf_read_wgt.mem_req)	? DP_DEPTH      : {ADDR_WIDTH{1'b0}}; 
+		assign mem_intf_read_wgt.mem_size_bytes  = (mem_intf_read_wgt.mem_req)	? size_wgt      : {ADDR_WIDTH{1'b0}}; 
 			//------BIAS-------
 		//assign mem_intf_read_bias.mem_req = (fc_done) ? 1'b0:((!mem_intf_read_bias.mem_valid)&&((state==REQ)||(state==DP))&&(!valid_bias)) ? 1'b1:1'b0;		
 	//	assign	mem_intf_read_bias.mem_req = (fc_done) ? 1'b0:(((!mem_intf_read_bias.mem_valid)&&(state==REQ))||(((!mem_intf_read_bias.mem_valid)&&(state==DP)))) ? 1'b1: ((!valid_bias)&&(state!=IDLE)) ? 1'b1:1'b0;
 		assign	mem_intf_read_bias.mem_req = (fc_done) ? 1'b0: ((!(mem_intf_read_bias.mem_valid))&&(!(valid_bias))&&(state==REQ)) ? 1'b1:1'b0;	
 		assign mem_intf_read_bias.mem_start_addr = (mem_intf_read_bias.mem_req)? fc_addrb+current_read_addr_bias : {ADDR_WIDTH{1'b0}};
-		assign mem_intf_read_bias.mem_size_bytes = (mem_intf_read_bias.mem_req)? DP_DEPTH>>3    : {ADDR_WIDTH{1'b0}};//only need 32 bits == 4 bytes instead of 32 bytes in data\wgt
+		assign mem_intf_read_bias.mem_size_bytes = (mem_intf_read_bias.mem_req)? size_bias    : {ADDR_WIDTH{1'b0}};//only need 32 bits == 4 bytes instead of 32 bytes in data\wgt
 			//-----WRITE-------	
 		assign mem_intf_write.mem_req = ((state==ACT)&&(mem_intf_write.mem_ack)) ? 1'b0 : (state==ACT) ? 1'b1:1'b0;
 		assign mem_intf_write.mem_start_addr = (mem_intf_write.mem_req)? fc_addrz + current_write_addr : {ADDR_WIDTH{1'b0}};
-		assign mem_intf_write.mem_size_bytes = (mem_intf_write.mem_req)? DP_DEPTH>>5  : {ADDR_WIDTH{1'b0}};//only writing 8 bits == 1 byte
+		assign mem_intf_write.mem_size_bytes = (mem_intf_write.mem_req)? DP_DEPTH>>5 	 : {ADDR_WIDTH{1'b0}};//only writing 8 bits == 1 byte
 
-
-		
+//======================================================================================================
+// Done signal
+//======================================================================================================
+	wire last_write = (counter_line == Y_ROWS_NUM-1);	
+	assign fc_done = (state==IDLE) ? 1'b0 : (state==ACT)&&(last_write)&&(mem_intf_write.mem_ack) ? 1'b1:1'b0;
 //======================================================================================================
 //IDLE
 //======================================================================================================
@@ -375,6 +391,8 @@ always @(posedge clk or negedge rst_n)
 				valid_data<=1'b0;
 				valid_wgt<=1'b0;
 				valid_bias<=1'b0;
+				size_left_data <={X_LOG2_ROWS_NUM{1'b0}};
+				size_left_wgt <={Y_LOG2_ROWS_NUM{1'b0}};
 
 				
 				//---DP---
@@ -387,7 +405,7 @@ always @(posedge clk or negedge rst_n)
 				//---ACT---	
 				mem_intf_write.mem_data <= 32'd0; 
 				counter_line <= {Y_LOG2_ROWS_NUM{1'b0}};
-				fc_done <= 1'b0;
+				//fc_done <= 1'b0;
 				current_write_addr<={ADDR_WIDTH{1'b0}};
 			
 		end
@@ -469,7 +487,8 @@ always @(posedge clk or negedge rst_n)
 				valid_data<=1'b0;
 				valid_wgt<=1'b0;
 				valid_bias<=1'b0;
-
+				size_left_data <={X_LOG2_ROWS_NUM{1'b0}};
+				size_left_wgt <={Y_LOG2_ROWS_NUM{1'b0}};
 				
 				//---DP---
 				counter_32 <= {CNT_32_MAX{1'b0}} ;			//Counter
@@ -481,7 +500,7 @@ always @(posedge clk or negedge rst_n)
 				//---ACT---	
 				mem_intf_write.mem_data <= 32'd0; 
 				counter_line <= {Y_LOG2_ROWS_NUM{1'b0}};
-				fc_done <= 1'b0;
+				//fc_done <= 1'b0;
 				current_write_addr<={ADDR_WIDTH{1'b0}};
 			
 		end
@@ -528,7 +547,7 @@ always @(posedge clk or negedge rst_n)
 				
 			  	        current_read_addr_data<=current_read_addr_data + 19'd32;
                			        valid_data <=1'b1;
-							
+				        size_left_data <=size_left_data + DP_DEPTH;				
 				end
 				if(mem_intf_read_wgt.mem_valid==1'b1) begin	
 					mem_wgt[0]<= mem_intf_read_wgt.mem_data[0];
@@ -565,7 +584,9 @@ always @(posedge clk or negedge rst_n)
 					mem_wgt[31]<= mem_intf_read_wgt.mem_data[31];	
 
 				        current_read_addr_wgt<=current_read_addr_wgt + 19'd32;					
-					valid_wgt <= 1'b1;		
+					valid_wgt <= 1'b1;
+					size_left_wgt <=size_left_wgt + DP_DEPTH;
+		
 						
 				end
 				if(mem_intf_read_bias.mem_valid==1'b1) begin	
@@ -610,15 +631,10 @@ always @(posedge clk or negedge rst_n)
 				        data_out_sum<=32'd0;					
 				        counter_line <= counter_line+1'b1;			//New line
 				        current_write_addr<=current_write_addr+1'b1;
-				        current_read_addr_data<={ADDR_WIDTH{1'b0}};				
-					    if (counter_line == Y_ROWS_NUM-1)
-						begin
-							fc_done <= 1'b1;
-						end
-					    else
-						begin
-							fc_done <= 1'b0; 
-						end	
+				        current_read_addr_data<={ADDR_WIDTH{1'b0}};
+					size_left_data <={X_LOG2_ROWS_NUM{1'b0}};
+					size_left_wgt <={Y_LOG2_ROWS_NUM{1'b0}};
+
 				    end	
 	 end
 

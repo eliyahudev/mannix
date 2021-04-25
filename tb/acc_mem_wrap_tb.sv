@@ -350,9 +350,12 @@ end
 
    @(posedge clk)
    fc_go=1'b1;
+	repeat (1) begin
+		@ (posedge clk) ;
+	end
+   fc_go=1'b0;
  wait(fc_done);
- //  FCC_TEST_128X128();	//The task that start it all!
- //  fc_go=1'b0;
+
    #100;
 
    $stop;
