@@ -283,27 +283,31 @@ begin
 
 	@(posedge clk)
 	cnn_go=1'b1;
+	@(posedge clk)
+
 //	TEST_128X128_4X4();
-	wait(cnn_done)
+//	wait(cnn_done)
 	cnn_go=1'b0;
+    wait(cnn_done)
 	#100;
+
 	//FCC
-	$monitor("START FCC TEST\n");
+//	$monitor("START FCC TEST\n");
 
-	fcc_dta = $fopen("../txt_files/data_bin.txt", "r");
-	fcc_wgt = $fopen("../txt_files/weights_bin.txt", "r");
-	fcc_b   = $fopen("../txt_files/bias_bin.txt", "r");
-	fcc_res = $fopen("../txt_files/result_bin.txt", "r");
+//	fcc_dta = $fopen("../txt_files/data_bin.txt", "r");
+//	fcc_wgt = $fopen("../txt_files/weights_bin.txt", "r");
+//	fcc_b   = $fopen("../txt_files/bias_bin.txt", "r");
+//	fcc_res = $fopen("../txt_files/result_bin.txt", "r");
 
 
-	FCC_RESET_VALUES();
-	ASYNC_RESET();
-	FCC_READ_RESULT();
+//	FCC_RESET_VALUES();
+//	ASYNC_RESET();
+//	FCC_READ_RESULT();
 
 	//The task that start it all!
 	//  FCC_TEST_128X128();
 
-	#100;
+//	#100;
 
 
 	$stop;

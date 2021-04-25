@@ -108,7 +108,7 @@ module cnn (
   output reg                        cnn_sw_busy_ind;	// An output to the software - 1 – CNN unit is busy CNN is available (Default)
 
   input                             sw_cnn_go;          //Input from Software to start calculation
-  output reg                        sw_cnn_done;        //Output to Software to inform on end of calculation
+  output                            sw_cnn_done;        //Output to Software to inform on end of calculation
 
   //========================== Debug ==============================
   output reg signed [31:0]                    data2write_out;    //Output for debug onlt - outputs the result of each window calculation before activation.
@@ -142,6 +142,7 @@ module cnn (
   wire                              read_condition;
   reg [ADDR_WIDTH-1:0]              calc_addr_to_wr; //Calc the current addr to write to
   reg [31:0]                        sample_bias_val; 
+  wire                              last_window_calc;
 //============================================
 //   For Debug Only !!!
 //============================================
@@ -199,7 +200,7 @@ always @(*)
           end
       SHIFT:
         begin
-          if((calc_line==4'd0)&&(((calc_load_of_wr_bus==6'd33))||((calc_line==Y_COLS_NUM-1'd1)&&(window_cols_index==X_COLS_NUM-Y_COLS_NUM+1)))) 
+          if(((calc_line==4'd0)&&((calc_load_of_wr_bus==6'd33)))||((calc_line==Y_COLS_NUM-1'd1)&&(window_cols_index==X_COLS_NUM-Y_COLS_NUM+1))) 
             begin
              nx_state = WRITE; 
             end
@@ -429,25 +430,28 @@ endgenerate
 		else if(mem_intf_read_bias.mem_valid)
 			sample_bias_val <= mem_intf_read_bias.mem_data[3:0];
   end
-	
+
+assign last_window_calc = ((state==WRITE) &&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(calc_load_of_wr_bus<6'd33)&&(mem_intf_write.mem_ack));
+assign sw_cnn_done = (state==IDLE)? 1'b0 : (last_window_calc)? 1'b1 : 1'b0;
+
   always @(posedge clk or negedge rst_n)
     begin
       if(!rst_n)
         begin
           cnn_sw_busy_ind<=1'b0;
-          sw_cnn_done<=1'b0;
+        //  sw_cnn_done<=1'b0;
         end
       else
         begin
           if(state==IDLE)
             begin
               cnn_sw_busy_ind<=1'b0;
-              sw_cnn_done<=1'b0;
+           //   sw_cnn_done<=1'b0;
             end
           else if((state==WRITE) &&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(calc_load_of_wr_bus<6'd33))        
             begin
               cnn_sw_busy_ind<=1'b0;
-              sw_cnn_done<=1'b1;
+           //   sw_cnn_done<=1'b1;
             end
           else if(sw_cnn_go==1'b1)
             begin
