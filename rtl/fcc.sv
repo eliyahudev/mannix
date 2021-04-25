@@ -587,7 +587,7 @@ always @(posedge clk or negedge rst_n)
 				    bias_ind<=1'b0;
 				    valid_data <= 1'b0;
 				    valid_wgt  <= 1'b0;
-			            current_read_addr_data<={ADDR_WIDTH{1'b0}};
+			          //  current_read_addr_data<={ADDR_WIDTH{1'b0}};
 				     if (counter_32 == CNT_32_MAX - 1)
 					begin
 						valid_bias<=1'b0;
@@ -610,7 +610,7 @@ always @(posedge clk or negedge rst_n)
 				        data_out_sum<=32'd0;					
 				        counter_line <= counter_line+1'b1;			//New line
 				        current_write_addr<=current_write_addr+1'b1;
-					   
+				        current_read_addr_data<={ADDR_WIDTH{1'b0}};				
 					    if (counter_line == Y_ROWS_NUM-1)
 						begin
 							fc_done <= 1'b1;
