@@ -97,6 +97,7 @@ module pool
 	reg [6:0]                         calc_load_of_wr_bus; //In order to calc when to write - when the data write bus is full.
 reg first_read_of_pic; //in order to rise the request in READ state only at the first time 
 reg [ADDR_WIDTH-1:0]              calc_addr_to_wr; //Calc the current addr to write to
+reg last_window_calc;
 // ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == 
 //   For Debug Only !!!
 // ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == 
@@ -192,7 +193,7 @@ assign mem_intf_write.mem_size_bytes = (state==WRITE)? calc_load_of_wr_bus-1'b1 
 				  
 		      SHIFT:
 			begin
-			  if((calc_line == 4'd0)&&(((calc_load_of_wr_bus == 6'd33))||((calc_line == Y_COLS_NUM-1'd1)&&(window_cols_index == X_COLS_NUM-Y_COLS_NUM+1)))) //8 is num of DW in data BUS. TODO: change the num of cycles until write!!!
+			  if(((calc_line == 4'd0)&&((calc_load_of_wr_bus == 6'd33)))||((calc_line == Y_COLS_NUM-1'd1)&&(window_cols_index == X_COLS_NUM-Y_COLS_NUM+1))) //8 is num of DW in data BUS. TODO: change the num of cycles until write!!!
 			    begin
 			     nx_state = WRITE; 
 			    end
@@ -323,14 +324,21 @@ else if (state==WRITE && mem_intf_write.mem_ack)
 			      window_rows_index<=window_rows_index+1'b1;
 			      window_cols_index<=8'd1;
 			      end           
-			  else if(calc_line == Y_COLS_NUM)
+			  //else if(calc_line == Y_COLS_NUM)
+			else if((calc_line==Y_COLS_NUM-1'b1)&&(state==READ))
 			    begin
 			      mem_intf_read_pic.mem_start_addr<=current_row_start_addr+JUMP_COL*window_cols_index;
-			      calc_line <= 4'd0;
+			     // calc_line <= 4'd0;
+				calc_line <= calc_line+1'b1;
 			      window_cols_index<=window_cols_index+1'b1;   ///TODO: zero when end of matrix
 			    end
 			  
-			  else if((state == SHIFT && counter_calc == Y_ROWS_NUM) || (state == READ && counter_calc == 1))  //The first one never happens, second one does. 
+			 // else if((state == SHIFT && counter_calc == Y_ROWS_NUM) || (state == READ && counter_calc == 1))  //The first one never happens, second one does. 
+				else if(calc_line==Y_COLS_NUM)
+				begin
+				calc_line <= 4'd0;
+				end
+			else if(nx_state==CALC)
 			    begin
 			      mem_intf_read_pic.mem_start_addr<=mem_intf_read_pic.mem_start_addr+sw_pool_x_n;
 			      calc_line <= calc_line+1'b1;
@@ -340,6 +348,10 @@ else if (state==WRITE && mem_intf_write.mem_ack)
 			  //  window_cols_index<=8'd1; 
 			end
 		    end
+			
+		assign last_window_calc = ((state==WRITE) &&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(window_cols_index==(X_COLS_NUM- Y_COLS_NUM+1)) && (calc_load_of_wr_bus<6'd33) &&(mem_intf_write.mem_ack));
+
+		assign sw_pool_done = (state==IDLE)? 1'b0 : (last_window_calc)? 1'b1 : 1'b0;
 
 		  always @(posedge clk or negedge rst_n) begin // manage busy & done
 		    
