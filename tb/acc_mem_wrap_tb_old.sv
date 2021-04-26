@@ -581,6 +581,27 @@ task RESET_VALUES();
 
 	end
 endtask // ASYNC_RESET
+
+function [7:0] address_read_debug (
+	input [ADDR_WIDTH-1:0] addr
+);
+	integer which_part, which_bank, which_addr;
+	logic odd;
+	logic [ADDR_WIDTH-1:0] addr_int;
+	logic [255:0] full_line;
+	addr_int=addr;
+	addr_int[4:0]='0;
+	if (addr[5]==0)
+		odd=0;
+	else
+		odd=1;
+	which_part= (addr_int>>5)/2048;
+	which_bank=which_part*2+odd;
+	which_addr=((addr_int)%(2048*32)-odd*32)/2;
+	full_line=acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*8+:256];
+	address_read_debug=full_line[addr[4:0]*8+:8];
+endfunction
+
 integer data_mem,scan_mem;
 integer addr_sram;
 
