@@ -1,15 +1,15 @@
-// ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == 
+//======================================================================================================
 //
 // Module: pool
 //
 // Description: probably supports only square filter
 //
-// ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == 
+//======================================================================================================
+
 module pool 
-		#(  	parameter WORD_WIDTH=8,         //Simhi's parameter for memory  
-			parameter NUM_WORDS_IN_LINE=32, //Simhi's parameter for memory  
-			parameter ADDR_WIDTH=19,        //Simhi's parameter for memory       //nitz.TODO: check width                  
-			parameter BYTES_TO_WRITE=4,
+		#(   
+			parameter ADDR_WIDTH=19,        //Simhi's parameter for memory                       
+			//parameter BYTES_TO_WRITE=32,
 
 			parameter X_ROWS_NUM=128,   //Picture dim
 			parameter X_COLS_NUM=128,   //Picture dim  
@@ -19,12 +19,11 @@ module pool
 
 			parameter JUMP_COL=1,
  			parameter JUMP_ROW=1,
-
 			parameter X_LOG2_ROWS_NUM =$clog2(X_ROWS_NUM),
 			parameter X_LOG2_COLS_NUM =$clog2(X_COLS_NUM),
 			
-			parameter Y_LOG2_ROWS_NUM =$clog2(Y_ROWS_NUM),
-			parameter Y_LOG2_COLS_NUM =$clog2(Y_COLS_NUM)
+			parameter  Y_LOG2_ROWS_NUM =$clog2(Y_ROWS_NUM),
+			parameter  Y_LOG2_COLS_NUM =$clog2(Y_COLS_NUM)			
 			
 			)(
 			
@@ -58,6 +57,8 @@ module pool
 			mem_intf_read.client_read            mem_intf_read_pic
 			
 			);
+
+
   
 
 //################################################################################################################################################################
@@ -83,18 +84,19 @@ module pool
 //                              Interface
 // ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == =  
 
-    	reg [7:0]                         cut_data_pic [0:7] ;	 	// 8 numbers - the data from one memory call
+    reg [7:0]                         cut_data_pic [0:7] ;	 	// 8 numbers - the data from one memory call
 	reg [ADDR_WIDTH-1:0]              current_row_start_addr;
-	wire [7:0]              	  sort_res;                       //Output of sort unit to find max. 
+	wire [7:0]              	  	  sort_res;                       //Output of sort unit to find max. 
 
 	reg [7:0]                         counter_calc;   //For now it is only 0 or 1. it should be used for multiple calculations on the same data bus
 	reg [3:0]                         calc_line;         //Calculate the index of line out of the calculation of single window
 	reg [7:0]                         window_cols_index; //Index of window out of single matrix. used for multiplication of 'JUMP_COL'.
 	reg [7:0]                         window_rows_index; //Index of window out of single matrix. used for multiplication of 'JUMP_ROW'.
-
-	// reg signed [31:0]                 data2write;        
+ 
 	reg                               read_pic_data_vld;
 	reg [6:0]                         calc_load_of_wr_bus; //In order to calc when to write - when the data write bus is full.
+reg first_read_of_pic; //in order to rise the request in READ state only at the first time 
+reg [ADDR_WIDTH-1:0]              calc_addr_to_wr; //Calc the current addr to write to
 // ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == 
 //   For Debug Only !!!
 // ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == 
@@ -108,6 +110,21 @@ module pool
 	end
   
 // ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == 
+
+
+//=======================================================================================================
+
+assign read_condition = (state==READ);   
+
+assign mem_intf_read_pic.mem_req = (mem_intf_read_pic.mem_valid)? 1'b0 : (read_condition && first_read_of_pic) ? 1'b1 :(state==CALC)? 1'b1: 1'b0;    
+assign mem_intf_read_pic.mem_size_bytes = mem_intf_read_pic.mem_req ? Y_COLS_NUM : {ADDR_WIDTH{1'b0}};//TODO:CHECK WITH SIMHI IF NEEDED
+
+
+assign mem_intf_write.mem_req        = mem_intf_write.mem_ack ? 1'b0: (state==WRITE)? 1'b1 : 1'b0;
+assign mem_intf_write.mem_start_addr = (state==WRITE)? calc_addr_to_wr :{ADDR_WIDTH{1'b0}};
+assign mem_intf_write.mem_size_bytes = (state==WRITE)? calc_load_of_wr_bus-1'b1 :{ADDR_WIDTH{1'b0}};
+//=======================================================================================================
+
 
 	reg [7:0]	buffer [0:7] ; 		// 8 numbers - buff to write to
 	reg [7:0]       sort_data [0:7] ; 	// 8 numbers - which numbers to sort now
@@ -126,6 +143,7 @@ module pool
 				buffer[7] <= 8'd0;
 			end 
 			// flip flops of buff : 
+			//improvement// buffer[calc_line] <= sort_res
 			else if(calc_line == 4'd0) buffer[0] <= sort_res;
 			else if(calc_line == 4'd1) buffer[1] <= sort_res;
 			else if(calc_line == 4'd2) buffer[2] <= sort_res;
@@ -208,18 +226,8 @@ module pool
 		    if(!rst_n)
 		      begin
 			pool_sw_busy_ind <= 1'b0;
-			
-			mem_intf_write.mem_req <= 1'b0;
-			mem_intf_write.mem_start_addr <= {ADDR_WIDTH{1'b0}};
-			mem_intf_write.mem_size_bytes <= 'd0;  //TODO: change to num of bits
-			mem_intf_write.last<= 1'b0;
-			mem_intf_write.mem_last_valid<= 1'b0;
-			
-			mem_intf_read_pic.mem_req<=1'b0;
-		     //   mem_intf_read_pic.mem_start_addr<={ADDR_WIDTH{1'b0}};
-			mem_intf_read_pic.mem_size_bytes<='d0; //TODO: change to num of bits
-		       
-
+			       
+                        first_read_of_pic<=1'b1;
 			counter_calc<=8'd0;
 			
 		       	cut_data_pic[0]<= 8'd0;
@@ -230,38 +238,37 @@ module pool
 			cut_data_pic[5]<= 8'd0;
 			cut_data_pic[6]<= 8'd0;
 			cut_data_pic[7]<= 8'd0;
+                        calc_addr_to_wr <=sw_pool_addr_z; //CHECK THAT VALUE IS AVILABLE AT THIS POINT
 			
 		      end
 		    else
 		      begin
-			if(state == IDLE)
-			  begin            
-			    if(mem_intf_write.mem_ack) 
-			      begin
-				mem_intf_write.mem_req<=1'b0; //For last calculation - last write request of the write bus. 
-			      end
-			  end             
-			else if((state == READ)&&(calc_line!=Y_COLS_NUM-1'd1)&&              (~((window_cols_index == (X_COLS_NUM-Y_COLS_NUM+1))&&(window_rows_index == (X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line>=Y_COLS_NUM-1'd1))))
-			  begin
-			    if(~read_pic_data_vld)
-			      mem_intf_read_pic.mem_req <=1'b1;
-			    else
-			      mem_intf_read_pic.mem_req <=1'b0;
-			    counter_calc<=8'd0;			    
-			    
-			    if(mem_intf_write.mem_ack)
-			      begin
-				mem_intf_write.mem_req<=1'b0;
-			      end
+if(state==IDLE)
+begin
+pool_sw_busy_ind <= 1'b0;
+			       
+ first_read_of_pic<=1'b1;
+			counter_calc<=8'd0;
+			
+		       	cut_data_pic[0]<= 8'd0;
+			cut_data_pic[1]<= 8'd0;
+			cut_data_pic[2]<= 8'd0;
+			cut_data_pic[3]<= 8'd0;
+			cut_data_pic[4]<= 8'd0;
+			cut_data_pic[5]<= 8'd0;
+			cut_data_pic[6]<= 8'd0;
+			cut_data_pic[7]<= 8'd0;
+calc_addr_to_wr <=sw_pool_addr_z; //CHECK THAT VALUE IS AVILABLE AT THIS POINT
 
-			    // if(mem_intf_read_pic.mem_valid == 1'b1)
-			    //  read_pic_data_vld<=1'b1;			   
-			      
-			    end
+end
+else if (state==READ)
+begin
+if(first_read_of_pic && mem_intf_read_pic.mem_valid) 
+			  first_read_of_pic<=1'b0;
+end
+
 			else if (state == CALC)
 			  begin
-				mem_intf_read_pic.mem_req <= 1'b0;
-
 			    mem_intf_read_pic.mem_data <= mem_intf_read_pic.mem_data >> 32;
 			    counter_calc<=counter_calc+1'b1;
 			    
@@ -274,13 +281,11 @@ module pool
 			    cut_data_pic[6]<= mem_intf_read_pic.mem_data[6];
 			    cut_data_pic[7]<= mem_intf_read_pic.mem_data[7];
 
-			  end // if (state == CALC)
-			else if (state == WRITE)
-			  begin
-			    mem_intf_write.mem_start_addr 	<= sw_pool_addr_z;
-			    mem_intf_write.mem_req		<= 1'b1;
-			    mem_intf_write.mem_size_bytes 	<= BYTES_TO_WRITE;
-			    end
+			  end // if (state == CALC)	
+else if (state==WRITE && mem_intf_write.mem_ack)
+          begin
+            calc_addr_to_wr <= sw_pool_addr_z+calc_addr_to_wr+calc_load_of_wr_bus-1'd1;
+            end		
 			
 		      end    
 		  end // always @ (posedge clk or negedge rst_n)
@@ -340,17 +345,17 @@ module pool
 		    
 		      if(!rst_n)begin
 			  pool_sw_busy_ind <= 1'b0;
-			  sw_pool_done <= 1'b0;
+			//  sw_pool_done <= 1'b0;
 			end
 		      else begin
 			if(state == IDLE) begin
 			      pool_sw_busy_ind <= 1'b0;
-			      sw_pool_done <= 1'b0;
+			     // sw_pool_done <= 1'b0;
 			    end    //              cols 					rows 						last calc  
 			  else if((window_cols_index == (X_COLS_NUM-Y_COLS_NUM+1))&&(window_rows_index == (X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line == Y_ROWS_NUM))
 			    begin // done with calc
 			      pool_sw_busy_ind  <=  1'b0;
-			      sw_pool_done <= 1'b1;
+			    //  sw_pool_done <= 1'b1;
 			    end
 			  else if(sw_pool_go == 1'b1)
 				pool_sw_busy_ind <= 1'b1;  
@@ -417,7 +422,7 @@ module pool
 			    begin
 			    calc_load_of_wr_bus <= 6'd1;   
 			    end 
-			  else if(((calc_load_of_wr_bus == 6'd33)&&(state == SHIFT)))// || ((window_cols_index == X_COLS_NUM-Y_COLS_NUM+2)))
+			  else if((calc_load_of_wr_bus == 6'd33)&&(state == WRITE)&&(mem_intf_write.mem_ack==1'd1))// || ((window_cols_index == X_COLS_NUM-Y_COLS_NUM+2)))
 			    calc_load_of_wr_bus <= 6'd0;
 			  else if(calc_line == Y_COLS_NUM)
 			    calc_load_of_wr_bus <= calc_load_of_wr_bus+1'd1;
@@ -426,22 +431,25 @@ module pool
 		    end // always @ (posedge clk or negedge rst_n)
 
 		  
-		 always @(posedge clk or negedge rst_n)
-		  begin
-		    if(!rst_n)
-		      begin
-			read_pic_data_vld<=1'b0;
-		      end
-		    else
-		      begin
-			if(mem_intf_read_pic.mem_valid == 1'b1)
-			  read_pic_data_vld<=1'b1;        
-			else if(mem_intf_read_pic.mem_req == 1'b1)
-			  read_pic_data_vld<=1'b0;
+ always @(posedge clk or negedge rst_n)
+  begin
+    if(!rst_n)
+      begin
+        read_pic_data_vld<=1'b0;
+      end
+    else if(state==IDLE)
+		begin
+        read_pic_data_vld<=1'b0;
+		end
+	else
+      begin
+        if(mem_intf_read_pic.mem_valid==1'b1)
+          read_pic_data_vld<=1'b1;        
+        else if(state==CALC)
+          read_pic_data_vld<=1'b0;
 
-
-		      end
-		  end // always @ (posedge clk or negedge rst_n)
+      end
+  end // always @ (posedge clk or negedge rst_n)
 
 		 
 		  always @(posedge clk or negedge rst_n) // states
