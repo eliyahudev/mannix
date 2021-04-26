@@ -343,16 +343,19 @@ end
    $display("Finished data - now wgt\n");
    FCC_MEM_LOAD(fcc_w_data, FCC_Y_ROWS_NUM*FCC_Y_COLS_NUM, 327680);//5*2^16
    $display("Finished wgt - now bias\n");	
-   FCC_MEM_LOAD(fcc_bias_data, FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 393216);//6*2^16
+   FCC_MEM_LOAD(fcc_bias_data,4*FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 393216);//6*2^16
    //MEM_READ(a_data, X_ROWS_NUM*X_COLS_NUM, 0);
 
 
 
    @(posedge clk)
    fc_go=1'b1;
+	repeat (1) begin
+		@ (posedge clk) ;
+	end
+   fc_go=1'b0;
  wait(fc_done);
- //  FCC_TEST_128X128();	//The task that start it all!
- //  fc_go=1'b0;
+
    #100;
 
    $stop;
