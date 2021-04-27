@@ -309,14 +309,15 @@ for (integer u=0;u<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);u=u+1)
 		scan=$fscanf(fcc_b,"%d\n",fcc_bias_data[u]);
 	end
 
-for (integer r=0;r<((FCC_X_ROWS_NUM-3'd3)*(FCC_X_COLS_NUM-3'd3));r=r+1)
+/*for (integer r=0;r<((FCC_X_ROWS_NUM-3'd3)*(FCC_X_COLS_NUM-3'd3));r=r+1)
 	begin
 		scan=$fscanf(fcc_res,"%d\n",fcc_results[r]);
 
-	end
-   FCC_RESET_VALUES();
+	end*/
+   $display("Fiswgt\n");//ASYNC_RESET();  
+ FCC_RESET_VALUES();
    
-   $display("Fiswgt\n");//ASYNC_RESET();
+
 
 
    FCC_MEM_LOAD(fcc_a_data, FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 262144);//4*2^16
