@@ -740,6 +740,26 @@ task MEM_READ(input reg [((X_COLS_NUM*X_ROWS_NUM)-1):0] [7:0] data_8_bit, input 
 	end
 	pool_r.mem_req=1'b0;
 endtask //// MEM_READ
+
+	function [7:0] address_read_debug (
+        input [ADDR_WIDTH-1:0] addr
+    );
+        integer which_part, which_bank, which_addr;
+		logic odd;
+		logic [ADDR_WIDTH-1:0] addr_int;
+		logic [255:0] full_line;
+		addr_int=addr;
+		addr_int[4:0]='0;
+			if (addr[5]==0)
+				odd=0;
+			else
+				odd=1;
+			which_part= (addr_int>>5)/2048;
+			which_bank=which_part*2+odd;
+			which_addr=((addr_int)%(2048*32)-odd*32)/2;
+			full_line=acc_mem_wrap_tb.mannix_mem_farm_ins.debug_mem[which_bank][which_addr*8+:256];
+			address_read_debug=full_line[addr[4:0]*8+:8];
+    endfunction
 //**************************FCC MEM_LOAD***********************************
 task FCC_MEM_LOAD(input reg [((128*128)-1):0] [7:0] data_8_bit, input integer size, integer start_addr);
 	data_mem = $fopen("../txt_files/data_bin.txt", "r");

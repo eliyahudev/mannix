@@ -57,5 +57,11 @@ probe -create -database waves acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.int
 probe -create -database waves acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.intf_in[10]
 probe -create -database waves acc_mem_wrap_tb.mannix_mem_farm_ins.i_req_ctrl.intf_out[10]
 probe -create -database waves acc_mem_wrap_tb.mannix_mem_farm_ins.loop[1].i_mem_sram.mem
+probe -create -database waves acc_mem_wrap_tb.address_read_debug.full_line
+probe -create -database waves acc_mem_wrap_tb.address_read_debug.address_read_debug
+probe -create -database waves acc_mem_wrap_tb.address_read_debug.addr
+probe -create -database waves acc_mem_wrap_tb.address_read_debug.which_bank
+probe -create -database waves acc_mem_wrap_tb.address_read_debug.which_addr
+
 
 simvision -input input/restore.tcl.svcf
