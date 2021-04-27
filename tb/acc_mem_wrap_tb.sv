@@ -292,7 +292,7 @@ fcc_res = $fopen("../cnn_fc_matrix_generator/resultsFC.txt", "r");
 fcc_b   = $fopen("../cnn_fc_matrix_generator/biasFC.txt", "r");
 
 //----fcc : reading all files to arrays ------
-fc_go=1'b0;
+
  $display("READ DATA\n");
 for (integer k=0;k<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);k=k+1)
 	begin
@@ -325,24 +325,33 @@ for (integer u=0;u<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);u=u+1)
    FCC_MEM_LOAD(fcc_w_data, FCC_Y_ROWS_NUM*FCC_Y_COLS_NUM, 327680);//5*2^16
    $display("Finished wgt - now bias\n");	
    FCC_MEM_LOAD(fcc_bias_data,4*FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 393216);//6*2^16
+   $display("Finished bias - now bias\n");	
 
+   @(posedge clk)
+   $display("start cnn\n");//ASYNC_RESET();  
+	#CLK_PERIOD
+	#CLK_PERIOD
+        cnn_go=1'b1;
+	#CLK_PERIOD
+	#CLK_PERIOD
+	   cnn_go=1'b0;
 
-@(posedge clk)
-   cnn_go=1'b1;
+	   wait(cnn_done);
+	   $display("CNN has finished now FC\n");
+	//   #100;
 
-   cnn_go=1'b0;
+	// FCC
+	#CLK_PERIOD
+	#CLK_PERIOD
+	 fc_go=1'b1;
+	#CLK_PERIOD
+	#CLK_PERIOD
+	  fc_go=1'b0;
+	   wait(fc_done);
 
-   wait(cnn_done);
-   #100;
-// FCC
-   fc_go=1'b1;
+	   #100;
 
-   fc_go=1'b0;
-   wait(fc_done);
-
-   #100;
-
-   $stop;
+	   $stop;
 
 end // initial begin
    //---------------------------------------------
