@@ -2,13 +2,13 @@ function [resultFC,result_cnn,data,weights,weightsFC] = CNN_FCC()
 
 dta = fopen("data.txt",'r');
 wgt =  fopen("weights.txt",'r');
-data = fscanf(dta,'%d',[128 128]);
-weights = fscanf(wgt,'%d',[4 4]);
+data = fscanf(dta,'%d',[28 28]);
+weights = fscanf(wgt,'%d',[5 5]);
 
 wgt_fc = fopen("weightsFC.txt",'r');
 b_fc =  fopen("biasFC.txt",'r');
-weightsFC = fscanf(wgt_fc,'%d',[125 125]);
-biasFC = fscanf(b_fc,'%d',[125 1]);
+weightsFC = fscanf(wgt_fc,'%d',[576 576]);
+biasFC = fscanf(b_fc,'%d',[576 1]);
 
 res =  fopen("resultsCNN.txt",'w');
 res_rl = fopen("results_real_cnn.txt",'w');
@@ -17,12 +17,12 @@ res_fc = fopen("resultsFC.txt",'w');
 data_tran=transpose(data);
 weights_tran=transpose(weights);
 
-result_cnn=zeros(125*125,1);
+result_cnn=zeros(24*24,1);
 
 a=0; %Jump col
 b=0; %Jump row
-% ------ Claculate --------
-for k=1:125*125
+% ------ Calculate --------
+for k=1:24*24
     for j=1+a:4+a
         for i=1+b:4+b
             tmp_d=data(i,j);
@@ -30,7 +30,7 @@ for k=1:125*125
             result_cnn(k)=result_cnn(k)+data(i,j)*weights(i-b,j-a);
         end
     end
-   if(mod(k,125)==0)
+   if(mod(k,24)==0)
         a=a+1;
         b=0;
     else
@@ -68,9 +68,9 @@ for i = 1:size(result_cnn)
 end
   %-------------FC PART-----------------------
  %----Reshape-----
- result_cnn = reshape(result_cnn,125,125);
+ weightsFC = reshape(weightsFC,576,576);
   
-  resultFC = weightsFC * result_cnn' + biasFC ; 
+  resultFC = weightsFC * result_cnn + biasFC ; 
   for i = 1:size(resultFC)
   if (resultFC(i)<0)
      resultFC(i) = 0;
@@ -81,7 +81,7 @@ end
      resultFC(i) =floor(resultFC(i)/(2^LOG2_SCALE));
   end
   
-  for i = 1:125
+  for i = 1:576
     fprintf(res_fc , '%5d\n', resultFC(i));
   end
   %-------------------------------------------
