@@ -92,7 +92,7 @@ reg         clk_enable;
 reg [((X_COLS_NUM*X_ROWS_NUM)-1):0] [7:0]  a_data; 
 //reg signed [7:0]  w_data [0:((Y_COLS_NUM*Y_ROWS_NUM)-1)];
 reg signed [((Y_COLS_NUM*Y_ROWS_NUM)-1):0][7:0]  w_data; 
-reg [31:0][7:0] bias_data;
+reg [3:0][7:0] bias_data;
 
 reg [((FCC_X_ROWS_NUM*FCC_X_COLS_NUM)-1):0] [7:0]  fcc_a_data; 
 reg signed [((FCC_Y_COLS_NUM*FCC_Y_ROWS_NUM)-1):0][7:0]  fcc_w_data; 
@@ -165,10 +165,10 @@ integer scan;
 reg [ADDR_WIDTH-1:0]            fc_addrx;		// FC Data window FIRST address
 reg [ADDR_WIDTH-1:0]            fc_addry;		// FC  weights window FIRST address
 reg [ADDR_WIDTH-1:0]            fc_addrz;		// FC return address
-reg [ADDR_WIDTH-1:0]	 	  fc_addrb;
-reg [X_LOG2_ROWS_NUM-1:0]       fc_xm;  		// FC data matrix num of *rows*
-reg [Y_LOG2_ROWS_NUM-1:0]       fc_ym;	      	// FC weight matrix num of *rows*
-reg [Y_LOG2_COLS_NUM-1:0]       fc_yn;	        // FC weight matrix num of *columns* 
+reg [ADDR_WIDTH-1:0]	 	fc_addrb;
+reg [FCC_X_LOG2_ROWS_NUM-1:0]   fc_xm;  		// FC data matrix num of *rows*
+reg [FCC_Y_LOG2_ROWS_NUM-1:0]   fc_ym;	      	// FC weight matrix num of *rows*
+reg [FCC_Y_LOG2_COLS_NUM-1:0]   fc_yn;	        // FC weight matrix num of *columns* 
 wire                            fc_sw_busy_ind;	// An output to the software - 1 – FC unit is busy FC is available (Default)
 reg 				fc_done;		// Indicating FC finished
 reg				fc_go;			// Indicating FC to start
@@ -225,7 +225,7 @@ mem_intf_write mem_intf_write_sw();
 mem_intf_read mem_intf_read_bias_cnn();
 logic [31:0][7:0] load_data;
 
-
+reg [31:0]           index_res;
 //==============================================================================================
 //   
 always #CLK_PERIOD  clk_config_tb    = !clk_config_tb;  // Configurable 
@@ -271,8 +271,8 @@ begin
 		begin
 			scan=$fscanf(res_real,"%d\n",results_real[r1]);
 		end
-bias_data='d1;
-//avrg=sum_res_real/15625;
+bias_data=32'd1;
+
 
 $monitor("START CNN TEST\n");
 
@@ -283,7 +283,7 @@ ASYNC_RESET();
  $display("READ wgt\n");
 	MEM_LOAD(w_data, Y_ROWS_NUM*Y_COLS_NUM, 65536);
  $display("READ BIAS\n");
-	MEM_LOAD(bias_data, 32, 1<<17);
+	MEM_LOAD(bias_data, 4, 1<<17);
 //***************************************FCC*************************************
 $display("START FCC TEST\n");
 fcc_dta = $fopen("../cnn_fc_matrix_generator/resultsCNN.txt", "r");
@@ -309,11 +309,11 @@ for (integer u=0;u<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);u=u+1)
 		scan=$fscanf(fcc_b,"%d\n",fcc_bias_data[u]);
 	end
 
-/*for (integer r=0;r<((FCC_X_ROWS_NUM-3'd3)*(FCC_X_COLS_NUM-3'd3));r=r+1)
+for (integer r=0;r<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);r=r+1)
 	begin
 		scan=$fscanf(fcc_res,"%d\n",fcc_results[r]);
 
-	end*/
+	end
    $display("Fiswgt\n");//ASYNC_RESET();  
  FCC_RESET_VALUES();
    
@@ -328,6 +328,7 @@ for (integer u=0;u<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);u=u+1)
    $display("Finished bias - now bias\n");	
 
    @(posedge clk)
+   index_res='d0;
    $display("start cnn\n");//ASYNC_RESET();  
 	#CLK_PERIOD
 	#CLK_PERIOD
@@ -335,8 +336,19 @@ for (integer u=0;u<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);u=u+1)
 	#CLK_PERIOD
 	#CLK_PERIOD
 	   cnn_go=1'b0;
-
-	   wait(cnn_done);
+	//------------------------
+	/*while(!cnn_done) begin	
+		@(posedge clk)
+		wait(activation_out_smpl==results[index_res]) 
+			$display("ok %d",activation_out_smpl);
+			index_res = index_res+1;
+				
+		
+		//index_res = index_res+1;
+	end	
+	$display("While ended ");*/
+	//------------------------
+	 wait(cnn_done);
 	   $display("CNN has finished now FC\n");
 	//   #100;
 
@@ -639,11 +651,11 @@ task RESET_VALUES();
 
 
 		//sw_cnn_addr_bias={ADDR_WIDTH{1'b0}}; // CNN Bias value address 		
-		sw_cnn_addr_bias=1<<16; // CNN Bias value address 		
+		sw_cnn_addr_bias='d131072; // CNN Bias value address 		
 		sw_cnn_addr_x={ADDR_WIDTH{1'b0}};	// CNN Data window FIRST address
 		//sw_cnn_addr_y={ADDR_WIDTH{1'b0}};	// CNN  weights window FIRST address
 		sw_cnn_addr_y='d65536;	// CNN  weights window FIRST address
-		sw_cnn_addr_z={ADDR_WIDTH{1'b0}};	// CNN return address
+		sw_cnn_addr_z='d196608;	//3*2^16==196608 CNN return address
 		sw_cnn_x_m=X_ROWS_NUM;  	        // CNN data matrix num of rows
 		sw_cnn_x_n=X_COLS_NUM;	        // CNN data matrix num of columns
 		sw_cnn_y_m=Y_ROWS_NUM;	        // CNN weight matrix num of rows
@@ -954,7 +966,7 @@ endtask // MEM_WGT_READ_REQ
 //reg [7:0] data;
 //reg [7:0] index;
 reg [ADDR_WIDTH-1:0] start_line_addr;
-reg [31:0]           index_res;
+//reg [31:0]           index_res;
 integer              u;
 
 task WINDOWS_IN_RAW(input [15:0] times , input [7:0] row_num);
@@ -1076,9 +1088,9 @@ end
 		  // fc_xm={X_LOG2_ROWS_NUM{1'b0}};  		// FC data matrix num of rows
 		  // fc_ym={Y_LOG2_ROWS_NUM{1'b0}};	        // FC weight matrix num of rows
 		  // fc_yn={Y_LOG2_COLS_NUM{1'b0}};	        // FC weight matrix num of columns
-		  fc_xm='d128;  	// FC data matrix num of rows
-		  fc_ym='d128;        // FC weight matrix num of rows
-		  fc_yn='d128;        // FC weight matrix num of columns
+		  fc_xm='d125;  	// FC data matrix num of rows
+		  fc_ym='d125;        // FC weight matrix num of rows
+		  fc_yn='d125;        // FC weight matrix num of columns
 		  fc_go = 1'b0;
 		  cnn_bn = 'd128 ;
 

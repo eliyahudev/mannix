@@ -43,9 +43,9 @@ module fcc (
 //		1) fc_addrx - ADDR_WIDTH bits - Data Vector start address 			   - 0x0040
 //		2) fc_addry - ADDR_WIDTH bits - Weights matrix start address    	           - 0x0044
 //		3) fc_addrb - ADDR_WIDTH bits - Bias vector start address 		   	   - 0x
-//		4) fc_xm    - X_LOG2_ROWS_NUM bits - Data vector input length 			   - 0x004B
-//		5) fc_ym    - Y_LOG2_ROWS_NUM bits - Weights matrix input length 		   - 0x0050
-//		6) fc_yn    - Y_LOG2_ROWS_NUM bits - Weights matrix input width		   	   - 0x0054
+//		4) fc_xm    - X_LOG2_ROWS_NUM bits - Data vector input rows 			   - 0x004B
+//		5) fc_ym    - Y_LOG2_ROWS_NUM bits - Weights matrix input cols 		   - 0x0050
+//		6) fc_yn    - Y_LOG2_COLS_NUM bits - Weights matrix input width		   	   - 0x0054
 //		7) cnn_bn   - X_LOG2_ROWS_NUM bits - Bias vector input length			   - 0x0058
 //		8) fc_go		- 1 bit   - Alerting the the adresses are in place	   - 0x
 // 
@@ -276,7 +276,7 @@ reg  [X_LOG2_ROWS_NUM-1:0] size_left_wgt;
 
 
 	assign size_data = (fc_xm % DP_DEPTH == 0) ? DP_DEPTH : (fc_xm - size_left_data < DP_DEPTH) ? (fc_xm - size_left_data) : DP_DEPTH;  
-	assign size_wgt = (fc_ym % DP_DEPTH == 0) ? DP_DEPTH : (fc_ym - size_left_wgt < DP_DEPTH) ? (fc_ym - size_left_data) : DP_DEPTH;
+	assign size_wgt = (fc_yn % DP_DEPTH == 0) ? DP_DEPTH : (fc_yn - size_left_wgt < DP_DEPTH) ? (fc_yn - size_left_data) : DP_DEPTH;
 	assign size_bias = DP_DEPTH>>3;
 //======================================================================================================
 //Request assigns
