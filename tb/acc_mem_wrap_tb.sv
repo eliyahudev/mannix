@@ -1,11 +1,11 @@
 //======================================================================================================
 //
-// Module: acc_cnn_tb
+// Module: acc_mem_wrap_tb
 //
-// Design Unit Owner :Nitzan Dabush
+// Design Unit Owner :Nitzan Dabush, Dor Shilo
 //                    
 // Original Author   :Nitzan Dabush
-// Original Date     : 22-Nov-2020
+// Original Date     : 22-jan-2020
 //
 //======================================================================================================
 
@@ -49,15 +49,15 @@ parameter DP_DEPTH=4;
 
 parameter FCC_DP_DEPTH=32; 		 		// How many bytes DP every time.
 
-parameter FCC_X_ROWS_NUM=128;			//Data: vector of (X_COLS_NUM , X_ROWS_NUM)
+parameter FCC_X_ROWS_NUM=125;//changed from 128			//Data: vector of (X_COLS_NUM , X_ROWS_NUM)
 parameter FCC_X_COLS_NUM=1;
 
 parameter FCC_X_LOG2_ROWS_NUM =$clog2(FCC_X_ROWS_NUM);
 parameter FCC_X_LOG2_COLS_NUM =$clog2(FCC_X_COLS_NUM); 
 
 
-parameter FCC_Y_ROWS_NUM=128;
-parameter FCC_Y_COLS_NUM=128;
+parameter FCC_Y_ROWS_NUM=125;
+parameter FCC_Y_COLS_NUM=125;
 
 parameter FCC_Y_LOG2_ROWS_NUM =$clog2(FCC_Y_ROWS_NUM);
 parameter FCC_Y_LOG2_COLS_NUM =$clog2(FCC_Y_COLS_NUM);
@@ -236,16 +236,11 @@ assign clk = clk_enable ? clk_config_tb : 1'b0;
 
 initial
 begin
-	//CNN
-	// dta = $fopen("/nfs/site/stod/areas/d/w.dabushni.102/PROJECT_4TH_YEAR/data.txt", "r");
-	// wgt = $fopen("/nfs/site/stod/areas/d/w.dabushni.102/PROJECT_4TH_YEAR/weights.txt", "r");
-	// res_real = $fopen("/nfs/site/stod/areas/d/w.dabushni.102/PROJECT_4TH_YEAR/res_real.txt", "r");
-	// res = $fopen("/nfs/site/stod/areas/d/w.dabushni.102/PROJECT_4TH_YEAR/results_after_activation.txt", "r");
 
-	dta = $fopen("../txt_files/128x128/data.txt", "r");
-	wgt = $fopen("../txt_files/128x128/weights.txt", "r");
-	res_real = $fopen("../txt_files/128x128/res_real.txt", "r");
-	res = $fopen("../txt_files/128x128/results_after_activation.txt", "r");
+	dta = $fopen("../cnn_fc_matrix_generator/data.txt", "r");
+	wgt = $fopen("../cnn_fc_matrix_generator/weights.txt", "r");
+	res_real = $fopen("../cnn_fc_matrix_generator/results_real_cnn.txt", "r");
+	res = $fopen("../cnn_fc_matrix_generator/resultsCNN.txt", "r");
 
 	//***************************************CNN*************************************
 	fc_go =1'b0; 
@@ -256,86 +251,102 @@ begin
 	sum_res_real=35'd0;
 	avrg=32'd0;
 	//----cnn : reading all files to arrays ------
-	/*	for (integer k=0;k<(X_ROWS_NUM*X_COLS_NUM);k=k+1)
-begin
-	scan=$fscanf(dta,"%d\n",a_data[k]);
-end
+		for (integer k=0;k<(X_ROWS_NUM*X_COLS_NUM);k=k+1)
+		begin
+			scan=$fscanf(dta,"%d\n",a_data[k]);
+		end
 
-for (integer s=0;s<(Y_ROWS_NUM*Y_COLS_NUM);s=s+1)
-begin
-	scan=$fscanf(wgt,"%d\n",w_data[s]);
-end
+		for (integer s=0;s<(Y_ROWS_NUM*Y_COLS_NUM);s=s+1)
+		begin
+			scan=$fscanf(wgt,"%d\n",w_data[s]);
+		end
 
-for (integer r=0;r<((X_ROWS_NUM-3'd3)*(X_COLS_NUM-3'd3));r=r+1)
-begin
-	scan=$fscanf(res,"%d\n",results[r]);
+		for (integer r=0;r<((X_ROWS_NUM-3'd3)*(X_COLS_NUM-3'd3));r=r+1)
+		begin
+			scan=$fscanf(res,"%d\n",results[r]);
 
-end
+		end
 
-for (integer r1=0;r1<((X_ROWS_NUM-3'd3)*(X_COLS_NUM-3'd3));r1=r1+1)
-begin
-	scan=$fscanf(res_real,"%d\n",results_real[r1]);
-	sum_res_real=sum_res_real+results_real[r1];
-end
-bias_data='d0;
-avrg=sum_res_real/15625;
+		for (integer r1=0;r1<((X_ROWS_NUM-3'd3)*(X_COLS_NUM-3'd3));r1=r1+1)
+		begin
+			scan=$fscanf(res_real,"%d\n",results_real[r1]);
+		end
+bias_data='d1;
+//avrg=sum_res_real/15625;
 
 $monitor("START CNN TEST\n");
 
 RESET_VALUES();
 ASYNC_RESET();
-MEM_LOAD(a_data, X_ROWS_NUM*X_COLS_NUM, 0);
-MEM_LOAD(w_data, Y_ROWS_NUM*Y_COLS_NUM, 65536);
-MEM_LOAD(bias_data, 32, 1<<16);
-//MEM_READ(a_data, X_ROWS_NUM*X_COLS_NUM, 0);
-
-
-
-@(posedge clk)
-cnn_go=1'b1;
-//TEST_128X128_4X4();
-cnn_go=1'b0;
-//#100;
-//wait(cnn_done);*/
+ $display("READ DATA\n");
+	MEM_LOAD(a_data, X_ROWS_NUM*X_COLS_NUM, 0);
+ $display("READ wgt\n");
+	MEM_LOAD(w_data, Y_ROWS_NUM*Y_COLS_NUM, 65536);
+ $display("READ BIAS\n");
+	MEM_LOAD(bias_data, 32, 1<<17);
 //***************************************FCC*************************************
-$monitor("START FCC TEST\n");
 $display("START FCC TEST\n");
-fcc_dta = $fopen("../txt_files/fcc_files/data.txt", "r");
-fcc_wgt = $fopen("../txt_files/fcc_files/weights.txt", "r");
-fcc_res = $fopen("../txt_files/fcc_files/result.txt", "r");
-fcc_b   = $fopen("../txt_files/fcc_files/bias.txt", "r");
+fcc_dta = $fopen("../cnn_fc_matrix_generator/resultsCNN.txt", "r");
+fcc_wgt = $fopen("../cnn_fc_matrix_generator/weightsFC.txt", "r");
+fcc_res = $fopen("../cnn_fc_matrix_generator/resultsFC.txt", "r");
+fcc_b   = $fopen("../cnn_fc_matrix_generator/biasFC.txt", "r");
 
 //----fcc : reading all files to arrays ------
-fc_go=1'b0; 
+fc_go=1'b0;
+ $display("READ DATA\n");
 for (integer k=0;k<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);k=k+1)
-begin
-	scan=$fscanf(fcc_dta,"%d\n",fcc_a_data[k]);
-end
-
+	begin
+		scan=$fscanf(fcc_dta,"%d\n",fcc_a_data[k]);
+	end
+$display("READ WGT\n");
 for (integer s=0;s<(FCC_Y_ROWS_NUM*FCC_Y_COLS_NUM);s=s+1)
-begin
-	scan=$fscanf(fcc_wgt,"%d\n",fcc_w_data[s]);
-end
+	begin
+		scan=$fscanf(fcc_wgt,"%d\n",fcc_w_data[s]);
+	end
+$display("READ BIAS\n");
 for (integer u=0;u<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);u=u+1)
-begin
-	scan=$fscanf(fcc_b,"%d\n",fcc_bias_data[u]);
-end
+	begin
+		scan=$fscanf(fcc_b,"%d\n",fcc_bias_data[u]);
+	end
 
-
-/*for (integer r=0;r<((FCC_X_ROWS_NUM-3'd3)*(FCC_X_COLS_NUM-3'd3));r=r+1)
+for (integer r=0;r<((FCC_X_ROWS_NUM-3'd3)*(FCC_X_COLS_NUM-3'd3));r=r+1)
 	begin
 		scan=$fscanf(fcc_res,"%d\n",fcc_results[r]);
 
 	end
+   FCC_RESET_VALUES();
+   
+   $display("Fiswgt\n");//ASYNC_RESET();
 
-	for (integer r1=0;r1<((X_ROWS_NUM-3'd3)*(X_COLS_NUM-3'd3));r1=r1+1)
-	begin
-		scan=$fscanf(fcc_res_real,"%d\n",fcc_results_real[r1]);
-		//fcc_sum_res_real=fcc_sum_res_real+fcc_results_real[r1];
-	end*/
+
+   FCC_MEM_LOAD(fcc_a_data, FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 262144);//4*2^16
+   $display("Finished data - now wgt\n");
+   FCC_MEM_LOAD(fcc_w_data, FCC_Y_ROWS_NUM*FCC_Y_COLS_NUM, 327680);//5*2^16
+   $display("Finished wgt - now bias\n");	
+   FCC_MEM_LOAD(fcc_bias_data,4*FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 393216);//6*2^16
+
+
+@(posedge clk)
+   cnn_go=1'b1;
+
+   cnn_go=1'b0;
+
+   wait(cnn_done);
+   #100;
+// FCC
+   fc_go=1'b1;
+
+   fc_go=1'b0;
+   wait(fc_done);
+
+   #100;
+
+   $stop;
+
+end // initial begin
    //---------------------------------------------
 
-   FCC_RESET_VALUES();
+   /*FCC_RESET_VALUES();
    ASYNC_RESET();
 
 
@@ -361,7 +372,7 @@ end
    $stop;
 end // initial begin
 
-
+*/
 
 mem_intf_read mem_intf_read_pic();
 
