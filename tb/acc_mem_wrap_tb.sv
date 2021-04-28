@@ -49,17 +49,18 @@ parameter DP_DEPTH=Y_ROWS_NUM; //demand
 
 parameter FCC_DP_DEPTH=32; 		 		// How many bytes DP every time.
 
-parameter FCC_X_ROWS_NUM=576;			//Data: vector of (X_COLS_NUM , X_ROWS_NUM)
+//parameter FCC_X_ROWS_NUM=576;
+parameter FCC_X_ROWS_NUM=128;			//Data: vector of (X_COLS_NUM , X_ROWS_NUM)
 parameter FCC_X_COLS_NUM=1;
 
 parameter FCC_X_LOG2_ROWS_NUM =$clog2(FCC_X_ROWS_NUM);
 parameter FCC_X_LOG2_COLS_NUM =$clog2(FCC_X_COLS_NUM); 
 
 
-//parameter FCC_Y_ROWS_NUM=128;
-//parameter FCC_Y_COLS_NUM=128;
-parameter FCC_Y_ROWS_NUM=576;
-parameter FCC_Y_COLS_NUM=576;
+parameter FCC_Y_ROWS_NUM=128;
+parameter FCC_Y_COLS_NUM=128;
+//parameter FCC_Y_ROWS_NUM=576;
+//parameter FCC_Y_COLS_NUM=576;
 
 parameter FCC_Y_LOG2_ROWS_NUM =$clog2(FCC_Y_ROWS_NUM);
 parameter FCC_Y_LOG2_COLS_NUM =$clog2(FCC_Y_COLS_NUM);
@@ -235,7 +236,8 @@ always #CLK_PERIOD  clk_config_tb    = !clk_config_tb;  // Configurable
 assign clk = clk_enable ? clk_config_tb : 1'b0;
 
 
-
+int outfile;
+integer count;
 initial
 begin
 
@@ -280,28 +282,37 @@ $monitor("START CNN TEST\n");
 
 RESET_VALUES();
 ASYNC_RESET();
- $display("READ DATA\n");
+ /*$display("READ DATA\n");
 	MEM_LOAD(a_data, X_ROWS_NUM*X_COLS_NUM, 0);
  $display("READ wgt\n");
 	MEM_LOAD(w_data, Y_ROWS_NUM*Y_COLS_NUM, 65536);
  $display("READ BIAS\n");
-	MEM_LOAD(bias_data, 4, 1<<17);
+	MEM_LOAD(bias_data, 4, 1<<17);*/
 //***************************************FCC*************************************
 //
 //	CNN retrives 24X24 matrix -> 576 data vector ->matlab weights are 576 X 675
 //					and bias is 576X1
 //---------------------------------------------------------------------------------
 $display("START FCC TEST\n");
-fcc_dta = $fopen("../cnn_fc_matrix_generator/resultsCNN.txt", "r");
+
+	
+	outfile = $fopen("../tb/FCresults.log", "w");
+ 	if (!outfile) begin
+		    $fdisplay(outfile,"Couldn't open file");
+		    $finish();
+	    end
+//****************** 576x576 OVERWRITE simulation ************************
+/*fcc_dta = $fopen("../cnn_fc_matrix_generator/resultsCNN.txt", "r");
 fcc_wgt = $fopen("../cnn_fc_matrix_generator/weightsFC.txt", "r");
 fcc_res = $fopen("../cnn_fc_matrix_generator/resultsFC.txt", "r");
-fcc_b   = $fopen("../cnn_fc_matrix_generator/biasFC.txt", "r");
-/*fcc_dta = $fopen("../txt_files/fcc_files/data.txt", "r");
+fcc_b   = $fopen("../cnn_fc_matrix_generator/biasFC.txt", "r");*/
+//****************** 128X128 OVERWRITE simulation ************************
+fcc_dta = $fopen("../txt_files/fcc_files/data.txt", "r");
 fcc_wgt = $fopen("../txt_files/fcc_files/weights.txt", "r");
 fcc_res = $fopen("../txt_files/fcc_files/result.txt", "r");
-fcc_b   = $fopen("../txt_files/fcc_files/bias.txt", "r");*/
+fcc_b   = $fopen("../txt_files/fcc_files/bias.txt", "r");
 //----fcc : reading all files to arrays ------
-/*
+
  $display("READ DATA\n");
 for (integer k=0;k<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);k=k+1)
 	begin
@@ -329,16 +340,22 @@ for (integer r=0;r<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);r=r+1)
 
 
 
-   FCC_MEM_LOAD(fcc_a_data, FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 262144);//4*2^16
+  FCC_MEM_LOAD(fcc_a_data, FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 262144);//4*2^16
    $display("Finished data - now wgt\n");
    FCC_MEM_LOAD(fcc_w_data, FCC_Y_ROWS_NUM*FCC_Y_COLS_NUM, 327680);//5*2^16
    $display("Finished wgt - now bias\n");	
    FCC_MEM_LOAD(fcc_bias_data,4*FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 393216);//6*2^16
-   $display("Finished bias - now bias\n");	
-*/
+   $display("Finished bias - now bias\n");
+  /* FCC_MEM_LOAD(fcc_a_data, FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 0);//4*2^16
+   $display("Finished data - now wgt\n");
+   FCC_MEM_LOAD(fcc_w_data, FCC_Y_ROWS_NUM*FCC_Y_COLS_NUM, 65536);//5*2^16
+   $display("Finished wgt - now bias\n");	
+   FCC_MEM_LOAD(fcc_bias_data,4*FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 32768);//6*2^16
+   $display("Finished bias - now bias\n");	*/
+
    @(posedge clk)
    index_res='d0;
-  $display("start cnn\n");//ASYNC_RESET();  
+ /* $display("start cnn\n");//ASYNC_RESET();  
 	#CLK_PERIOD
 	#CLK_PERIOD
         cnn_go=1'b1;
@@ -356,7 +373,7 @@ for (integer r=0;r<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);r=r+1)
 		//index_res = index_res+1;
 	end	
 	$display("While ended ");
-	//------------------------*/
+	//------------------------
 	 wait(cnn_done);
 	for (integer index=0;index<FCC_Y_ROWS_NUM;index=index+1) begin
 		if(address_read_debug(196608+index)==results[index])
@@ -365,26 +382,36 @@ for (integer r=0;r<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);r=r+1)
 			$display("not ok in index %d, valueFC is %d,valueMAT is\n",index,address_read_debug(196608+index),results[index]);
 	end
 	   $display("CNN has finished now FC\n");
-	//   #100;
+	//   #100;*/
 
 	// FCC
-	/*#CLK_PERIOD
+	   $display("FC start\n");
+	#CLK_PERIOD
 	#CLK_PERIOD
 	 fc_go=1'b1;
 	#CLK_PERIOD
 	#CLK_PERIOD
 	  fc_go=1'b0;
-	
-	$display("While ended ");
+
 	   wait(fc_done);
 	   #100;
+	count=0;
 	for (integer index=0;index<FCC_Y_ROWS_NUM;index=index+1) begin
 		if(address_read_debug(458752+index)==fcc_results[index])
 			$display("ok in index %d, value is %d\n",index,fcc_results[index]);
-		else
+		else begin
 			$display("not ok in index %d, valueFC is %d,valueMAT is\n",index,address_read_debug(458752+index),fcc_results[index]);
-	end	*/
-	   $stop;
+			count = count +1;		
+		end	
+	end	
+	if(count == 0) begin
+		   $fdisplay(outfile,"PASS");	
+	end
+	else begin
+		   $fdisplay(outfile,"FAIL");
+	end
+        $fclose(outfile);	  
+ 	$stop;
 
 end // initial begin
    //---------------------------------------------
@@ -804,7 +831,7 @@ endtask //// MEM_READ
 			address_read_debug=full_line[addr[4:0]*8+:8];
     endfunction
 //**************************FCC MEM_LOAD***********************************
-task FCC_MEM_LOAD(input reg [((576*576)-1):0] [7:0] data_8_bit, input integer size, integer start_addr);
+task FCC_MEM_LOAD(input reg [((128*128)-1):0] [7:0] data_8_bit, input integer size, integer start_addr);
 	data_mem = $fopen("../txt_files/data_bin.txt", "r");
 	addr_sram=0;
 	clk_enable = 1'b1;
@@ -1101,17 +1128,22 @@ end
 		  fc_addry={ADDR_WIDTH{1'b0}};		// FC  weighs FIRST address
 		  fc_addrz={ADDR_WIDTH{1'b0}};		// FC bias address
 		  fc_addrb={ADDR_WIDTH{1'b0}};		// FC return address
-						*/
+		// ******* 128x128 addresses *******				*/
 		  fc_addrx=19'd262144;		// FC Data window FIRST address
 		  fc_addry=19'd327680;		// FC  weighs FIRST address
 		  fc_addrz=19'd458752;		// FC bias address
-		  fc_addrb=19'd393216;	
-		  // fc_xm={X_LOG2_ROWS_NUM{1'b0}};  		// FC data matrix num of rows
+		  fc_addrb=19'd393216;
+		/* ******* 576x576 addresses *******
+		 fc_addrx=19'd0;		// FC Data window FIRST address
+		  fc_addry=19'd65536;		// FC  weighs FIRST address
+		  fc_addrz=19'd458752;		// FC bias address
+		  fc_addrb=19'd32768;	  */
+		// fc_xm={X_LOG2_ROWS_NUM{1'b0}};  		// FC data matrix num of rows
 		  // fc_ym={Y_LOG2_ROWS_NUM{1'b0}};	        // FC weight matrix num of rows
 		  // fc_yn={Y_LOG2_COLS_NUM{1'b0}};	        // FC weight matrix num of columns
-		  fc_xm='d125;  	// FC data matrix num of rows
-		  fc_ym='d125;        // FC weight matrix num of rows
-		  fc_yn='d125;        // FC weight matrix num of columns
+		  fc_xm='d128;  	// FC data matrix num of rows
+		  fc_ym='d128;        // FC weight matrix num of rows
+		  fc_yn='d128;        // FC weight matrix num of columns
 		  fc_go = 1'b0;
 		  cnn_bn = 'd128 ;
 
