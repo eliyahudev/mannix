@@ -660,7 +660,7 @@ module mem_req_ctrl
 								(kk[3:0]==which_sram[j] ? {write_mem_start_addr[j][18:16],write_mem_start_addr[j][5],write_mem_start_addr[j][15:6],write_mem_start_addr[j][4:0]} :
 								{second_addr_write[j][18:16],second_addr_write[j][5],second_addr_write[j][15:6],second_addr_write[j][4:0]});
 							mask_sec[kk]= ((257'd1<<256)-1) >> (256-(num_bytes_second_data_out[j]<<3));
-							mask[kk] =kk[3:0]==which_sram[j] ? (~((256'd1 << (write_mem_start_addr[j][4:0]<<3))-1'b1)) & 
+							mask[kk] =kk[3:0]==which_sram[j] ? (~((256'd1 << ({3'b0,write_mem_start_addr[j][4:0]}<<3))-1'b1)) & 
 								(((257'd1<<256)-1) >> (256-(({3'd0,write_mem_start_addr[j][4:0]}<<3)+(num_bytes_first_data_out[j]<<3)))) : mask_sec[kk]; 
 							mask_enable[kk] = !data_write_align[j]|| (num_bytes_first_data_out[j]<32);
 							read[kk]= read_prior[j]==1'b1;

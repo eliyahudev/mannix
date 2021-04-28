@@ -28,7 +28,7 @@ module mem_sram
 			if (write && !read && !mask_enable)
 				mem[addr[14:5]]<=data_in;//the [4:0] bits are the 32B inside the line
 			if (write && !read && mask_enable)
-				mem[addr[14:5]]<=data_in & mask | mem[addr[14:5]];//the [4:0] bits are the 32B inside the line
+				mem[addr[14:5]]<= (data_in & mask) | (mem[addr[14:5]] & (~mask));//the [4:0] bits are the 32B inside the line
 			if (read && !write)
 				data_out<=mem[addr[14:5]];
 		end
