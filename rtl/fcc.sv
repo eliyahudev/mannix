@@ -304,6 +304,7 @@ reg  [X_LOG2_ROWS_NUM-1:0] size_left_wgt;
 		assign mem_intf_write.mem_req = ((state==ACT)&&(mem_intf_write.mem_ack)) ? 1'b0 : (state==ACT) ? 1'b1:1'b0;
 		assign mem_intf_write.mem_start_addr = (mem_intf_write.mem_req)? fc_addrz + current_write_addr : {ADDR_WIDTH{1'b0}};
 		assign mem_intf_write.mem_size_bytes = (mem_intf_write.mem_req)? DP_DEPTH>>5 	 : {ADDR_WIDTH{1'b0}};//only writing 8 bits == 1 byte
+		assign  mem_intf_write.mem_data = (state==ACT) ? mem_write_post_act : 8'd0;
 
 //======================================================================================================
 // Done signal
@@ -623,7 +624,7 @@ always @(posedge clk or negedge rst_n)
 			begin	
 
 			    //Writing the data
-			   	 mem_intf_write.mem_data<=mem_write_post_act;
+			   	// mem_intf_write.mem_data<=mem_write_post_act;
 
 			    //Starting again the calculation
 			    	    if (mem_intf_write.mem_ack) begin

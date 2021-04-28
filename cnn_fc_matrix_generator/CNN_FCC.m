@@ -45,8 +45,8 @@ res_real=result_cnn ;
      fprintf(res_rl , '%5d\n', res_real(i));
  end
 
-for i = 1:size(result_cnn)
-in = result_cnn(i);
+for i = 1:size(res_real)
+in = res_real(i);
 WB_LOG2_SCALE = 7;  
 UINT_DATA_WIDTH=8;
 LOG2_RELU_FACTOR=1;
@@ -68,9 +68,9 @@ for i = 1:size(result_cnn)
 end
   %-------------FC PART-----------------------
  %----Reshape-----
- weightsFC = reshape(weightsFC,576,576);
-  
-  resultFC = weightsFC * result_cnn + biasFC ; 
+ %weightsFC = reshape(weightsFC,576,576);
+ resultFC = zeros(576,1);
+ resultFC = transpose(weightsFC) * result_cnn + biasFC; 
   for i = 1:size(resultFC)
   if (resultFC(i)<0)
      resultFC(i) = 0;
