@@ -56,6 +56,8 @@ parameter FCC_X_LOG2_ROWS_NUM =$clog2(FCC_X_ROWS_NUM);
 parameter FCC_X_LOG2_COLS_NUM =$clog2(FCC_X_COLS_NUM); 
 
 
+//parameter FCC_Y_ROWS_NUM=128;
+//parameter FCC_Y_COLS_NUM=128;
 parameter FCC_Y_ROWS_NUM=576;
 parameter FCC_Y_COLS_NUM=576;
 
@@ -294,9 +296,12 @@ fcc_dta = $fopen("../cnn_fc_matrix_generator/resultsCNN.txt", "r");
 fcc_wgt = $fopen("../cnn_fc_matrix_generator/weightsFC.txt", "r");
 fcc_res = $fopen("../cnn_fc_matrix_generator/resultsFC.txt", "r");
 fcc_b   = $fopen("../cnn_fc_matrix_generator/biasFC.txt", "r");
-
+/*fcc_dta = $fopen("../txt_files/fcc_files/data.txt", "r");
+fcc_wgt = $fopen("../txt_files/fcc_files/weights.txt", "r");
+fcc_res = $fopen("../txt_files/fcc_files/result.txt", "r");
+fcc_b   = $fopen("../txt_files/fcc_files/bias.txt", "r");*/
 //----fcc : reading all files to arrays ------
-
+/*
  $display("READ DATA\n");
 for (integer k=0;k<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);k=k+1)
 	begin
@@ -330,10 +335,10 @@ for (integer r=0;r<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);r=r+1)
    $display("Finished wgt - now bias\n");	
    FCC_MEM_LOAD(fcc_bias_data,4*FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 393216);//6*2^16
    $display("Finished bias - now bias\n");	
-
+*/
    @(posedge clk)
    index_res='d0;
-/*   $display("start cnn\n");//ASYNC_RESET();  
+  $display("start cnn\n");//ASYNC_RESET();  
 	#CLK_PERIOD
 	#CLK_PERIOD
         cnn_go=1'b1;
@@ -343,7 +348,7 @@ for (integer r=0;r<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);r=r+1)
 	//------------------------
 	/*while(!cnn_done) begin	
 		@(posedge clk)
-		wait(activation_out_smpl==results[index_res]) 
+		wait(activatwion_out_smpl==results[index_res]) 
 			$display("ok %d",activation_out_smpl);
 			index_res = index_res+1;
 				
@@ -351,13 +356,19 @@ for (integer r=0;r<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);r=r+1)
 		//index_res = index_res+1;
 	end	
 	$display("While ended ");
-	//------------------------
-	 wait(cnn_done);*/
+	//------------------------*/
+	 wait(cnn_done);
+	for (integer index=0;index<FCC_Y_ROWS_NUM;index=index+1) begin
+		if(address_read_debug(196608+index)==results[index])
+			$display("ok in index %d, value is %d\n",index,results[index]);
+		else
+			$display("not ok in index %d, valueFC is %d,valueMAT is\n",index,address_read_debug(196608+index),results[index]);
+	end
 	   $display("CNN has finished now FC\n");
 	//   #100;
 
 	// FCC
-	#CLK_PERIOD
+	/*#CLK_PERIOD
 	#CLK_PERIOD
 	 fc_go=1'b1;
 	#CLK_PERIOD
@@ -372,7 +383,7 @@ for (integer r=0;r<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);r=r+1)
 			$display("ok in index %d, value is %d\n",index,fcc_results[index]);
 		else
 			$display("not ok in index %d, valueFC is %d,valueMAT is\n",index,address_read_debug(458752+index),fcc_results[index]);
-	end	
+	end	*/
 	   $stop;
 
 end // initial begin
@@ -1114,7 +1125,6 @@ end
 		  mem_intf_write_sw.mem_req=1'b0;
 		  mem_intf_write_sw.mem_start_addr='0;
 		  mem_intf_write_sw.mem_size_bytes='0;
-
 
 	  end
   endtask // ASYNC_RESET

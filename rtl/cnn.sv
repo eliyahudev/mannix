@@ -200,7 +200,8 @@ always @(*)
           end
       SHIFT:
         begin
-          if(((calc_line==4'd0)&&((calc_load_of_wr_bus==6'd33)))||((calc_line==Y_COLS_NUM-1'd1)&&(window_cols_index==X_COLS_NUM-Y_COLS_NUM+1))) 
+         // if(((calc_line==4'd0)&&((calc_load_of_wr_bus==6'd33)))||((calc_line==Y_COLS_NUM-1'd1)&&(window_cols_index==X_COLS_NUM-Y_COLS_NUM+1))) 
+	if(((calc_line==4'd0)&&((calc_load_of_wr_bus==6'd33)))||((calc_line==Y_COLS_NUM-1'd1)&&(window_rows_index==X_ROWS_NUM-Y_ROWS_NUM+1))) 
             begin
              nx_state = WRITE; 
             end
@@ -312,7 +313,7 @@ always @(posedge clk or negedge rst_n)
             end
         else if (state==CALC)
           begin
-			if(calc_line==4'd4)
+			if(calc_line==DP_DEPTH)
 			begin
 	          wgt_mem_data<=wgt_mem_data_smpl;
 			end
