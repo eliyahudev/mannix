@@ -12,8 +12,8 @@
 module acc_mem_wrap_tb ();
 
 
+//******************************************* 28X28 data cnn+fc *******************************
 
-parameter DEPTH=4;
 
 parameter   CLK_PERIOD = 5;
 
@@ -31,38 +31,38 @@ parameter MAX_BYTES_TO_WR=5;
 parameter LOG2_MAX_BYTES_TO_WR=$clog2(MAX_BYTES_TO_WR);
 parameter MEM_DATA_BUS=128;
 
-parameter X_ROWS_NUM=128;
-parameter X_COLS_NUM=128;
+parameter X_ROWS_NUM=28;
+parameter X_COLS_NUM=28;
 
 parameter X_LOG2_ROWS_NUM =$clog2(X_ROWS_NUM);
 parameter X_LOG2_COLS_NUM =$clog2(X_COLS_NUM); 
 
 
-parameter Y_ROWS_NUM=4;
-parameter Y_COLS_NUM=4;
+parameter Y_ROWS_NUM=5;
+parameter Y_COLS_NUM=5;
 
 parameter Y_LOG2_ROWS_NUM =$clog2(Y_ROWS_NUM);
 parameter Y_LOG2_COLS_NUM =$clog2(Y_COLS_NUM);
 
-parameter DP_DEPTH=4;
+parameter DP_DEPTH=Y_ROWS_NUM; //demand
 //=================================================================================
 
 parameter FCC_DP_DEPTH=32; 		 		// How many bytes DP every time.
 
-parameter FCC_X_ROWS_NUM=125;//changed from 128			//Data: vector of (X_COLS_NUM , X_ROWS_NUM)
+parameter FCC_X_ROWS_NUM=576;			//Data: vector of (X_COLS_NUM , X_ROWS_NUM)
 parameter FCC_X_COLS_NUM=1;
 
 parameter FCC_X_LOG2_ROWS_NUM =$clog2(FCC_X_ROWS_NUM);
 parameter FCC_X_LOG2_COLS_NUM =$clog2(FCC_X_COLS_NUM); 
 
 
-parameter FCC_Y_ROWS_NUM=125;
-parameter FCC_Y_COLS_NUM=125;
+parameter FCC_Y_ROWS_NUM=576;
+parameter FCC_Y_COLS_NUM=576;
 
 parameter FCC_Y_LOG2_ROWS_NUM =$clog2(FCC_Y_ROWS_NUM);
 parameter FCC_Y_LOG2_COLS_NUM =$clog2(FCC_Y_COLS_NUM);
 
-parameter FCC_CNT_32_MAX = X_ROWS_NUM/32;
+parameter FCC_CNT_32_MAX = FCC_X_ROWS_NUM/32;
 
 //Non Changing parameters:
 
@@ -285,6 +285,10 @@ ASYNC_RESET();
  $display("READ BIAS\n");
 	MEM_LOAD(bias_data, 4, 1<<17);
 //***************************************FCC*************************************
+//
+//	CNN retrives 24X24 matrix -> 576 data vector ->matlab weights are 576 X 675
+//					and bias is 576X1
+//---------------------------------------------------------------------------------
 $display("START FCC TEST\n");
 fcc_dta = $fopen("../cnn_fc_matrix_generator/resultsCNN.txt", "r");
 fcc_wgt = $fopen("../cnn_fc_matrix_generator/weightsFC.txt", "r");
@@ -329,7 +333,7 @@ for (integer r=0;r<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);r=r+1)
 
    @(posedge clk)
    index_res='d0;
-   $display("start cnn\n");//ASYNC_RESET();  
+/*   $display("start cnn\n");//ASYNC_RESET();  
 	#CLK_PERIOD
 	#CLK_PERIOD
         cnn_go=1'b1;
@@ -346,9 +350,9 @@ for (integer r=0;r<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);r=r+1)
 		
 		//index_res = index_res+1;
 	end	
-	$display("While ended ");*/
+	$display("While ended ");
 	//------------------------
-	 wait(cnn_done);
+	 wait(cnn_done);*/
 	   $display("CNN has finished now FC\n");
 	//   #100;
 
@@ -783,7 +787,7 @@ endtask //// MEM_READ
 			address_read_debug=full_line[addr[4:0]*8+:8];
     endfunction
 //**************************FCC MEM_LOAD***********************************
-task FCC_MEM_LOAD(input reg [((128*128)-1):0] [7:0] data_8_bit, input integer size, integer start_addr);
+task FCC_MEM_LOAD(input reg [((576*576)-1):0] [7:0] data_8_bit, input integer size, integer start_addr);
 	data_mem = $fopen("../txt_files/data_bin.txt", "r");
 	addr_sram=0;
 	clk_enable = 1'b1;
