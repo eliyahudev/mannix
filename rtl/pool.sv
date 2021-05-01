@@ -193,7 +193,7 @@ assign mem_intf_write.mem_size_bytes = (state==WRITE)? calc_load_of_wr_bus-1'b1 
 				  
 		      SHIFT:
 			begin
-			  if(((calc_line == 4'd0)&&((calc_load_of_wr_bus == 6'd33)))||((calc_line == Y_COLS_NUM-1'd1)&&(window_cols_index == X_COLS_NUM-Y_COLS_NUM+1))) //8 is num of DW in data BUS. TODO: change the num of cycles until write!!!
+			  if(((calc_line == 4'd0)&&((calc_load_of_wr_bus == 6'd33)))||((calc_line == Y_COLS_NUM-1'd1)&&(window_rows_index == X_ROWS_NUM-Y_ROWS_NUM+1))) //8 is num of DW in data BUS. TODO: change the num of cycles until write!!!
 			    begin
 			     nx_state = WRITE; 
 			    end
