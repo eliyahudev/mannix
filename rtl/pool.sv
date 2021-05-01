@@ -117,7 +117,7 @@ reg last_window_calc;
 
 assign read_condition = (state==READ);   
 
-assign mem_intf_read_pic.mem_req = (mem_intf_read_pic.mem_valid)? 1'b0 : (read_condition && first_read_of_pic) ? 1'b1 :(state==CALC)? 1'b1: 1'b0;    
+assign mem_intf_read_pic.mem_req = (mem_intf_read_pic.mem_valid)? 1'b0 :(mem_intf_read_pic.mem_req)? 1'b1 : (read_condition && first_read_of_pic) ? 1'b1 :(state==CALC)? 1'b1: 1'b0;    
 assign mem_intf_read_pic.mem_size_bytes = mem_intf_read_pic.mem_req ? Y_COLS_NUM : {ADDR_WIDTH{1'b0}};//TODO:CHECK WITH SIMHI IF NEEDED
 
 
