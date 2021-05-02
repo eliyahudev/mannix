@@ -154,7 +154,7 @@ wire [7:0]  activation_out_smpl;
 reg [7:0] index;
 reg signed [7:0] data [0:3] ;
 reg signed [7:0] weights [0:3];
-reg [7:0] results [0:15624];
+reg [15624:0] [7:0] results ;
 reg signed [31:0] results_real [0:15624];
 
 
@@ -209,7 +209,7 @@ integer fcc_scan;
 
 //POOL signals
 integer pool_res;
-reg [7:0] pool_results [0:(POOL_X_ROWS_NUM-POOL_Y_ROWS_NUM+1'd1)*(POOL_X_COLS_NUM-POOL_Y_COLS_NUM+1'd1)];	  	
+reg[(POOL_X_ROWS_NUM-POOL_Y_ROWS_NUM+1'd1)*(POOL_X_COLS_NUM-POOL_Y_COLS_NUM+1'd1) - 1:0] [7:0] pool_results ;	  	
 // ==  ==  ==  ==  ==  ==  ==  ==  ==  ==       
 // pool Software Interface
 // ==  ==  ==  ==  ==  ==  ==  ==  ==  == 		
@@ -340,7 +340,7 @@ RESET_VALUES();
 
 
 
-  POOL_MEM_LOAD(results, POOL_X_ROWS_NUM*POOL_X_COLS_NUM, 327680);//5*2^16
+  MEM_LOAD(results, POOL_X_ROWS_NUM*POOL_X_COLS_NUM, 327680);//5*2^16
    $display("Finished data for pool");
 
 //***************************************FCC*************************************
@@ -391,11 +391,11 @@ for (integer r=0;r<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);r=r+1)
 
 
 
-  FCC_MEM_LOAD(pool_results, FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 458752);//7*2^18
+   FCC_MEM_LOAD(pool_results, FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 196608);//6*2^15
    $display("Finished data - now wgt\n");
-   FCC_MEM_LOAD(fcc_w_data, FCC_Y_ROWS_NUM*FCC_Y_COLS_NUM, 524288);//8*2^18
+   FCC_MEM_LOAD(fcc_w_data, FCC_Y_ROWS_NUM*FCC_Y_COLS_NUM, 229376);//8*2^18
    $display("Finished wgt - now bias\n");	
-   FCC_MEM_LOAD(fcc_bias_data,4*FCC_X_ROWS_NUM*FCC_X_COLS_NUM, 589824);//9*2^16
+   FCC_MEM_LOAD(fcc_bias_data,4*FCC_Y_ROWS_NUM*FCC_X_COLS_NUM, 262144);//9*2^16
    $display("Finished bias - now we start CNN\n");
 
 
@@ -410,11 +410,11 @@ for (integer r=0;r<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);r=r+1)
 	
 	//------------------------
 	 wait(cnn_done);
-	for (integer index=0;index<FCC_Y_ROWS_NUM;index=index+1) begin
-		if(address_read_debug(262144+index)==results[index])
+	for (integer index=0;index<Y_ROWS_NUM*Y_COLS_NUM;index=index+1) begin
+		if(address_read_debug(98304+index)==results[index])
 			$display("ok in index %d, value is %d\n",index,results[index]);
 		else
-			$display("not ok in index %d, valueCNN is %d,valueMAT is\n",index,address_read_debug(262144+index),results[index]);
+			$display("not ok in index %d, valueCNN is %d,valueMAT is\n",index,address_read_debug(98304+index),results[index]);
 		end
 	   $display("CNN has finished now FC\n");
 	  #100
@@ -427,11 +427,12 @@ for (integer r=0;r<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);r=r+1)
 	#CLK_PERIOD
 	sw_pool_go=1'b0;
 	wait(sw_pool_done)
-	for (integer index=0;index<FCC_Y_ROWS_NUM;index=index+1) begin
-		if(address_read_debug(393216+index)==results[index])
+	for (integer index=0;index<POOL_Y_ROWS_NUM*POOL_Y_COLS_NUM;index=index+1) begin
+		if(address_read_debug(163840+index)==results[index])
 			$display("ok in index %d, value is %d\n",index,pool_results[index]);
 		else
-			$display("not ok in index %d, valueCNN is %d,valueMAT is\n",index,address_read_debug(393216+index),results[index]);
+			$display("not ok in index %d, valueCNN is %d,valueMAT is\n",index,address_read_debug(163840+index),results[index]);
+	end	
 	#100
 
 	// FCC
@@ -447,10 +448,10 @@ for (integer r=0;r<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);r=r+1)
 	   #100;
 	count=0;
 	for (integer index=0;index<FCC_Y_ROWS_NUM;index=index+1) begin
-		if(address_read_debug(655360+index)==fcc_results[index])
+		if(address_read_debug(294912+index)==fcc_results[index])
 			$display("ok in index %d, value is %d\n",index,fcc_results[index]);
 		else begin
-			$display("not ok in index %d, valueFC is %d,valueMAT is\n",index,address_read_debug(655360+index),fcc_results[index]);
+			$display("not ok in index %d, valueFC is %d,valueMAT is\n",index,address_read_debug(294912+index),fcc_results[index]);
 			count = count +1;		
 		end	
 	end	
@@ -971,16 +972,16 @@ task RESET_VALUES();
 
 		//sw_cnn_addr_bias={ADDR_WIDTH{1'b0}};  // CNN Bias value address
 		sw_cnn_addr_x={ADDR_WIDTH{1'b0}};	// CNN Data window FIRST address
-		sw_cnn_addr_y='d65536;			// CNN  weights window FIRST address 		
-		sw_cnn_addr_bias='d131072; 		// CNN Bias value address 		
-		sw_cnn_addr_z='d196608;			//3*2^16==196608 CNN return address
+		sw_cnn_addr_y='d32768;			// CNN  weights window FIRST address - 2^15 		
+		sw_cnn_addr_bias='d65536; 		// CNN Bias value address 		
+		sw_cnn_addr_z='d98304;			//3*2^16==196608 CNN return address
 		sw_cnn_x_m=X_ROWS_NUM;  	        // CNN data matrix num of rows
 		sw_cnn_x_n=X_COLS_NUM;	        	// CNN data matrix num of columns
 		sw_cnn_y_m=Y_ROWS_NUM;	        	// CNN weight matrix num of rows
 		sw_cnn_y_n=Y_COLS_NUM;	        	// CNN weight matrix num of columns
 
-		sw_pool_addr_x='d327680;		// POOL Data window FIRST address
-		sw_pool_addr_z='d393216;		// POOL return address
+		sw_pool_addr_x='d131072;		// POOL Data window FIRST address
+		sw_pool_addr_z='d163840;		// POOL return address
 		sw_pool_x_m=POOL_X_ROWS_NUM;  	        // POOL data matrix num of rows
 		sw_pool_x_n=POOL_X_COLS_NUM;	       		// POOL data matrix num of columns
 		sw_pool_y_m=POOL_Y_ROWS_NUM;	        	// POOL weight matrix num of rows
@@ -1015,14 +1016,14 @@ endtask // ASYNC_RESET
 		  fcc_mem_intf_read_bias_mem_last_valid='d0;
 
 		// ******* Test addresses *******				*/
-		  fc_addrx='d458752;		// FC Data window FIRST address
-		  fc_addry='d524288;		// FC  weighs FIRST address
-		  fc_addrb='d589824;		// FC bias address
-		  fc_addrz='d655360;
+		  fc_addrx='d196608;		// FC Data window FIRST address
+		  fc_addry='d229376;		// FC  weighs FIRST address
+		  fc_addrb='d262144;		// FC bias address
+		  fc_addrz='d294912;
 		
-		  fc_xm='d128;  		// FC data matrix num of rows
-		  fc_ym='d128;       		// FC weight matrix num of rows
-		  fc_yn='d128;        		// FC weight matrix num of columns
+		  fc_xm=FCC_X_ROWS_NUM;	  		// FC data matrix num of rows
+		  fc_ym=FCC_Y_ROWS_NUM;       		// FC weight matrix num of rows
+		  fc_yn=FCC_Y_COLS_NUM;        		// FC weight matrix num of columns
 		  fc_go = 1'b0;
 		  cnn_bn = 'd128 ;
 
@@ -1040,5 +1041,5 @@ endtask // ASYNC_RESET
 	  end
   endtask // ASYNC_RESET
 
-
+endmodule
 
