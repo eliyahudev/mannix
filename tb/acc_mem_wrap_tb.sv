@@ -852,7 +852,7 @@ task FCC_MEM_LOAD(input reg [((128*128)-1):0] [7:0] data_8_bit, input integer si
 			mem_intf_write_sw.mem_req=1'b1;
 			mem_intf_write_sw.mem_data=data_8_bit[out*32+:32];
 			for (integer index=0;index<32;index=index+1)
-				$display("scan_mem[%d]: %h\n",index,data_8_bit[out*32+index]);
+				$display("scan_mem[%d]: %h\n",out*32+index,data_8_bit[out*32+index]);
 			wait (mem_intf_write_sw.mem_ack ==1'b1) @(negedge clk)
 			addr_sram=mem_intf_write_sw.mem_start_addr;
 			if (addr_sram[5]==0)

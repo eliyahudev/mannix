@@ -11,5 +11,6 @@ workspace/*
 *simvision*
 *waves.shm
 *xcelium*
+*.log
 
 
