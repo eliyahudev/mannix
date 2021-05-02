@@ -58,15 +58,15 @@ res_fc = fopen("resultsFC.txt",'w');
 %------------CNN--------------------------------
 data_tran=transpose(data);
 weights_tran=transpose(weights_cnn);
-
+filter = 5;
 result_cnn=zeros(27*27,1);
 
 a=0; %Jump col
 b=0; %Jump row
 % ------ Calculate --------
 for k=1:(size(result_cnn))
-    for j=1+a:4+a
-        for i=1+b:4+b
+    for j=1+a:filter+a
+        for i=1+b:filter+b
             tmp_d=data(i,j);
             tmp_w=weights_cnn(i-b,j-a);
             result_cnn(k)=result_cnn(k)+data(i,j)*weights_cnn(i-b,j-a);
