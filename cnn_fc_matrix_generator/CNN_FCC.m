@@ -46,8 +46,8 @@ else
     %FC
     wgt_fc = fopen("weightsFC.txt",'r');
     b_fc =  fopen("biasFC.txt",'r');
-    weightsFC = fscanf(wgt_fc,'%d',[5 400]);
-    biasFC = fscanf(b_fc,'%d',[400 1]);
+    weightsFC = fscanf(wgt_fc,'%d',[5 625]);
+    biasFC = fscanf(b_fc,'%d',[5 1]);
 end
 bias_cnn = 1;
 
