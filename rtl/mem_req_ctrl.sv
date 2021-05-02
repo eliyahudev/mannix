@@ -149,7 +149,7 @@ module mem_req_ctrl
 					addr_temp_buf[i]<='0;
 				end
 				else if (new_read_req[i])
-					if (!req_data_stored_temp_buf[i]) begin
+					if (!req_data_stored_temp_buf[i] || two_read_req_need_one) begin
 						num_bytes_temp_buf[i]<=two_read_req[i] ? (7'd64 - read_mem_start_addr[i][4:0] - read_mem_size_bytes[i][5:0]) :
 							(6'd32 - read_mem_start_addr[i][4:0] - read_mem_size_bytes[i][5:0]);
 						addr_temp_buf[i]<=read_mem_start_addr[i] + read_mem_size_bytes[i][5:0];
@@ -314,10 +314,10 @@ module mem_req_ctrl
 							else begin
 								case ({read_gnt_cnt_s[i], read_gnt_cnt[i]}) //to know what was before and what is now.
 									4'b0011: begin
-										temp_buf[i][255:0]<= data_in[which_sram_sec_s[i]] >> ((8'd64 -(read_mem_start_addr_s[i][4:0] + read_mem_size_bytes_s[i]) )<<3); 
+										temp_buf[i][255:0]<= data_in[which_sram_sec_s[i]] >> (((read_mem_start_addr_s[i][4:0] + read_mem_size_bytes_s[i])- 8'd32 )<<3); 
 									end
 									4'b0111: begin
-										temp_buf[i][255:0]<= data_in[which_sram_sec_s[i]] >> ((8'd64 -(read_mem_start_addr_s[i][4:0] + read_mem_size_bytes_s[i]) )<<3); 
+										temp_buf[i][255:0]<= data_in[which_sram_sec_s[i]] >> (((read_mem_start_addr_s[i][4:0] + read_mem_size_bytes_s[i]) - 8'd32)<<3); 
 									end
 								endcase
 							end
@@ -626,6 +626,31 @@ module mem_req_ctrl
 					end
 				end
 	
+				
+   // 		always_comb	begin
+   // 			req='0;
+   // 		//	case (state[i])
+   // for (integer k=0; k < 16; k++) 
+   // 			begin
+   // 					if ((next_state[k]!=IDLE) && (!req_data_stored_temp_buf[k] && read_mem_req[k] || two_read_req_need_one[k]|| write_mem_req[k]))
+   // 						if ((next_state[k]==WRITE_TWO) || (next_state[k]==READ_TWO)) begin
+   // 							if (!req_data_stored_temp_buf) begin
+   // 								req[which_sram[k]][k]=1'b1;
+   // 								req[which_sram_sec[k]][k]=1'b1;
+   // 							end
+   // 							else
+   // 								req[which_sram_sec[k]][k]=1'b1;
+   // 						end
+   // 						else begin
+   // 							req[which_sram[k]][k]=1'b1;
+   // 						end
+   // 					else begin
+   // 						req[which_sram_sec[k]][k]=1'b0;
+   // 						req[which_sram[k]][k]=1'b0;
+   // 					end
+   // 				end
+   // 			end
+
 			always_comb begin
 				data_out='0;
 				addr_to_sram='0;
