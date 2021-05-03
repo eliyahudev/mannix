@@ -23,12 +23,12 @@ git config --global push.default matching
 	echo "your git credentials will be saved on the next push"
 fi
 
-echo "running acc_mem_wrap_tb.sv test"
+echo "running acc_mem_wrap_tb_stable_fc.sv test"
 ./acc_mem_wrap_tb_stable_fc.sh > run.log
 rm run.log
 if  cat ../tb/FCresults.log | grep -q 'FAIL'
 then 
-	echo "acc_mem_wrap_tb.sv failed!!!!!
+	echo "acc_mem_wrap_tb_stable_fc.sv failed!!!!!
 try to figure out what broken or contact with Dor or Simhi
 for to run the test:
 cd workspace
@@ -36,7 +36,7 @@ cd workspace
 script exited"
 	exit 0
 fi
-echo "acc_mem_wrap_tb.sv test passed! bravo!!"
+echo "acc_mem_wrap_tb_stable_fc.sv test passed! bravo!!"
 
 echo "git pull"
 git pull
@@ -52,16 +52,16 @@ echo "check compilation agaim"
 if ./check_rtl.sh | grep -q 'Simulation is complete' 
 then
 echo "compilation passed! bravo!!"
-echo "running acc_mem_wrap_tb.sv test again"
+echo "running acc_mem_wrap_tb_stable_fc.sv test again"
 ./acc_mem_wrap_tb_stable_fc.sh > run.log
 rm run.log
 if  cat ../tb/FCresults.log | grep -q 'PASS'
 then
-	echo "acc_mem_wrap_tb.sv test passed! bravo!!
+	echo "acc_mem_wrap_tb_stable_fc.sv test passed! bravo!!
 git push"
 	git push
 else 
-	echo "acc_mem_wrap_tb.sv failed!!!!!
+	echo "acc_mem_wrap_tb_stable_fc.sv failed!!!!!
 try to figure out what broken or contact with Dor or Simhi
 for to run the test:
 cd workspace
