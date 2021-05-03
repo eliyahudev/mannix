@@ -400,7 +400,8 @@ for (integer r=0;r<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);r=r+1)
 
 
    @(posedge clk)
-   $display("start cnn\n");//ASYNC_RESET();  
+  //CNNN
+  /* $display("start cnn\n");//ASYNC_RESET();  
 	#CLK_PERIOD
 	#CLK_PERIOD
         cnn_go=1'b1;
@@ -417,9 +418,9 @@ for (integer r=0;r<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);r=r+1)
 			$display("not ok in index %d, valueCNN is %d,valueMAT is\n",index,address_read_debug(98304+index),results[index]);
 		end
 	   $display("CNN has finished now FC\n");
-	  #100
+	  #100*/
 	//POOL
-	$display("start pool\n");  
+	/*$display("start pool\n");  
 	#CLK_PERIOD
 	#CLK_PERIOD
         sw_pool_go=1'b1;
@@ -433,7 +434,7 @@ for (integer r=0;r<(FCC_X_ROWS_NUM*FCC_X_COLS_NUM);r=r+1)
 		else
 			$display("not ok in index %d, valueCNN is %d,valueMAT is\n",index,address_read_debug(163840+index),results[index]);
 	end	
-	#100
+	#100*/
 
 	// FCC
 	$display("FC start\n");

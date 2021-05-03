@@ -150,10 +150,9 @@ module fcc (
 // Data and Weights simulation 
 //======================================================================================================
   reg signed [7:0]      mem_wgt    [DP_DEPTH-1:0]; //The weights we read the memory weights - DP_DEPTH values of 8 bit signed
- //reg signed  [DP_DEPTH-1:0] [7:0]      mem_wgt  ; //The weights we read the memory weights - DP_DEPTH values of 8 bit signed
-  reg signed [DP_DEPTH:0]     mem_bias ;		      //The biases we read
+  reg signed [DP_DEPTH - 1 :0]     mem_bias ;		      //The biases we read
   reg [7:0] 		mem_data  [DP_DEPTH-1:0]; 	      //The data we read - - DP_DEPTH values of 8 bit unsigned
-  //reg [DP_DEPTH-1:0] [7:0] 		mem_data  ; 	      //The data we read - - DP_DEPTH values of 8 bit unsigned
+
                 
 //======================================================================================================
 // Interface instanciation 
@@ -557,7 +556,7 @@ always @(posedge clk or negedge rst_n)
 				/*else begin
 					mem_data <= '{mem_intf_read_pic.mem_data[size_data:0] , {size_zeros{1'b0}}};
 				end*/
-				/*else begin 
+				else begin 
 					
 	    				for (c = 0; c < DP_DEPTH ; c = c + 1) 
 	      					begin 
@@ -565,51 +564,56 @@ always @(posedge clk or negedge rst_n)
 								mem_data[c]<= mem_intf_read_pic.mem_data[c];						
 							else
 								mem_data[c]<=8'd0;									
-						end*/
-//				for (c = size_data; c < DP_DEPTH ; c = c + 1) 
-  //    					begin : generate_loop	
-	//					mem_data[c]<=8'd0;						
-	//				end
-
-				//end
+						end
+					end
 			  	        current_read_addr_data<=current_read_addr_data + size_data;
                			        valid_data <=1'b1;
 				        size_left_data <=size_left_data + DP_DEPTH;				
 				end
-				if(mem_intf_read_wgt.mem_valid==1'b1) begin	
-					mem_wgt[0]<= mem_intf_read_wgt.mem_data[0];
-					mem_wgt[1]<= mem_intf_read_wgt.mem_data[1];
-					mem_wgt[2]<= mem_intf_read_wgt.mem_data[2];
-					mem_wgt[3]<= mem_intf_read_wgt.mem_data[3];
-					mem_wgt[4]<= mem_intf_read_wgt.mem_data[4];
-					mem_wgt[5]<= mem_intf_read_wgt.mem_data[5];
-					mem_wgt[6]<= mem_intf_read_wgt.mem_data[6];	
-					mem_wgt[7]<= mem_intf_read_wgt.mem_data[7];
-					mem_wgt[8]<= mem_intf_read_wgt.mem_data[8];
-					mem_wgt[9]<= mem_intf_read_wgt.mem_data[9];
-					mem_wgt[10]<= mem_intf_read_wgt.mem_data[10];	
-					mem_wgt[11]<= mem_intf_read_wgt.mem_data[11];
-					mem_wgt[12]<= mem_intf_read_wgt.mem_data[12];
-					mem_wgt[13]<= mem_intf_read_wgt.mem_data[13];
-					mem_wgt[14]<= mem_intf_read_wgt.mem_data[14];	
-					mem_wgt[15]<= mem_intf_read_wgt.mem_data[15];
-					mem_wgt[16]<= mem_intf_read_wgt.mem_data[16];
-					mem_wgt[17]<= mem_intf_read_wgt.mem_data[17];
-					mem_wgt[18]<= mem_intf_read_wgt.mem_data[18];	
-					mem_wgt[19]<= mem_intf_read_wgt.mem_data[19];
-					mem_wgt[20]<= mem_intf_read_wgt.mem_data[20];
-					mem_wgt[21]<= mem_intf_read_wgt.mem_data[21];
-					mem_wgt[22]<= mem_intf_read_wgt.mem_data[22];	
-					mem_wgt[23]<= mem_intf_read_wgt.mem_data[23];
-					mem_wgt[24]<= mem_intf_read_wgt.mem_data[24];
-					mem_wgt[25]<= mem_intf_read_wgt.mem_data[25];
-					mem_wgt[26]<= mem_intf_read_wgt.mem_data[26];	
-					mem_wgt[27]<= mem_intf_read_wgt.mem_data[27];
-					mem_wgt[28]<= mem_intf_read_wgt.mem_data[28];
-					mem_wgt[29]<= mem_intf_read_wgt.mem_data[29];
-					mem_wgt[30]<= mem_intf_read_wgt.mem_data[30];	
-					mem_wgt[31]<= mem_intf_read_wgt.mem_data[31];	
-
+				if(mem_intf_read_wgt.mem_valid==1'b1) begin
+					if(size_wgt == DP_DEPTH) begin	
+						mem_wgt[0]<= mem_intf_read_wgt.mem_data[0];
+						mem_wgt[1]<= mem_intf_read_wgt.mem_data[1];
+						mem_wgt[2]<= mem_intf_read_wgt.mem_data[2];
+						mem_wgt[3]<= mem_intf_read_wgt.mem_data[3];
+						mem_wgt[4]<= mem_intf_read_wgt.mem_data[4];
+						mem_wgt[5]<= mem_intf_read_wgt.mem_data[5];
+						mem_wgt[6]<= mem_intf_read_wgt.mem_data[6];	
+						mem_wgt[7]<= mem_intf_read_wgt.mem_data[7];
+						mem_wgt[8]<= mem_intf_read_wgt.mem_data[8];
+						mem_wgt[9]<= mem_intf_read_wgt.mem_data[9];
+						mem_wgt[10]<= mem_intf_read_wgt.mem_data[10];	
+						mem_wgt[11]<= mem_intf_read_wgt.mem_data[11];
+						mem_wgt[12]<= mem_intf_read_wgt.mem_data[12];
+						mem_wgt[13]<= mem_intf_read_wgt.mem_data[13];
+						mem_wgt[14]<= mem_intf_read_wgt.mem_data[14];	
+						mem_wgt[15]<= mem_intf_read_wgt.mem_data[15];
+						mem_wgt[16]<= mem_intf_read_wgt.mem_data[16];
+						mem_wgt[17]<= mem_intf_read_wgt.mem_data[17];
+						mem_wgt[18]<= mem_intf_read_wgt.mem_data[18];	
+						mem_wgt[19]<= mem_intf_read_wgt.mem_data[19];
+						mem_wgt[20]<= mem_intf_read_wgt.mem_data[20];
+						mem_wgt[21]<= mem_intf_read_wgt.mem_data[21];
+						mem_wgt[22]<= mem_intf_read_wgt.mem_data[22];	
+						mem_wgt[23]<= mem_intf_read_wgt.mem_data[23];
+						mem_wgt[24]<= mem_intf_read_wgt.mem_data[24];
+						mem_wgt[25]<= mem_intf_read_wgt.mem_data[25];
+						mem_wgt[26]<= mem_intf_read_wgt.mem_data[26];	
+						mem_wgt[27]<= mem_intf_read_wgt.mem_data[27];
+						mem_wgt[28]<= mem_intf_read_wgt.mem_data[28];
+						mem_wgt[29]<= mem_intf_read_wgt.mem_data[29];
+						mem_wgt[30]<= mem_intf_read_wgt.mem_data[30];	
+						mem_wgt[31]<= mem_intf_read_wgt.mem_data[31];	
+					end
+					else begin
+					for (c = 0; c < DP_DEPTH ; c = c + 1) 
+	      					begin 
+							if(c < size_wgt)
+								mem_wgt[c]<= mem_intf_read_wgt.mem_data[c];						
+							else
+								mem_wgt[c]<=8'd0;									
+						end
+					end
 				        current_read_addr_wgt<=current_read_addr_wgt + size_wgt;					
 					valid_wgt <= 1'b1;
 					size_left_wgt <=size_left_wgt + DP_DEPTH;
