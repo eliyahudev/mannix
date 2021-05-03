@@ -198,7 +198,7 @@ reg  [X_LOG2_ROWS_NUM-1:0] size_left_wgt;
 
 
 	assign size_data = (fc_xm % DP_DEPTH == 0) ? DP_DEPTH : (fc_xm - size_left_data < DP_DEPTH) ? (fc_xm - size_left_data) : DP_DEPTH;  
-	assign size_wgt = (fc_yn % DP_DEPTH == 0) ? DP_DEPTH : (fc_yn - size_left_wgt < DP_DEPTH) ? (fc_yn - size_left_data) : DP_DEPTH;
+	assign size_wgt = (fc_yn % DP_DEPTH == 0) ? DP_DEPTH : (fc_yn - size_left_wgt < DP_DEPTH) ? (fc_yn - size_left_wgt) : DP_DEPTH;
 	assign size_bias = DP_DEPTH>>3;
 //====================================================================================================
 // DP instanciation
@@ -661,7 +661,7 @@ always @(posedge clk or negedge rst_n)
 				        current_read_addr_data<={ADDR_WIDTH{1'b0}};
 					size_left_data <={X_LOG2_ROWS_NUM{1'b0}};
 					size_left_wgt <={Y_LOG2_ROWS_NUM{1'b0}};
-				        current_read_addr_wgt<=current_read_addr_wgt + 19'd32;					
+				     //   current_read_addr_wgt<=current_read_addr_wgt + 19'd32;					
 				    end	
 	 end
 
