@@ -24,7 +24,7 @@ git config --global push.default matching
 fi
 
 echo "running acc_mem_wrap_tb.sv test"
-./acc_mem_wrap_tb.sh > run.log
+./acc_mem_wrap_tb_stable_fc.sh > run.log
 rm run.log
 if  cat ../tb/FCresults.log | grep -q 'FAIL'
 then 
@@ -32,7 +32,7 @@ then
 try to figure out what broken or contact with Dor or Simhi
 for to run the test:
 cd workspace
-./acc_mem_wrap_tb.sh
+./acc_mem_wrap_tb_stable_fc.sh
 script exited"
 	exit 0
 fi
@@ -53,7 +53,7 @@ if ./check_rtl.sh | grep -q 'Simulation is complete'
 then
 echo "compilation passed! bravo!!"
 echo "running acc_mem_wrap_tb.sv test again"
-./acc_mem_wrap_tb.sh > run.log
+./acc_mem_wrap_tb_stable_fc.sh > run.log
 rm run.log
 if  cat ../tb/FCresults.log | grep -q 'PASS'
 then
@@ -65,7 +65,7 @@ else
 try to figure out what broken or contact with Dor or Simhi
 for to run the test:
 cd workspace
-./acc_mem_wrap_tb.sh
+./acc_mem_wrap_tb_stable_fc.sh
 script exited"
 	exit 0
 fi
