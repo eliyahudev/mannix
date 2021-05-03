@@ -129,7 +129,7 @@ module mem_req_ctrl
 			//the address of the req should be higher than (or equal to) the address of the temp_buf
 			//and the last address of the temp_buf is higher than (or equal to) the address of the req
 			assign req_data_stored_temp_buf[i] = ((read_mem_start_addr[i] >= addr_temp_buf[i]) &&
-				(addr_temp_buf[i] + num_bytes_temp_buf[i] >= read_mem_start_addr[i] + read_mem_size_bytes[i][5:0])) || two_read_req_need_one;
+				(addr_temp_buf[i] + num_bytes_temp_buf[i] >= read_mem_start_addr[i] + read_mem_size_bytes[i][5:0])) || two_read_req_need_one[i];
 
 			//if there is read req that required two req for the memory, 
 			//check if the first data req stored in the temp_buf
@@ -149,7 +149,7 @@ module mem_req_ctrl
 					addr_temp_buf[i]<='0;
 				end
 				else if (new_read_req[i])
-					if (!req_data_stored_temp_buf[i] || two_read_req_need_one) begin
+					if (!req_data_stored_temp_buf[i] || two_read_req_need_one[i]) begin
 						num_bytes_temp_buf[i]<=two_read_req[i] ? (7'd64 - read_mem_start_addr[i][4:0] - read_mem_size_bytes[i][5:0]) :
 							(6'd32 - read_mem_start_addr[i][4:0] - read_mem_size_bytes[i][5:0]);
 						addr_temp_buf[i]<=read_mem_start_addr[i] + read_mem_size_bytes[i][5:0];
