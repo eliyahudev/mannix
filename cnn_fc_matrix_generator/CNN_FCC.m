@@ -46,10 +46,17 @@ else
     %FC
     wgt_fc = fopen("weightsFC.txt",'r');
     b_fc =  fopen("biasFC.txt",'r');
-    weightsFC = fscanf(wgt_fc,'%d',[5 625]);
+    weightsFC1 = fscanf(wgt_fc,'%d',[1 3125]);
+    weightsFC = zeros(5,625);
+    weightsFC(1,:) = weightsFC1(1:625);
+    weightsFC(2,:) = weightsFC1(1+625:625*2);
+    weightsFC(3,:) = weightsFC1(1+625*2:625*3);
+    weightsFC(4,:) = weightsFC1(1+625*3:625*4);
+    weightsFC(5,:) = weightsFC1(1+625*4:625*5);
+    end
     biasFC = fscanf(b_fc,'%d',[5 1]);
-end
-bias_cnn = 1;
+
+    bias_cnn = 1;
 
 res =  fopen("resultsCNN.txt",'w');
 res_pool = fopen("resultsPOOL.txt",'w');
