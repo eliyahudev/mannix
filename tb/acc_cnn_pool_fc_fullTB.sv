@@ -65,7 +65,7 @@ parameter FCC_Y_COLS_NUM=625;
 parameter FCC_Y_LOG2_ROWS_NUM =$clog2(FCC_Y_ROWS_NUM);
 parameter FCC_Y_LOG2_COLS_NUM =$clog2(FCC_Y_COLS_NUM);
 
-parameter FCC_CNT_32_MAX = FCC_X_ROWS_NUM/32;
+parameter FCC_CNT_32_MAX = FCC_X_ROWS_NUM/32 + 1'd1;
 
 //Non Changing parameters:
 

@@ -285,13 +285,15 @@ reg  [X_LOG2_ROWS_NUM-1:0] size_left_wgt;
 		//assign	mem_intf_read_pic.mem_req = (fc_done) ? 1'b0:((!mem_intf_read_pic.mem_valid)&&((state==REQ)||(state==DP))&&(!valid_data)) ? 1'b1:1'b0;		
 		//assign	mem_intf_read_pic.mem_req = (fc_done) ? 1'b0:(((!mem_intf_read_pic.mem_valid)&&(state==REQ))||((!mem_intf_read_pic.mem_valid)&&(state==DP))) ? 1'b1:1'b0;		
 		//assign	mem_intf_read_pic.mem_req = ((fc_done)||(counter_32 == CNT_32_MAX -1)) ? 1'b0: (((!mem_intf_read_pic.mem_valid)&&(state==REQ))||((!mem_intf_read_pic.mem_valid)&&(state==DP))) ? 1'b1:1'b0;	
-		assign	mem_intf_read_pic.mem_req = ((fc_done)||(counter_32 == CNT_32_MAX -1)) ? 1'b0:((valid_data)&&(state==DP)) ? 1'b1:((!valid_data)&&(state == REQ)&&(!mem_intf_read_pic.mem_valid)) ? 1'b1:1'b0;
+		//assign	mem_intf_read_pic.mem_req = ((fc_done)||(counter_32 == CNT_32_MAX -1)) ? 1'b0:((valid_data)&&(state==DP)) ? 1'b1:((!valid_data)&&(state == REQ)&&(!mem_intf_read_pic.mem_valid)) ? 1'b1:1'b0;
+		assign	mem_intf_read_pic.mem_req = ((fc_done)||(counter_32 == CNT_32_MAX )) ? 1'b0:((valid_data)&&(state==DP)) ? 1'b1:((!valid_data)&&(state == REQ)&&(!mem_intf_read_pic.mem_valid)) ? 1'b1:1'b0;
 		assign mem_intf_read_pic.mem_start_addr  = (mem_intf_read_pic.mem_req)	? (fc_addrx + current_read_addr_data) : {ADDR_WIDTH{1'b0}};
 		assign mem_intf_read_pic.mem_size_bytes  = (mem_intf_read_pic.mem_req)	? size_data      : {ADDR_WIDTH{1'b0}};
 			//------WGT-------
 		//assign	mem_intf_read_wgt.mem_req = (fc_done) ? 1'b0:((!mem_intf_read_wgt.mem_valid)&&((state==REQ)||(state==DP))&&(!valid_wgt)) ? 1'b1:1'b0;
 	//	assign	mem_intf_read_wgt.mem_req = (fc_done) ? 1'b0:(counter_32 == CNT_32_MAX -1) ? 1'b0 : (((!mem_intf_read_wgt.mem_valid)&&(state==REQ))||((!mem_intf_read_wgt.mem_valid)&&(state==DP))) ? 1'b1:1'b0;
-		assign	mem_intf_read_wgt.mem_req = ((fc_done)||(counter_32 == CNT_32_MAX -1)) ? 1'b0:((valid_wgt)&&(state==DP)) ? 1'b1:((!valid_wgt)&&(state == REQ)&&(!mem_intf_read_wgt.mem_valid)) ? 1'b1:1'b0;		
+		//assign	mem_intf_read_wgt.mem_req = ((fc_done)||(counter_32 == CNT_32_MAX -1)) ? 1'b0:((valid_wgt)&&(state==DP)) ? 1'b1:((!valid_wgt)&&(state == REQ)&&(!mem_intf_read_wgt.mem_valid)) ? 1'b1:1'b0;
+		assign	mem_intf_read_wgt.mem_req = ((fc_done)||(counter_32 == CNT_32_MAX )) ? 1'b0:((valid_wgt)&&(state==DP)) ? 1'b1:((!valid_wgt)&&(state == REQ)&&(!mem_intf_read_wgt.mem_valid)) ? 1'b1:1'b0;			
 		assign mem_intf_read_wgt.mem_start_addr  = (mem_intf_read_wgt.mem_req)? (fc_addry + current_read_addr_wgt) : {ADDR_WIDTH{1'b0}};
 		assign mem_intf_read_wgt.mem_size_bytes  = (mem_intf_read_wgt.mem_req)	? size_wgt      : {ADDR_WIDTH{1'b0}}; 
 			//------BIAS-------
