@@ -150,9 +150,10 @@ module fcc (
 // Data and Weights simulation 
 //======================================================================================================
   reg signed [7:0]      mem_wgt    [DP_DEPTH-1:0]; //The weights we read the memory weights - DP_DEPTH values of 8 bit signed
-  reg signed [31:0]     mem_bias ;		      //The biases we read
+ //reg signed  [DP_DEPTH-1:0] [7:0]      mem_wgt  ; //The weights we read the memory weights - DP_DEPTH values of 8 bit signed
+  reg signed [DP_DEPTH:0]     mem_bias ;		      //The biases we read
   reg [7:0] 		mem_data  [DP_DEPTH-1:0]; 	      //The data we read - - DP_DEPTH values of 8 bit unsigned
-
+  //reg [DP_DEPTH-1:0] [7:0] 		mem_data  ; 	      //The data we read - - DP_DEPTH values of 8 bit unsigned
                 
 //======================================================================================================
 // Interface instanciation 
@@ -186,18 +187,33 @@ module fcc (
  reg [CNT_32_MAX-1 : 0] counter_32; 		//counting 32 dot product 
  reg [Y_LOG2_ROWS_NUM - 1:0] counter_line;	//counting on which line we are on
 
+//======================================================================================================
+//Size bytes to request
+//======================================================================================================
+wire [X_LOG2_ROWS_NUM-1:0] size_data;
+wire [X_LOG2_ROWS_NUM-1:0] size_wgt;
+wire [X_LOG2_ROWS_NUM-1:0] size_bias;
+reg  [X_LOG2_ROWS_NUM-1:0] size_left_data;
+reg  [X_LOG2_ROWS_NUM-1:0] size_left_wgt;
+
+
+	assign size_data = (fc_xm % DP_DEPTH == 0) ? DP_DEPTH : (fc_xm - size_left_data < DP_DEPTH) ? (fc_xm - size_left_data) : DP_DEPTH;  
+	assign size_wgt = (fc_yn % DP_DEPTH == 0) ? DP_DEPTH : (fc_yn - size_left_wgt < DP_DEPTH) ? (fc_yn - size_left_data) : DP_DEPTH;
+	assign size_bias = DP_DEPTH>>3;
 //====================================================================================================
 // DP instanciation
 //======================================================================================================
-
+wire [X_LOG2_ROWS_NUM-1:0] size_zeros;
+assign size_zeros = DP_DEPTH - size_data;
 wire signed [31:0] dp_res;
 dot_product_parallel #(.DEPTH(DP_DEPTH)) dp_pll_ins(.a(mem_data), .b(mem_wgt), .res(dp_res)); 
 reg signed [31:0] data_out_sum ;
 
+//dot_product_parallel #(.DEPTH(DP_DEPTH)) dp_pll_ins(.a({mem_data[size_data - 1:0] , {zeros_size{1'b0}}}), .b({mem_wgt[size_data - 1:0] , {zeros_size{1'b0}}}), .res(dp_res)); 
+
 
 //====================================================================================================
-// Activation instanciation
-//======================================================================================================
+// Activation instanciation/======================================================================================================
 wire signed [31:0] mem_write_tmp ;
 wire [7:0] mem_write_post_act  ;
 assign mem_write_tmp = (data_out_sum + mem_bias);
@@ -226,7 +242,7 @@ activation #(.WB_LOG2_SCALE(WB_LOG2_SCALE),.UINT_DATA_WIDTH(UINT_DATA_WIDTH),.LO
 
 	REQ: begin
 
-   			 if(((mem_intf_read_pic.mem_valid ==1'b1)||(valid_data)) && ((mem_intf_read_wgt.mem_valid ==1'b1)||(valid_wgt)) && ((mem_intf_read_bias.mem_valid == 1'b1)||(valid_bias)))
+   			 if(((mem_intf_read_pic.mem_valid)||(valid_data)) && ((mem_intf_read_wgt.mem_valid)||(valid_wgt)) && ((mem_intf_read_bias.mem_valid)||(valid_bias)))
 				begin 
 					next_state = DP;
 				end
@@ -265,20 +281,7 @@ end
         state <= next_state;
       end
   end
-//======================================================================================================
-//Size bytes to request
-//======================================================================================================
-wire [X_LOG2_ROWS_NUM-1:0] size_data;
-wire [X_LOG2_ROWS_NUM-1:0] size_wgt;
-wire [X_LOG2_ROWS_NUM-1:0] size_bias;
-reg  [X_LOG2_ROWS_NUM-1:0] size_left_data;
-reg  [X_LOG2_ROWS_NUM-1:0] size_left_wgt;
-
-
-	assign size_data = (fc_xm % DP_DEPTH == 0) ? DP_DEPTH : (fc_xm - size_left_data < DP_DEPTH) ? (fc_xm - size_left_data) : DP_DEPTH;  
-	assign size_wgt = (fc_yn % DP_DEPTH == 0) ? DP_DEPTH : (fc_yn - size_left_wgt < DP_DEPTH) ? (fc_yn - size_left_data) : DP_DEPTH;
-	assign size_bias = DP_DEPTH>>3;
-//======================================================================================================
+///======================================================================================================
 //Request assigns
 //======================================================================================================
 			//------PIC-------
@@ -286,14 +289,14 @@ reg  [X_LOG2_ROWS_NUM-1:0] size_left_wgt;
 		//assign	mem_intf_read_pic.mem_req = (fc_done) ? 1'b0:(((!mem_intf_read_pic.mem_valid)&&(state==REQ))||((!mem_intf_read_pic.mem_valid)&&(state==DP))) ? 1'b1:1'b0;		
 		//assign	mem_intf_read_pic.mem_req = ((fc_done)||(counter_32 == CNT_32_MAX -1)) ? 1'b0: (((!mem_intf_read_pic.mem_valid)&&(state==REQ))||((!mem_intf_read_pic.mem_valid)&&(state==DP))) ? 1'b1:1'b0;	
 		//assign	mem_intf_read_pic.mem_req = ((fc_done)||(counter_32 == CNT_32_MAX -1)) ? 1'b0:((valid_data)&&(state==DP)) ? 1'b1:((!valid_data)&&(state == REQ)&&(!mem_intf_read_pic.mem_valid)) ? 1'b1:1'b0;
-		assign	mem_intf_read_pic.mem_req = ((fc_done)||(counter_32 == CNT_32_MAX )) ? 1'b0:((valid_data)&&(state==DP)) ? 1'b1:((!valid_data)&&(state == REQ)&&(!mem_intf_read_pic.mem_valid)) ? 1'b1:1'b0;
+		assign	mem_intf_read_pic.mem_req =((fc_done)||(mem_intf_read_pic.mem_valid)) ? 1'b0: ((state==DP)&&(counter_32 == CNT_32_MAX - 1)) ? 1'b0 : ((valid_data)&&(state==DP)) ? 1'b1:((!valid_data)&&(state == REQ)&&(!mem_intf_read_pic.mem_valid)) ? 1'b1:1'b0;
 		assign mem_intf_read_pic.mem_start_addr  = (mem_intf_read_pic.mem_req)	? (fc_addrx + current_read_addr_data) : {ADDR_WIDTH{1'b0}};
 		assign mem_intf_read_pic.mem_size_bytes  = (mem_intf_read_pic.mem_req)	? size_data      : {ADDR_WIDTH{1'b0}};
 			//------WGT-------
 		//assign	mem_intf_read_wgt.mem_req = (fc_done) ? 1'b0:((!mem_intf_read_wgt.mem_valid)&&((state==REQ)||(state==DP))&&(!valid_wgt)) ? 1'b1:1'b0;
 	//	assign	mem_intf_read_wgt.mem_req = (fc_done) ? 1'b0:(counter_32 == CNT_32_MAX -1) ? 1'b0 : (((!mem_intf_read_wgt.mem_valid)&&(state==REQ))||((!mem_intf_read_wgt.mem_valid)&&(state==DP))) ? 1'b1:1'b0;
-		//assign	mem_intf_read_wgt.mem_req = ((fc_done)||(counter_32 == CNT_32_MAX -1)) ? 1'b0:((valid_wgt)&&(state==DP)) ? 1'b1:((!valid_wgt)&&(state == REQ)&&(!mem_intf_read_wgt.mem_valid)) ? 1'b1:1'b0;
-		assign	mem_intf_read_wgt.mem_req = ((fc_done)||(counter_32 == CNT_32_MAX )) ? 1'b0:((valid_wgt)&&(state==DP)) ? 1'b1:((!valid_wgt)&&(state == REQ)&&(!mem_intf_read_wgt.mem_valid)) ? 1'b1:1'b0;			
+		assign	mem_intf_read_wgt.mem_req = ((fc_done)||(mem_intf_read_wgt.mem_valid)) ? 1'b0: ((state==DP)&&(counter_32 == CNT_32_MAX - 1)) ? 1'b0 : ((valid_wgt)&&(state==DP)) ? 1'b1:((!valid_wgt)&&(state == REQ)&&(!mem_intf_read_wgt.mem_valid)) ? 1'b1:1'b0;
+		//assign	mem_intf_read_wgt.mem_req = ((fc_done)||(mem_intf_read_wgt.mem_valid)) ? 1'b0:((valid_wgt)&&(state==DP)) ? 1'b1:((!valid_wgt)&&(state == REQ)&&(!mem_intf_read_wgt.mem_valid)) ? 1'b1:1'b0;			
 		assign mem_intf_read_wgt.mem_start_addr  = (mem_intf_read_wgt.mem_req)? (fc_addry + current_read_addr_wgt) : {ADDR_WIDTH{1'b0}};
 		assign mem_intf_read_wgt.mem_size_bytes  = (mem_intf_read_wgt.mem_req)	? size_wgt      : {ADDR_WIDTH{1'b0}}; 
 			//------BIAS-------
@@ -307,12 +310,13 @@ reg  [X_LOG2_ROWS_NUM-1:0] size_left_wgt;
 		assign mem_intf_write.mem_start_addr = (mem_intf_write.mem_req)? fc_addrz + current_write_addr : {ADDR_WIDTH{1'b0}};
 		assign mem_intf_write.mem_size_bytes = (mem_intf_write.mem_req)? DP_DEPTH>>5 	 : {ADDR_WIDTH{1'b0}};//only writing 8 bits == 1 byte
 		assign  mem_intf_write.mem_data = (state==ACT) ? mem_write_post_act : 8'd0;
-
+  integer c;
 //======================================================================================================
 // Done signal
 //======================================================================================================
 	wire last_write = (counter_line == Y_ROWS_NUM-1);	
 	assign fc_done = (state==IDLE) ? 1'b0 : (state==ACT)&&(last_write)&&(mem_intf_write.mem_ack) ? 1'b1:1'b0;
+
 //======================================================================================================
 //IDLE
 //======================================================================================================
@@ -514,41 +518,61 @@ always @(posedge clk or negedge rst_n)
 	else if(state == REQ )
 		begin					
 					
-				if(mem_intf_read_pic.mem_valid==1'b1) begin	
-					mem_data[0]<= mem_intf_read_pic.mem_data[0];
-					mem_data[1]<= mem_intf_read_pic.mem_data[1];
-					mem_data[2]<= mem_intf_read_pic.mem_data[2];
-					mem_data[3]<= mem_intf_read_pic.mem_data[3];
-					mem_data[4]<= mem_intf_read_pic.mem_data[4];
-					mem_data[5]<= mem_intf_read_pic.mem_data[5];
-					mem_data[6]<= mem_intf_read_pic.mem_data[6];	
-					mem_data[7]<= mem_intf_read_pic.mem_data[7];
-					mem_data[8]<= mem_intf_read_pic.mem_data[8];
-					mem_data[9]<= mem_intf_read_pic.mem_data[9];
-					mem_data[10]<= mem_intf_read_pic.mem_data[10];	
-					mem_data[11]<= mem_intf_read_pic.mem_data[11];
-					mem_data[12]<= mem_intf_read_pic.mem_data[12];
-					mem_data[13]<= mem_intf_read_pic.mem_data[13];
-					mem_data[14]<= mem_intf_read_pic.mem_data[14];	
-					mem_data[15]<= mem_intf_read_pic.mem_data[15];
-					mem_data[16]<= mem_intf_read_pic.mem_data[16];
-					mem_data[17]<= mem_intf_read_pic.mem_data[17];
-					mem_data[18]<= mem_intf_read_pic.mem_data[18];	
-					mem_data[19]<= mem_intf_read_pic.mem_data[19];
-					mem_data[20]<= mem_intf_read_pic.mem_data[20];
-					mem_data[21]<= mem_intf_read_pic.mem_data[21];
-					mem_data[22]<= mem_intf_read_pic.mem_data[22];	
-					mem_data[23]<= mem_intf_read_pic.mem_data[23];
-					mem_data[24]<= mem_intf_read_pic.mem_data[24];
-					mem_data[25]<= mem_intf_read_pic.mem_data[25];
-					mem_data[26]<= mem_intf_read_pic.mem_data[26];	
-					mem_data[27]<= mem_intf_read_pic.mem_data[27];
-					mem_data[28]<= mem_intf_read_pic.mem_data[28];
-					mem_data[29]<= mem_intf_read_pic.mem_data[29];
-					mem_data[30]<= mem_intf_read_pic.mem_data[30];	
-					mem_data[31]<= mem_intf_read_pic.mem_data[31];	
-				
-			  	        current_read_addr_data<=current_read_addr_data + 19'd32;
+				if(mem_intf_read_pic.mem_valid==1'b1) begin
+					if(size_data == DP_DEPTH) begin	
+						mem_data[0]<= mem_intf_read_pic.mem_data[0];
+						mem_data[1]<= mem_intf_read_pic.mem_data[1];
+						mem_data[2]<= mem_intf_read_pic.mem_data[2];
+						mem_data[3]<= mem_intf_read_pic.mem_data[3];
+						mem_data[4]<= mem_intf_read_pic.mem_data[4];
+						mem_data[5]<= mem_intf_read_pic.mem_data[5];
+						mem_data[6]<= mem_intf_read_pic.mem_data[6];	
+						mem_data[7]<= mem_intf_read_pic.mem_data[7];
+						mem_data[8]<= mem_intf_read_pic.mem_data[8];
+						mem_data[9]<= mem_intf_read_pic.mem_data[9];
+						mem_data[10]<= mem_intf_read_pic.mem_data[10];	
+						mem_data[11]<= mem_intf_read_pic.mem_data[11];
+						mem_data[12]<= mem_intf_read_pic.mem_data[12];
+						mem_data[13]<= mem_intf_read_pic.mem_data[13];
+						mem_data[14]<= mem_intf_read_pic.mem_data[14];	
+						mem_data[15]<= mem_intf_read_pic.mem_data[15];
+						mem_data[16]<= mem_intf_read_pic.mem_data[16];
+						mem_data[17]<= mem_intf_read_pic.mem_data[17];
+						mem_data[18]<= mem_intf_read_pic.mem_data[18];	
+						mem_data[19]<= mem_intf_read_pic.mem_data[19];
+						mem_data[20]<= mem_intf_read_pic.mem_data[20];
+						mem_data[21]<= mem_intf_read_pic.mem_data[21];
+						mem_data[22]<= mem_intf_read_pic.mem_data[22];	
+						mem_data[23]<= mem_intf_read_pic.mem_data[23];
+						mem_data[24]<= mem_intf_read_pic.mem_data[24];
+						mem_data[25]<= mem_intf_read_pic.mem_data[25];
+						mem_data[26]<= mem_intf_read_pic.mem_data[26];	
+						mem_data[27]<= mem_intf_read_pic.mem_data[27];
+						mem_data[28]<= mem_intf_read_pic.mem_data[28];
+						mem_data[29]<= mem_intf_read_pic.mem_data[29];
+						mem_data[30]<= mem_intf_read_pic.mem_data[30];	
+						mem_data[31]<= mem_intf_read_pic.mem_data[31];	
+	
+				end
+				/*else begin
+					mem_data <= '{mem_intf_read_pic.mem_data[size_data:0] , {size_zeros{1'b0}}};
+				end*/
+				/*else begin 
+					
+	    				for (c = 0; c < DP_DEPTH ; c = c + 1) 
+	      					begin 
+							if(c<size_data)
+								mem_data[c]<= mem_intf_read_pic.mem_data[c];						
+							else
+								mem_data[c]<=8'd0;									
+						end*/
+//				for (c = size_data; c < DP_DEPTH ; c = c + 1) 
+  //    					begin : generate_loop	
+	//					mem_data[c]<=8'd0;						
+	//				end
+
+				//end
+			  	        current_read_addr_data<=current_read_addr_data + size_data;
                			        valid_data <=1'b1;
 				        size_left_data <=size_left_data + DP_DEPTH;				
 				end
@@ -586,7 +610,7 @@ always @(posedge clk or negedge rst_n)
 					mem_wgt[30]<= mem_intf_read_wgt.mem_data[30];	
 					mem_wgt[31]<= mem_intf_read_wgt.mem_data[31];	
 
-				        current_read_addr_wgt<=current_read_addr_wgt + 19'd32;					
+				        current_read_addr_wgt<=current_read_addr_wgt + size_wgt;					
 					valid_wgt <= 1'b1;
 					size_left_wgt <=size_left_wgt + DP_DEPTH;
 		
@@ -637,7 +661,7 @@ always @(posedge clk or negedge rst_n)
 				        current_read_addr_data<={ADDR_WIDTH{1'b0}};
 					size_left_data <={X_LOG2_ROWS_NUM{1'b0}};
 					size_left_wgt <={Y_LOG2_ROWS_NUM{1'b0}};
-
+				        current_read_addr_wgt<=current_read_addr_wgt + 19'd32;					
 				    end	
 	 end
 
