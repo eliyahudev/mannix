@@ -38,6 +38,21 @@ script exited"
 fi
 echo "acc_mem_wrap_tb_stable_fc.sv test passed! bravo!!"
 
+echo "running acc_cnn_pool_fc_fullTB.sv test"
+./acc_cnn_pool_fc_fullTB.sh > run.log
+rm run.log
+if  cat ../tb/FCresults_fullTB.log | grep -q 'FAIL'
+then 
+	echo "acc_cnn_pool_fc_fullTB.sv failed!!!!!
+try to figure out what broken or contact with Dor or Simhi
+for to run the test:
+cd workspace
+./acc_cnn_pool_fc_fullTB.sh
+script exited"
+	exit 0
+fi
+echo "acc_cnn_pool_fc_fullTB.sv test passed! bravo!!"
+
 echo "git pull"
 git pull
 if git pull | grep -q error 
@@ -48,7 +63,7 @@ script exited"
 fi
 echo "pull succeeded"
 
-echo "check compilation agaim"
+echo "check compilation again"
 if ./check_rtl.sh | grep -q 'Simulation is complete' 
 then
 echo "compilation passed! bravo!!"
@@ -57,9 +72,24 @@ echo "running acc_mem_wrap_tb_stable_fc.sv test again"
 rm run.log
 if  cat ../tb/FCresults.log | grep -q 'PASS'
 then
-	echo "acc_mem_wrap_tb_stable_fc.sv test passed! bravo!!
+	echo "acc_mem_wrap_tb_stable_fc.sv test passed! bravo!!"
+echo "running acc_cnn_pool_fc_fullTB.sv test again"
+./acc_cnn_pool_fc_fullTB.sh > run.log
+rm run.log
+if  cat ../tb/FCresults_fullTB.log | grep -q 'PASS'
+then
+	echo "acc_cnn_pool_fc_fullTB.sv test passed! bravo!!
 git push"
 	git push
+else
+	echo "acc_cnn_pool_fc_fullTB.sv failed!!!!!
+try to figure out what broken or contact with Dor or Simhi
+for to run the test:
+cd workspace
+./acc_cnn_pool_fc_fullTB.sh
+script exited"
+	exit 0
+fi
 else 
 	echo "acc_mem_wrap_tb_stable_fc.sv failed!!!!!
 try to figure out what broken or contact with Dor or Simhi

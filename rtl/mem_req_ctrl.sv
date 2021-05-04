@@ -62,6 +62,7 @@ module mem_req_ctrl
 	logic [15:0][8:0] num_bytes_first_data_out, num_bytes_second_data_out; //the num of bytes that should the be write. //FIXME -reduce to [5:0] and fix the << in the code 
 	logic [15:0] new_read_req, new_write_req; //pulse when new req is appear
 	logic [15:0][18:0] start_addr_s; //sampling the start adress to read for the memory that come from the clients
+	logic [15:0][18:0] end_addr, end_addr_s; //sampling the end adress to read for the memory that come from the clients
 	logic [15:0][255:0] mask_sec; //the mask for the request to the second sram.
 	//states for the FSM - ONE/TWO is the number of the banks that involve in the request (just by the addrees, not by the data that stored in the temp_buf)
 	typedef enum logic [2:0] {IDLE, READ_ONE, READ_TWO, WRITE_ONE, WRITE_TWO} fsm;
@@ -139,6 +140,7 @@ module mem_req_ctrl
 			//There is new request (pulse) when the state is IDLE or valid/ack with request
 			assign new_read_req[i] = (state[i]==IDLE || read_mem_valid[i] ) && read_mem_req[i];
 			assign new_write_req[i] = (state[i]==IDLE || write_mem_ack[i] ) && write_mem_req[i];
+			assign end_addr[i] = read_mem_start_addr[i] + read_mem_size_bytes[i];
 
 			//the num of the bytes and the address updated once when there is a new req
 			//in conrtast to the temp_buf that updtate several times during one req
@@ -256,6 +258,7 @@ module mem_req_ctrl
 						which_sram_s[i]<='0;
 						which_sram_sec_s[i]<='0;
 						read_gnt_cnt_s[i]<='0;
+						end_addr_s[i]<='0;
 					end
 					else begin
 						req_data_stored_temp_buf_s[i]<=req_data_stored_temp_buf[i];
@@ -267,6 +270,7 @@ module mem_req_ctrl
 						which_sram_s[i]<=which_sram[i];
 						which_sram_sec_s[i]<=which_sram_sec[i];
 						read_gnt_cnt_s[i]<=read_gnt_cnt[i];
+						end_addr_s[i]<=end_addr[i];
 					end
 
 			//define value of the temp_buf
@@ -301,13 +305,13 @@ module mem_req_ctrl
 										temp_buf[i][511:256]<= data_in[which_sram_sec_s[i]]; 
 									end
 									4'b0011: begin
-										temp_buf[i][255:0]<= {data_in[which_sram_sec_s[i]],data_in[which_sram_s[i]]} >> ((9'd32+start_addr_s[i][4:0])<<3);
+										temp_buf[i][255:0]<= {data_in[which_sram_sec_s[i]],data_in[which_sram_s[i]]} >> ((9'd32+end_addr_s[i][4:0])<<3);
 									end
 									4'b0111: begin
-										temp_buf[i][255:0]<= {data_in[which_sram_sec_s[i]],temp_buf[i][255:0]} >> ((9'd32+start_addr_s[i][4:0])<<3);
+										temp_buf[i][255:0]<= {data_in[which_sram_sec_s[i]],temp_buf[i][255:0]} >> ((9'd32+end_addr_s[i][4:0])<<3);
 									end
 									4'b1011: begin
-										temp_buf[i][255:0]<= {temp_buf[i][511:256],data_in[which_sram_s[i]]} >> ((9'd32+start_addr_s[i][4:0])<<3);
+										temp_buf[i][255:0]<= {temp_buf[i][511:256],data_in[which_sram_s[i]]} >> ((9'd32+end_addr_s[i][4:0])<<3);
 									end
 								endcase
 							end
