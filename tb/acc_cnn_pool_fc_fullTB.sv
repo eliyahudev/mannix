@@ -351,7 +351,7 @@ RESET_VALUES();
 $display("START FCC TEST\n");
 
 	
-	outfile = $fopen("../tb/FCresults.log", "w");
+	outfile = $fopen("../tb/FCresults_fullTB.log", "w");
  	if (!outfile) begin
 		    $fdisplay(outfile,"Couldn't open file");
 		    $finish();
