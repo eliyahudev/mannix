@@ -116,11 +116,9 @@ module cnn (
   //===============================================================
   reg        [7:0]                 cut_data_pic [0:DP_DEPTH-1] ; //Single byte to send to dot_product from the picture matrix (big one)                 
   reg signed [7:0]                 data_wgt [0:DP_DEPTH-1] ;     //Single byte to send to dot_product from the weight matrix  (small one)
-  //reg [ADDR_WIDTH-1:0]             current_read_addr;            //Calculation of read addr from memory. 
   reg [ADDR_WIDTH-1:0]             current_row_start_addr;
   wire signed [31:0]               dp_res;                       //Output of dot_product unit. 
 
-  reg [7:0]                         counter_calc;   //For now it is only 0 or 1. it should be used for multiple calculations on the same data bus
   reg [3:0]                         calc_line;         //Calculate the index of line out of the calculation of single window
   reg [7:0]                         window_cols_index; //Index of window out of single matrix. used for multiplication of 'JUMP_COL'.
   reg [7:0]                         window_rows_index; //Index of window out of single matrix. used for multiplication of 'JUMP_ROW'.
@@ -186,7 +184,7 @@ always @(*)
         end
       READ:
         begin
-          if((window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line==Y_ROWS_NUM)) //If end of calculation
+          if((window_cols_index==(8'd1))&&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+2))&&(calc_line==4'd1)) //If end of calculation
              nx_state = WRITE; 
           else if(read_pic_data_vld && read_wgt_data_vld && read_bias_data_vld)
              nx_state = CALC;
@@ -196,12 +194,14 @@ always @(*)
       
       CALC:
         begin
-          nx_state = SHIFT;
+		//	if((calc_line==Y_COLS_NUM)&&(window_rows_index==X_ROWS_NUM-Y_ROWS_NUM+1)&&(window_cols_index==X_COLS_NUM-Y_COLS_NUM+2))
+		//	nx_state=WRITE;
+		//		else
+			nx_state = SHIFT;
           end
       SHIFT:
         begin
-         // if(((calc_line==4'd0)&&((calc_load_of_wr_bus==6'd33)))||((calc_line==Y_COLS_NUM-1'd1)&&(window_cols_index==X_COLS_NUM-Y_COLS_NUM+1))) 
-	if(((calc_line==4'd0)&&((calc_load_of_wr_bus==6'd33)))||((calc_line==Y_COLS_NUM-1'd1)&&(window_rows_index==X_ROWS_NUM-Y_ROWS_NUM+1))) 
+if(((calc_line==4'd0)&&((calc_load_of_wr_bus==7'd33))))//||((calc_line==4'd0)&&(window_rows_index==X_ROWS_NUM-Y_ROWS_NUM+1)&&(window_cols_index==X_COLS_NUM-Y_COLS_NUM+2))) 
             begin
              nx_state = WRITE; 
             end
@@ -236,10 +236,7 @@ assign read_condition = (state==READ);
 assign mem_intf_read_wgt.mem_req =(mem_intf_read_wgt.mem_valid )? 1'b0 : ( read_condition && first_read_of_weights )? 1'b1: 1'b0;
 assign mem_intf_read_wgt.mem_start_addr  = (mem_intf_read_wgt.mem_req && first_read_of_weights)? sw_cnn_addr_y : {ADDR_WIDTH{1'b0}};
 assign mem_intf_read_wgt.mem_size_bytes  = (mem_intf_read_wgt.mem_req && first_read_of_weights)? DP_DEPTH*DP_DEPTH      : {ADDR_WIDTH{1'b0}};
-
-
-//assign mem_intf_read_pic.mem_req = (mem_intf_read_pic.mem_valid)? 1'b0 : read_condition? 1'b1: 1'b0;
-//assign mem_intf_read_pic.mem_req = (mem_intf_read_pic.mem_valid)? 1'b0 : (read_condition && first_read_of_pic) ? 1'b1 :(state==CALC)? 1'b1: 1'b0;    
+  
 assign mem_intf_read_pic.mem_req = (mem_intf_read_pic.mem_valid)? 1'b0 : (mem_intf_read_pic.mem_req)? 1'b1 : (read_condition && first_read_of_pic) ? 1'b1 :(state==CALC)? 1'b1: 1'b0;    
 assign mem_intf_read_pic.mem_size_bytes = mem_intf_read_pic.mem_req ? DP_DEPTH : {ADDR_WIDTH{1'b0}};
 
@@ -256,31 +253,25 @@ assign mem_intf_write.mem_size_bytes = (state==WRITE)? calc_load_of_wr_bus-1'b1 
 always @(posedge clk or negedge rst_n)
   begin
     if(!rst_n)
-      begin
-        counter_calc<=8'd0;     
+      begin  
 		first_read_of_pic<=1'b1;
         first_read_of_weights<=1'b1;
         first_read_of_bias<=1'b1;
         calc_addr_to_wr <=sw_cnn_addr_z; //CHECK THAT VALUE IS AVILABLE AT THIS POINT
-	//	wgt_mem_data <= 'd0;
-	//	wgt_mem_data_smpl<= 'd0;
 		wgt_mem_data <= '{32{'d0}};
-	wgt_mem_data_smpl<= '{32{'d0}};
+		wgt_mem_data_smpl<= '{32{'d0}};
 
       end
     else
       begin
        if(state==IDLE)
-	   begin
-        counter_calc<=8'd0;     
+	   begin   
 		first_read_of_pic<=1'b1;
         first_read_of_weights<=1'b1;
         first_read_of_bias<=1'b1;
         calc_addr_to_wr <=sw_cnn_addr_z; //CHECK THAT VALUE IS AVILABLE AT THIS POINT
-		//wgt_mem_data <= 'd0;
-	//	wgt_mem_data_smpl<= 'd0;
-	wgt_mem_data <= '{32{'d0}};
-	wgt_mem_data_smpl<= '{32{'d0}};
+		wgt_mem_data <= '{32{'d0}};
+		wgt_mem_data_smpl<= '{32{'d0}};
 	   end
            
         else if((state==READ)&&              (~((window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line>=Y_COLS_NUM-1'd1))))   
@@ -296,23 +287,9 @@ always @(posedge clk or negedge rst_n)
                 wgt_mem_data<=mem_intf_read_wgt.mem_data;
 				wgt_mem_data_smpl<=mem_intf_read_wgt.mem_data;
 			end
-		//	else if (read_wgt_data_vld && (calc_line==4'd0))
-		//	begin
-			//	wgt_mem_data_smpl<=wgt_mem_data;
-		//	end
-
- 
             if(mem_intf_read_bias.mem_valid)
               first_read_of_bias<=1'b0;
-
-            
-            counter_calc<=8'd0;
-
-         //   if((calc_line==4'd0)&&(counter_calc==8'd0))
-       //  if(mem_intf_read_wgt.mem_valid)
-          //    wgt_mem_data<=mem_intf_read_wgt.mem_data;
-            
-                                 
+                 
             end
         else if (state==CALC)
           begin
@@ -324,9 +301,7 @@ always @(posedge clk or negedge rst_n)
 			begin
             wgt_mem_data<=wgt_mem_data>>(DP_DEPTH*8);
 	     	end
-            counter_calc<=counter_calc+1'b1;
-
-          end 
+            end 
         else if (state==WRITE && mem_intf_write.mem_ack)
           begin
             calc_addr_to_wr <= calc_addr_to_wr+calc_load_of_wr_bus-1'd1;
@@ -356,11 +331,9 @@ always @(posedge clk or negedge rst_n)
               begin
                 cut_data_pic[c]<= mem_intf_read_pic.mem_data[c];
               end
-          //  if(mem_intf_read_wgt.mem_valid)
-		  if(read_wgt_data_vld && (state==READ))
+  		  if(read_wgt_data_vld && (state==READ))
               begin
                  data_wgt[c]<= wgt_mem_data[c];
-				//data_wgt[c]<= mem_intf_read_wgt.mem_data[c];
               end
           end
       end // always @ (posedge clk or negedge rst_n)
@@ -389,7 +362,7 @@ endgenerate
             window_rows_index<=8'd1;  
             current_row_start_addr<={ADDR_WIDTH{1'b0}};
           end
-          else if((window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line==Y_ROWS_NUM))
+          else if((window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1+1))&&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(calc_line==Y_ROWS_NUM))
             begin
               mem_intf_read_pic.mem_start_addr<={ADDR_WIDTH{1'b0}};
               calc_line <= 4'd0;
@@ -398,14 +371,18 @@ endgenerate
           else if(window_cols_index==X_COLS_NUM-Y_COLS_NUM+2)
             begin
               current_row_start_addr<=X_ROWS_NUM*window_rows_index;
-              mem_intf_read_pic.mem_start_addr<=X_ROWS_NUM*window_rows_index;
-              window_rows_index<=window_rows_index+1'b1;
-              window_cols_index<=8'd1;
+            //  mem_intf_read_pic.mem_start_addr<=X_ROWS_NUM*window_rows_index;
+               window_rows_index<=window_rows_index+1'b1;
+               window_cols_index<=8'd1;
+               calc_line <= 4'd0;
               end           
           else if((calc_line==Y_COLS_NUM-1'b1)&&(state==READ))
             begin
-              mem_intf_read_pic.mem_start_addr<=current_row_start_addr+JUMP_COL*window_cols_index;
-              //calc_line <= 4'd0;
+				if(window_cols_index==X_COLS_NUM-Y_COLS_NUM+1)
+				mem_intf_read_pic.mem_start_addr<=X_ROWS_NUM*window_rows_index;
+            //  mem_intf_read_pic.mem_start_addr<=current_row_start_addr+JUMP_COL*window_cols_index;
+		       else
+			 mem_intf_read_pic.mem_start_addr<=current_row_start_addr+JUMP_COL*window_cols_index;
 			  calc_line <= calc_line+1'b1;
               window_cols_index<=window_cols_index+1'b1;   ///TODO: zero when end of matrix
             end
@@ -413,9 +390,7 @@ endgenerate
 			begin
 				calc_line <= 4'd0;
 			end
-          
-          //else if (state==SHIFT)
-			  else if (nx_state==CALC)
+ 		else if (nx_state==CALC)
             begin
               mem_intf_read_pic.mem_start_addr<=mem_intf_read_pic.mem_start_addr+sw_cnn_x_n;
               calc_line <= calc_line+1'b1;
@@ -434,28 +409,25 @@ endgenerate
 			sample_bias_val <= mem_intf_read_bias.mem_data[3:0];
   end
 
-assign last_window_calc = ((state==WRITE) &&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(calc_load_of_wr_bus<6'd33)&&(mem_intf_write.mem_ack));
-assign sw_cnn_done = (state==IDLE)? 1'b0 : (last_window_calc)? 1'b1 : 1'b0;
+assign last_window_calc = ((state==WRITE) &&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+2))&&(window_cols_index==(8'd1))&&(calc_load_of_wr_bus<7'd33)&&(mem_intf_write.mem_ack));
+assign sw_cnn_done = (state==IDLE)? 1'b0 : (last_window_calc && mem_intf_write.mem_ack)? 1'b1 : 1'b0;
 
   always @(posedge clk or negedge rst_n)
     begin
       if(!rst_n)
         begin
           cnn_sw_busy_ind<=1'b0;
-        //  sw_cnn_done<=1'b0;
         end
       else
         begin
           if(state==IDLE)
             begin
               cnn_sw_busy_ind<=1'b0;
-           //   sw_cnn_done<=1'b0;
             end
-          else if((state==WRITE) &&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(calc_load_of_wr_bus<6'd33))        
+          else if((state==WRITE) &&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(calc_load_of_wr_bus<7'd33))        
             begin
               cnn_sw_busy_ind<=1'b0;
-           //   sw_cnn_done<=1'b1;
-            end
+             end
           else if(sw_cnn_go==1'b1)
             begin
               cnn_sw_busy_ind<=1'b1;  
@@ -465,7 +437,7 @@ assign sw_cnn_done = (state==IDLE)? 1'b0 : (last_window_calc)? 1'b1 : 1'b0;
         end
     end // always @ (posedge clk or negedge rst_n)
 
-  assign shift_last=({3'b0,(6'd33-calc_load_of_wr_bus-1'd1)})<<3;      
+  assign shift_last=({3'b0,(7'd33-calc_load_of_wr_bus-1'd1)})<<3;      
 
   always @(posedge clk or negedge rst_n)
   begin
@@ -481,28 +453,20 @@ assign sw_cnn_done = (state==IDLE)? 1'b0 : (last_window_calc)? 1'b1 : 1'b0;
 		end
     else
       begin
-        if((state==WRITE) &&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+1))&&(window_cols_index==(X_COLS_NUM-Y_COLS_NUM+1))&&(calc_load_of_wr_bus<6'd33)&&(mem_intf_write.mem_req==1'b0))
+        if((state==SHIFT) &&(window_rows_index==(X_ROWS_NUM-Y_ROWS_NUM+2))&&(window_cols_index==(8'd1))&&(calc_load_of_wr_bus<7'd33)&&(mem_intf_write.mem_req==1'b0))
           begin
             mem_intf_write.mem_data<= mem_intf_write.mem_data>>shift_last;
-            end        
-        else if((state==READ) && (calc_line==4'd0)&&(calc_load_of_wr_bus!=6'd33))
-          begin
-           mem_intf_write.mem_data<= mem_intf_write.mem_data>>8;
-            end
-        else if(((calc_line==4'd0)&&(state==READ)))
-        //else if (calc_line==4'd0) 
-	 // else if (calc_line==Y_ROWS_NUM)
+            end   
+	else if(((calc_line==4'd0)&&(state==READ)))
 		begin
-        mem_intf_write.mem_data[31] <= activation_out;
+	        mem_intf_write.mem_data[31] <= activation_out;
          data2write<=32'd0;
-		// data2write<=data2write+dp_res;   
             end
         else if (state==SHIFT)   
           begin  
          data2write<=data2write+dp_res;  
-		// mem_intf_write.mem_data[31] <= activation_out;
-         //data2write<=32'd0;
-
+	if((calc_line==4'd1) &&(calc_load_of_wr_bus!=7'd32))
+   	   mem_intf_write.mem_data<= mem_intf_write.mem_data>>8;
           end
         else if((state==WRITE) && (mem_intf_write.mem_ack==1'b1))
           begin
@@ -521,18 +485,18 @@ assign sw_cnn_done = (state==IDLE)? 1'b0 : (last_window_calc)? 1'b1 : 1'b0;
     begin
       if(!rst_n)
         begin
-          calc_load_of_wr_bus <= 6'd1;
+          calc_load_of_wr_bus <= 7'd0;
         end
       else if (state==IDLE)
-          calc_load_of_wr_bus <= 6'd1;
+          calc_load_of_wr_bus <= 7'd0;
 	  else
         begin
-          if(((state==WRITE)&&(window_rows_index==8'd1)&&(calc_load_of_wr_bus<6'd33))||(state==IDLE))
+          if(((state==WRITE)&&(window_rows_index==8'd1)&&(calc_load_of_wr_bus<7'd33))||(state==IDLE))
             begin
-            calc_load_of_wr_bus <= 6'd1;   
+            calc_load_of_wr_bus <= 7'd1;   
             end 
-          else if(((calc_load_of_wr_bus==6'd33)&&(state==WRITE)&&(mem_intf_write.mem_ack==1'd1)))
-            calc_load_of_wr_bus <= 6'd0;
+          else if(((calc_load_of_wr_bus==7'd33)&&(state==WRITE)&&(mem_intf_write.mem_ack==1'd1)))
+            calc_load_of_wr_bus <= 7'd1;
           else if(calc_line==Y_COLS_NUM)
             calc_load_of_wr_bus <= calc_load_of_wr_bus+1'd1;
           
