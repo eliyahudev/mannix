@@ -247,7 +247,7 @@ assign mem_intf_read_bias.mem_size_bytes = (mem_intf_read_bias.mem_req && first_
 
 assign mem_intf_write.mem_req        = mem_intf_write.mem_ack ? 1'b0: (state==WRITE)? 1'b1 : 1'b0;
 assign mem_intf_write.mem_start_addr = (state==WRITE)? calc_addr_to_wr :{ADDR_WIDTH{1'b0}};
-assign mem_intf_write.mem_size_bytes = (state==WRITE)? calc_load_of_wr_bus-1'b1 :{ADDR_WIDTH{1'b0}};
+assign mem_intf_write.mem_size_bytes = ((state==WRITE) && (calc_line==4'd0)) ? calc_load_of_wr_bus-1'b1 :((state==WRITE) && (calc_line==4'd1))? calc_load_of_wr_bus : {ADDR_WIDTH{1'b0}};
 //=======================================================================================================
   
 always @(posedge clk or negedge rst_n)
