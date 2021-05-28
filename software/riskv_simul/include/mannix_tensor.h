@@ -68,14 +68,6 @@ void printTensor_int32(Tensor_int32* tens) {
     }
 }
 
-void printTensor_int8(Tensor_int8* tens) {
-
-    for(int i = 0; i < tens->depth; i++) {
-        printMatrix_int8(&tens->matrix[i]);
-        if(i!= tens->depth-1) 
-            printf("\n,\n");        
-    }
-}
 
 void printTensor_uint8(Tensor_uint8* tens) {
 
@@ -86,7 +78,14 @@ void printTensor_uint8(Tensor_uint8* tens) {
     }
 }
 
+void printTensor_int8(Tensor_int8* tens) {
 
+    for(int i = 0; i < tens->depth; i++) {
+        printMatrix_int8(&tens->matrix[i]);
+        if(i!= tens->depth-1) 
+            printf("\n,\n");        
+    }
+}
 
 void writeTensorToCsv_int32 (Tensor_int32* tens, char* file_path) {
     
@@ -121,6 +120,11 @@ void writeTensorToCsv_uint8 (Tensor_uint8* tens, char* file_path) {
 
 
 void tensorFlatten(Tensor_uint8* tens, int n_row) {
+    for (int i = 1; i < tens->depth; i++) {
+        for (int data = 0; data < tens->matrix->size; data++) {
+            tens->matrix->data[i*tens->matrix->size  + data] = tens->matrix[i].data[data];
+        }
+    }
     
     tens->rows  = n_row;
     tens->cols  = 1;
@@ -161,11 +165,12 @@ Matrix_int32* tensorConvolution(Tensor_uint8* tens, Tensor_int8* m_filter, int b
         matrixConvolution(&tens->matrix[i], &m_filter->matrix[i], bias, tmp_matrix);
         addMatrix_int32(result_matrix, tmp_matrix);
     }
-            // printMatrix_int32(tmp_matrix);
-
     // delete allocation
-    mannixDataFree_int32(al, tmp_matrix->data, tmp_matrix->size);
-    
+        printf("error bef\n");
+
+    mannixDataFree_int32(al, tmp_matrix->data, tmp_matrix->pad_size);
+            printf("error af\n");
+
     return result_matrix;
 }
 
@@ -178,20 +183,55 @@ Matrix_uint8* tensorConvNActivate(Tensor_uint8* tens, Tensor_int8* m_filter, int
     creatMatrix_int32(tens->rows - m_filter->rows + 1, tens->cols - m_filter->cols + 1, sum_matrix, al);
     creatMatrix_int32(tens->rows - m_filter->rows + 1, tens->cols - m_filter->cols + 1, tmp_matrix, al);     
 
+    int i = 0;
 
-    for (int i = 0; i < tens->depth-1; i++) {
-        matrixConvolution(&tens->matrix[i], &m_filter->matrix[i], bias, tmp_matrix);
-        addMatrix_int32(sum_matrix, tmp_matrix);
-
+    for (; i < tens->depth-1; i++) {
+        matrixConvolution(&tens->matrix[i], &m_filter->matrix[i], bias, tmp_matrix);     
+        if (0 == i) {
+            asignMatrix_int32(sum_matrix, tmp_matrix);
+        }
+        else {
+            addMatrix_int32(sum_matrix, tmp_matrix);
+        }
     }
 
     matrixConvolution(&tens->matrix[tens->depth-1], &m_filter->matrix[tens->depth-1], bias, tmp_matrix);
-    matrixAddNActivate(sum_matrix, tmp_matrix, result_matrix, sc);  
+    if (0 == i) {
+        asignMatrix_uint8(result_matrix, matrixActivation(tmp_matrix, sc));
+    }
+    else {
+        matrixAddNActivate(sum_matrix, tmp_matrix, result_matrix, sc);  
+    }
+    // free allocation
+    mannixDataFree_int32(al, tmp_matrix->data, tmp_matrix->pad_size);
+    mannixDataFree_int32(al, sum_matrix->data, sum_matrix->pad_size);
+    return result_matrix;
+}
+
+
+
+Matrix_uint8* DUT_tensorConvNActivate(Tensor_uint8* tens, Tensor_int8* m_filter, int bias, Matrix_uint8* result_matrix, Allocator_int32* al, MatAllocator_int32* mat_alloc, int sc){
+
+    Matrix_int32 tmp_matrix[1];
+    Matrix_uint8 sum_matrix[1];
+    
+    creatMatrix_uint8(tens->rows - m_filter->rows + 1, tens->cols - m_filter->cols + 1, sum_matrix, (Allocator_uint8*)al);
+    creatMatrix_int32(tens->rows - m_filter->rows + 1, tens->cols - m_filter->cols + 1, tmp_matrix, al);     
+
+
+    for (int i = 0; i < tens->depth; i++) {
+        matrixConvolution(&tens->matrix[i], &m_filter->matrix[i], bias, tmp_matrix);     
+        if (0 == i) {
+            asignMatrix_uint8(sum_matrix, matrixActivation(tmp_matrix, sc));
+        }
+        else {
+            addMatrix_uint8(sum_matrix, matrixActivation(tmp_matrix, sc));
+        }
+    }
     
     // free allocation
-    mannixDataFree_int32(al, tmp_matrix->data, tmp_matrix->size);
-    mannixDataFree_int32(al, sum_matrix->data, sum_matrix->size);
-    
+    mannixDataFree_int32(al, tmp_matrix->data, tmp_matrix->pad_size);
+    mannixDataFree_uint8((Allocator_uint8 *)al, sum_matrix->data, sum_matrix->pad_size);
     return result_matrix;
 }
 

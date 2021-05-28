@@ -1,0 +1,11 @@
+﻿  cnn_fashion_mnist.c
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\source\cnn_fashion_mnist.c(22,18): warning C4101: 'result_matrix': unreferenced local variable
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\source\cnn_fashion_mnist.c(50,10): warning C4101: 'file_out': unreferenced local variable
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\source\cnn_fashion_mnist.c(13,20): warning C4101: 'result_4D_tensor': unreferenced local variable
+  debug_lib.vcxproj -> C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\debug\debug_lib\Debug\debug_lib.exe
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\include\mannixlib.h(214): warning C6031: Return value ignored: 'fscanf'.
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\include\mannixlib.h(222): warning C6031: Return value ignored: 'fscanf'.
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\include\mannixlib.h(223): warning C6031: Return value ignored: 'fscanf'.
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\include\mannixlib.h(226): warning C6031: Return value ignored: 'fscanf'.
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\include\mannix_4dtensor.h(76): warning C6001: Using uninitialized memory 'label'.
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\source\cnn_fashion_mnist.c(5): warning C6262: Function uses '56108' bytes of stack:  exceeds /analyze:stacksize '16384'.  Consider moving some data to heap.

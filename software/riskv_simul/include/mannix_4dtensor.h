@@ -2,10 +2,12 @@
 // ============================== SETUP ==============================
 
 void create4DTensor_uint8(Tensor4D_uint8* tens_4d, int rows, int cols, int depth, int dim, Allocator_uint8* al, MatAllocator_uint8* mat_alloc, TensorAllocator_uint8* tens_alloc) {
+
     tens_4d->rows = rows;
     tens_4d->cols = cols;
     tens_4d->depth = depth;
     tens_4d->dim = dim;
+
     tens_4d->tensor = mannixTensorMalloc_uint8(tens_alloc, dim);
 
     for(int i = 0; i < tens_4d->dim; i++)
@@ -91,6 +93,18 @@ void print4DTensor_uint8(Tensor4D_uint8* tens_4d) {
 
 }
 
+void print4DTensor_int8(Tensor4D_int8* tens_4d) {
+
+    printf("tensor{\n");    
+    for(int i = 0; i < tens_4d->dim; i++) {
+        printf("\n[");
+        printTensor_int8(&tens_4d->tensor[i]);
+        printf(" ]\n");
+    }
+    printf("}\n");
+    printf("rows size: %d columns size: %d depth size: %d dim: %d \n\n",tens_4d->rows,tens_4d->cols,tens_4d->depth,tens_4d->dim);
+
+}
 
 void writeTensor4DToCsv_uint8 (Tensor4D_uint8* tens_4d, char* file_path, char* layer_name) {
     
@@ -130,7 +144,7 @@ void writeTensor4DToCsv_int32 (Tensor4D_int32* tens_4d, char* file_path, char* l
 
 // convert matrix to vector
 void tensor4Dflatten(Tensor4D_uint8* tens_4d) {
-    
+    // TODO - FIX FLATTEN TO SUPPORT ALIGNED MOMERY
     tens_4d->rows = tens_4d->rows * tens_4d->cols * tens_4d->depth * tens_4d->dim;
     tens_4d->cols = 1;
     tens_4d->depth = 1;
@@ -167,6 +181,19 @@ Tensor4D_uint8* tensor4DConvNActivate(Tensor4D_uint8* tens, Tensor4D_int8* filte
 }
 
 
+Tensor4D_uint8* DUT_tensor4DConvNActivate(Tensor4D_uint8* tens, Tensor4D_int8* filter, Matrix_int32* bias, Tensor4D_uint8* result_4D_tensor, 
+                                    Allocator_int32* al, MatAllocator_int32* mat_alloc, TensorAllocator_int32* tens_alloc, int sc) 
+{
+    create4DTensor_uint8(result_4D_tensor, tens->rows - filter->rows + 1, tens->cols - filter->cols + 1, filter->dim, 1, (Allocator_uint8*) al, (MatAllocator_uint8*) mat_alloc, (TensorAllocator_uint8*) tens_alloc);
+
+    for (int i = 0; i < filter->dim; i++) {
+        DUT_tensorConvNActivate(&tens->tensor[0], &filter->tensor[i], bias->data[i], &result_4D_tensor->tensor->matrix[i], al, mat_alloc, sc);
+    }
+
+    return result_4D_tensor;
+}
+
+
 Tensor4D_uint8* tensor4DActivation(Tensor4D_int32* tens, int sc) {
     
     Tensor4D_uint8 * t_out = (Tensor4D_uint8 *) tens ; // output data as uint8 overlay input data int32
@@ -176,7 +203,6 @@ Tensor4D_uint8* tensor4DActivation(Tensor4D_int32* tens, int sc) {
     }
     return t_out ;
 }
-
 
 Tensor4D_uint8* tensor4DMaxPool(Tensor4D_uint8* tens_4d, Tensor4D_uint8* tens_4d_result, int p_m, int p_n, int stride, Allocator_uint8* al, MatAllocator_uint8* mat_alloc, TensorAllocator_uint8* tens_alloc) {
     
@@ -192,3 +218,51 @@ Tensor4D_uint8* tensor4DMaxPool(Tensor4D_uint8* tens_4d, Tensor4D_uint8* tens_4d
     return tens_4d_result;
 }
 
+/*
+
+Tensor4D_uint8 ACCELERATOR_tensor4DMaxPool(Tensor4D_uint8* tens_4d, Tensor4D_uint8* tens_4d_result, int p_m, int p_n, int stride, Allocator_uint8* al, MatAllocator_uint8* mat_alloc, TensorAllocator_uint8* tens_alloc) {
+    
+    int new_rows = (tens_4d->rows - p_m) / stride + 1;
+    int new_cols = (tens_4d->cols - p_m) / stride + 1;
+
+    create4DTensor_uint8(tens_4d_result, new_rows, new_cols, tens_4d->depth, tens_4d->dim, al, mat_alloc, tens_alloc);
+
+    for (int i = 0; i < tens_4d->dim; i++) {
+        ACCELERATOR_tensorMaxPool_uint8(&tens_4d->tensor[i], &tens_4d_result->tensor[i], p_m, p_n, stride);
+    }
+
+    return tens_4d_result;
+}
+
+
+Matrix_uint8* ACCELERATOR_matrixFCNActivate(Matrix_uint8* input_matrix, Matrix_int8* weight_matrix, Matrix_int32* bias_vector, Matrix_uint8* result_matrix, Allocator_int32* al, int sc) {
+
+   // Notice : Matrix algebra order is : (weight_matrix * input_matrix) + bias
+   // Currently we assume input matrix is a single column. 
+    Matrix_int32 tmp_matrix[1];
+
+    if (input_matrix->cols!=1) {
+        printf("matrixFC : Dimension ERROR, currently we restrict input matrix to a single column\n");
+        printf("input_matrix->rows=%d , input_matrix->cols=%d\n",input_matrix->rows,input_matrix->cols);
+        exit(-1); 
+    }    
+ 
+
+    else if (input_matrix->rows != weight_matrix->cols)  {
+        printf("matrixFC : Dimension ERROR :\n");
+        printf("input_matrix->rows=%d , weight_matrix->cols=%d\n",input_matrix->rows,weight_matrix->cols);
+        exit(-1);
+    }
+
+    creatMatrix_uint8(weight_matrix->rows, input_matrix->cols, result_matrix, (Allocator_uint8*) al);     
+    creatMatrix_int32(weight_matrix->rows, input_matrix->cols, tmp_matrix, al);     
+
+    mullMatrix_i32_i8Xui8(weight_matrix,input_matrix,tmp_matrix,al);
+
+    matrixAddNActivate(tmp_matrix, bias_vector, result_matrix, sc);
+
+    mannixDataFree_int32(al, tmp_matrix->data, tmp_matrix->pad_size);
+
+    return result_matrix;
+}
+*/

@@ -1,0 +1,4 @@
+﻿  mannix_simul_net.c
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\source\mannix_simul_net.c(51,48): error C2065: 'DATASET_FILE': undeclared identifier
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\source\mannix_simul_net.c(51,48): warning C4047: 'function': 'const char *' differs in levels of indirection from 'int'
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\source\mannix_simul_net.c(51,36): warning C4024: 'fopen': different types for formal and actual parameter 1

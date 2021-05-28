@@ -14,6 +14,6 @@
 #include "mannix_matrix.h"
 #include "mannix_tensor.h"
 #include "mannix_4dtensor.h"
-#include "cnn.h"
+//#include "cnn.h"
 
 #endif

@@ -22,34 +22,7 @@ int main(int argc, char const *argv[]) {
     Matrix_int32 result_matrix[3];
     Matrix_uint8 result_matrix_uint8[3];
     
-    // import matrices
-
-    char* path_in = { "../../../python/csv_dumps/scaled_int/" };
-
-#ifndef MEM_LOAD_MODE
-  #ifdef VS_MANNIX
-      #ifdef CMP_TEST  
-      FILE* imageFilePointer = fopen("../../test_src/img_3673.csv", "r");
-      char file_out[80] ;
-      #else
-      FILE* imageFilePointer = fopen("../../test_src/data_set_256_fasion_emnist.csv", "r");
-      #endif
-      char * path_out = {"../../test_products/"} ;    
-  #else
-      char* path_in = { "../../python/csv_dumps/scaled_int/" };
-      #ifdef CMP_TEST  
-      FILE* imageFilePointer = fopen("../../../../test_and_delete/mannix_test/inference/img_csv_dumps/img_3673.csv", "r");
-      #else
-      FILE* imageFilePointer = fopen("../test_src/data_set_256_fasion_emnist.csv", "r");
-      #endif
-      char * path_out = {"../test_products/"} ;
-  #endif
-#else
-    FILE* imageFilePointer = fopen(DATASET_FILE,"r");  // @MEM_LOAD_MODE (File name defined at man_def.h)
-    char * path_out = {"../test_products/"} ;
-    char file_out[80] ;
-
-#endif
+    #include "../include/mannix_src_setup.h"
 
     // allocate memory for image, conv_weight and bias
     printf("allocating memory\n");
@@ -65,6 +38,7 @@ int main(int argc, char const *argv[]) {
     creatMatrix_int32(64,1,   &fc_bias[1],     (Allocator_int32*) al);
     creatMatrix_int32(10,1,   &fc_bias[2],     (Allocator_int32*) al);
  
+
     // set values from csv table
     printf("setting weights and bais\n");
     setFilter(&conv_weight[0], path_in, 1);
@@ -78,11 +52,12 @@ int main(int argc, char const *argv[]) {
     setWeight(&fc_weight[1], path_in, "fc", 2, "w");
     setWeight(&fc_weight[2], path_in, "fc", 3, "w");
 
-    
+
     #ifdef MEM_DUMP_MODE // Dumps the model parameters loadable db , run once per model configuration.
     dump_model_params_mfdb(al,MODEL_PARAMS_FILE);  // dump mannix format data base
     #endif
     
+
     #ifdef MEM_LOAD_MODE // Load the model parameters pre-dumped db
     load_model_params_mfdb(al,MODEL_PARAMS_FILE);  // load mannix format data base
     #endif
@@ -96,6 +71,34 @@ int main(int argc, char const *argv[]) {
     int reset_mannix_matrix_index = mat_al->index ;
     Tensor_uint8* reset_mannix_tensor = tens_alloc->tensor ;
     int reset_mannix_tensor_index = tens_alloc->index ;
+
+
+    // print4DTensor_int8(&conv_weight[0]);
+    // print4DTensor_int8(&conv_weight[1]);
+    // printf("conv_bias[1]\n");
+    // printMatrix_int32(&conv_bias[1]);
+    // printf("\n\n");
+    // printf("conv_bias[0]\n");
+    // printMatrix_int32(&conv_bias[0]);
+    // printf("\n\n");
+    // printf("fc_bias[0]\n");
+    // printMatrix_int32(&fc_bias[0]);
+    // printf("\n\n");
+    // printf("fc_bias[1]\n");
+    // printMatrix_int32(&fc_bias[1]);
+    // printf("\n\n");
+    // printf("fc_bias[2]\n");
+    // printMatrix_int32(&fc_bias[2]);
+    // printf("\n\n");
+    // printf("fc_weight[0]\n");
+    // printMatrix_int8(&fc_weight[0]);
+    // printf("\n\n");
+    // printf("fc_weight[1]\n");
+    // printMatrix_int8(&fc_weight[1]);
+    // printf("\n\n");
+    // printf("fc_weight[2]\n");
+    // printMatrix_int8(&fc_weight[2]);
+    // printf("\n");
 
     printf("============================================================================\n");
     printf("=============== starting test (it could take some time...): ================\n");
@@ -121,29 +124,29 @@ int main(int argc, char const *argv[]) {
         tens_alloc->index = reset_mannix_tensor_index ;
 
         int real_label = setImage(&image[0], imageFilePointer);
-        
+            // print4DTensor_uint8(image);
+
         int sc = LOG2_RELU_FACTOR ;  // 'sc' (extra scale) is determined by LOG2_RELU_FACTOR , consider maling this layer specific;
 
-    //  convolution layer 
-        
+    //  convolution layer   
         Tensor4D_uint8 * actResult_4D_tensor = tensor4DConvNActivate(image, &conv_weight[0], &conv_bias[0], result_4D_tensor_uint8, (Allocator_int32 *)al, (MatAllocator_int32 *)mat_al, (TensorAllocator_int32 *)tens_alloc, sc);
+        // print4DTensor_uint8(actResult_4D_tensor);
         IFDEF_CMP_TEST( writeTensor4DToCsv_uint8 (actResult_4D_tensor, path_out, "conv1_relu_out"); )
- 
+        
         Tensor4D_uint8 * maxPoolResult_tensor =  tensor4DMaxPool(actResult_4D_tensor, &result_maxPool_tensor[0], 2, 2, 2, al, mat_al, tens_alloc);
-       
-        IFDEF_CMP_TEST( writeTensor4DToCsv_uint8 (maxPoolResult_tensor, path_out, "conv1_pool2d_out"); )
-      
-        actResult_4D_tensor = tensor4DConvNActivate(maxPoolResult_tensor, &conv_weight[1], &conv_bias[1], &result_4D_tensor_uint8[1], (Allocator_int32 *)al, (MatAllocator_int32 *)mat_al, (TensorAllocator_int32 *)tens_alloc, sc);
+        //  print4DTensor_uint8(maxPoolResult_tensor);
+        IFDEF_CMP_TEST(writeTensor4DToCsv_uint8(maxPoolResult_tensor, path_out, "conv1_pool2d_out"); )
 
+        actResult_4D_tensor = tensor4DConvNActivate(maxPoolResult_tensor, &conv_weight[1], &conv_bias[1], &result_4D_tensor_uint8[1], (Allocator_int32 *)al, (MatAllocator_int32 *)mat_al, (TensorAllocator_int32 *)tens_alloc, sc);
+        // print4DTensor_uint8(actResult_4D_tensor);
         IFDEF_CMP_TEST( writeTensor4DToCsv_uint8 (actResult_4D_tensor  , path_out, "conv2_relu_out"); )
 
         maxPoolResult_tensor =  tensor4DMaxPool(actResult_4D_tensor, & result_maxPool_tensor[1], 2, 2, 2, al, mat_al, tens_alloc);
-     
+    //  print4DTensor_uint8(maxPoolResult_tensor);
         IFDEF_CMP_TEST( writeTensor4DToCsv_uint8 (maxPoolResult_tensor, path_out, "conv2_pool2d_out"); )
 
 
-    // fully-connected layer 
-
+        // fully-connected layer 
         tensor4Dflatten(maxPoolResult_tensor);
         
         Matrix_uint8 * actResultMatrix  = matrixFCNActivate(maxPoolResult_tensor->tensor->matrix, &fc_weight[0], &fc_bias[0], &result_matrix_uint8[0], (Allocator_int32 *)al, sc);

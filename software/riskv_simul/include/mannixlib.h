@@ -76,6 +76,20 @@ char* mannixDataMalloc_uint8(Allocator_uint8* alloc, int length) {
 }
  
  
+int mannixDataFree_uint8(Allocator_uint8* alloc, char* data, int length) {
+    
+    Allocator_uint8 * byte_alloc = alloc ;
+    
+    int byte_length = length ;
+    if ((byte_alloc->data + byte_alloc->index - byte_length) == (unsigned char *)data)
+        byte_alloc->index -= byte_length;
+    else {
+        printf("ERROR- cannot free memory due to incorrect size  [%p][%p]\n",(alloc->data - length),data);
+        exit(-1);
+    }
+    return 0;
+}
+
 
 int mannixDataFree_int32(Allocator_int32* alloc, int* data, int length) {
     
@@ -203,7 +217,7 @@ void dump_model_params_mfdb(Allocator_uint8 *alloc, char *dumpFileName) {
     exit(0);
 }
 
-
+// load_model_params_mfdb(al,MODEL_PARAMS_FILE);  // load mannix format data base "../model_params_db/model_params_mfdb.txt"
 void load_model_params_mfdb(Allocator_uint8 *alloc, char *dumpFileName) {
     
     FILE* dumpFile = fopen(dumpFileName,"r");
