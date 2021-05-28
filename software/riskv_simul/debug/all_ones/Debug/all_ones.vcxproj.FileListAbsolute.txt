@@ -1,0 +1,2 @@
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\debug\all_ones\Debug\all_ones.exe
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\debug\all_ones\Debug\all_ones.pdb

@@ -1,0 +1,11 @@
+﻿  cnn_fashion_mnist.c
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\include\mannix_tensor.h(190,17): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 1 has type 'Matrix_uint8 *'
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\include\mannix_tensor.h(190,17): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'Matrix_int8 *'
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\source\cnn_fashion_mnist.c(22,18): warning C4101: 'result_matrix': unreferenced local variable
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\source\cnn_fashion_mnist.c(13,20): warning C4101: 'result_4D_tensor': unreferenced local variable
+  Generating code
+  3 of 64 functions ( 4.7%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  debug_lib.vcxproj -> C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\debug\debug_lib\Release\debug_lib.exe

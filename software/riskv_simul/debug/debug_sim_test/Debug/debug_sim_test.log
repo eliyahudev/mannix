@@ -1,0 +1,6 @@
+﻿  mannix_simul_net.c
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\source\mannix_simul_net.c(6,1): warning C4005: 'MODEL_PARAMS_FILE': macro redefinition
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\include\man_def.h(70): message : see previous definition of 'MODEL_PARAMS_FILE'
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\source\mannix_simul_net.c(22,18): warning C4101: 'result_matrix': unreferenced local variable
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\source\mannix_simul_net.c(13,20): warning C4101: 'result_4D_tensor': unreferenced local variable
+  debug_sim_test.vcxproj -> C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\debug\debug_sim_test\Debug\debug_sim_test.exe

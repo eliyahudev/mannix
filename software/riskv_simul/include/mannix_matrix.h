@@ -6,24 +6,30 @@
     // ------------------matrix creation -------------------------
     // cearte matrix with the value of zero 
 Matrix_int32* creatMatrix_int32(int rows, int cols, Matrix_int32* m1, Allocator_int32* al) {
+        srand(time(NULL));
         m1[0].cols = cols;
         m1[0].rows = rows;
         m1->size = cols * rows;
-        m1[0].data = mannixDataMalloc_int32(al, cols * rows);
-        for (int i = 0; i < m1->size; i++) {
-            m1[0].data[i] = 0 ;
-        }
+        m1->pad_size = m1->size;// + (4 - m1->size%4)%4;
+        m1[0].data = mannixDataMalloc_int32(al, m1->pad_size);
+        for (int i = 0/*m1->size*/; i < m1->pad_size; i++) {
+             
+            m1[0].data[i] = rand() % 100 ;
+         }
+        // printf("m1->pad_size(%d), m1->size(%d)",m1->pad_size, m1->size);
         return m1;
     }
     
 
 Matrix_int8* creatMatrix_int8(int rows, int cols, Matrix_int8* m1, Allocator_int8* al) {
+        srand(time(NULL));
         m1[0].cols = cols;
         m1[0].rows = rows;
         m1->size = cols * rows;
-        m1[0].data = mannixDataMalloc_int8(al, cols * rows);
-        for (int i = 0; i < m1->size; i++) {
-            m1[0].data[i] = 0 ;
+        m1->pad_size = m1->size + (4 - m1->size%4)%4;
+        m1[0].data = mannixDataMalloc_int8(al,  m1->pad_size);
+        for (int i = 0/*m1->size*/; i < m1->pad_size; i++) {
+             m1[0].data[i] = rand() % 100 ;
         }
         return m1;
     }
@@ -33,10 +39,11 @@ Matrix_uint8* creatMatrix_uint8(int rows, int cols, Matrix_uint8* m1, Allocator_
         m1[0].cols = cols;
         m1[0].rows = rows;
         m1->size = cols * rows;
-        m1[0].data = mannixDataMalloc_uint8(al, cols * rows);
-        for (int i = 0; i < m1->size; i++) {
-            m1[0].data[i] = 0 ;
-        }
+        m1->pad_size = m1->size + (4 - m1->size%4)%4;
+        m1[0].data = mannixDataMalloc_uint8(al,  m1->pad_size);
+        // for (int i = 0/*m1->size*/; i < m1->pad_size; i++) {
+        //     m1[0].data[i] = 0 ;
+        // }
         return m1;
     }
     
@@ -317,6 +324,23 @@ void writeMatrixToCsv_int32 (Matrix_int32* m1, char* layer_name) {
 
 // add matricies
 // output stored in the left matrix (m1)
+Matrix_uint8* addMatrix_uint8(Matrix_uint8* m1, Matrix_uint8* m2) {
+    if ((m1->rows != m2->rows) || (m1->cols != m2->cols)) {
+        printf("addMatrix_int32 : Dimension ERRER\n");
+        printf("m1->rows=%d , m1->cols %d  , m2->rows=%d , m2->cols=%d",m1->rows,m1->cols,m2->rows,m2->cols);
+        exit(-1);
+    }
+
+    int i=0;
+    while(i<m1->size) {
+        m1->data[i] += m2->data[i];
+        i++;
+    }
+
+    return m1;
+}
+
+
 Matrix_int32* addMatrix_int32(Matrix_int32* m1, Matrix_int32* m2) {
     if ((m1->rows != m2->rows) || (m1->cols != m2->cols)) {
         printf("addMatrix_int32 : Dimension ERRER\n");
@@ -331,6 +355,55 @@ Matrix_int32* addMatrix_int32(Matrix_int32* m1, Matrix_int32* m2) {
 
     return m1;
 }
+
+
+Matrix_uint8* asignMatrix_uint8(Matrix_uint8* m1, Matrix_uint8* m2) {
+    if ((m1->rows != m2->rows) || (m1->cols != m2->cols)) {
+        printf("addMatrix_int32 : Dimension ERRER\n");
+        printf("m1->rows=%d , m1->cols %d  , m2->rows=%d , m2->cols=%d",m1->rows,m1->cols,m2->rows,m2->cols);
+        exit(-1);
+    }
+    int i=0;
+    while(i<m1->size) {
+        m1->data[i] = m2->data[i];
+        i++;
+    }
+
+    return m1;
+}
+
+
+Matrix_int8* asignMatrix_int8(Matrix_int8* m1, Matrix_int8* m2) {
+    if ((m1->rows != m2->rows) || (m1->cols != m2->cols)) {
+        printf("addMatrix_int32 : Dimension ERRER\n");
+        printf("m1->rows=%d , m1->cols %d  , m2->rows=%d , m2->cols=%d",m1->rows,m1->cols,m2->rows,m2->cols);
+        exit(-1);
+    }
+    int i=0;
+    while(i<m1->size) {
+        m1->data[i] = m2->data[i];
+        i++;
+    }
+
+    return m1;
+}
+
+
+Matrix_int32* asignMatrix_int32(Matrix_int32* m1, Matrix_int32* m2) {
+    if ((m1->rows != m2->rows) || (m1->cols != m2->cols)) {
+        printf("addMatrix_int32 : Dimension ERRER\n");
+        printf("m1->rows=%d , m1->cols %d  , m2->rows=%d , m2->cols=%d",m1->rows,m1->cols,m2->rows,m2->cols);
+        exit(-1);
+    }
+    int i=0;
+    while(i<m1->size) {
+        m1->data[i] = m2->data[i];
+        i++;
+    }
+
+    return m1;
+}
+
 
 Matrix_int32* addScalarMatrix(Matrix_int32* m1, int num) {
     int i=0;
@@ -353,9 +426,6 @@ Matrix_int32* mullScalarMatrix(Matrix_int32* m1, int num) {
 
 // matrix multiplication
 
-// TODO : Need to check properly and efficiently handle transpose. (m1 should be a column matrix)
-
-
 Matrix_int32* mullMatrix_i32_i8Xui8(Matrix_int8* m1, Matrix_uint8* m2, Matrix_int32* result_matrix, Allocator_int32* al){
 
    if (m1->cols != m2->rows ) {
@@ -366,7 +436,12 @@ Matrix_int32* mullMatrix_i32_i8Xui8(Matrix_int8* m1, Matrix_uint8* m2, Matrix_in
     for (int i=0; i< m1->rows; i++) {
         for (int j=0; j < m2->cols; j++) {
             for (int k=0; k < m1->cols; k++) {
-                result_matrix->data[(i*(result_matrix->cols))+j] +=  m1->data[(i*(m1->cols))+k] * m2->data[(k*(m2->cols))+j]  ;
+                if (k == 0) {
+                    result_matrix->data[(i*(result_matrix->cols))+j] =  m1->data[(i*(m1->cols))+k] * m2->data[(k*(m2->cols))+j]  ;
+                }
+                else { 
+                    result_matrix->data[(i*(result_matrix->cols))+j] +=  m1->data[(i*(m1->cols))+k] * m2->data[(k*(m2->cols))+j]  ;
+                }
             }
         }
     }
@@ -417,7 +492,7 @@ void setWeight(Matrix_int8* weight, char* file_path, char* type, int layer, char
 // x - window's starting row 
 // y - window's starting column
 int hadamardMullMatrix(Matrix_uint8* m1, Matrix_int8* m2, int x, int y) {
-    int filter_sum=0;;
+    int filter_sum=0;
     for (int i=0; i < m2->rows; i++) {
         for (int j=0; j < m2->cols; j++) {
             int m1_idx = (i + x) * m1->cols + j + y ;
@@ -426,8 +501,10 @@ int hadamardMullMatrix(Matrix_uint8* m1, Matrix_int8* m2, int x, int y) {
             signed char m2_val = m2->data[m2_idx];
             int mul_val = m1_val * m2_val ;
             filter_sum +=  mul_val ; 
+            // printf("m1_val[%d], m2_val[%d], i(%d), j(%d)\n", m1_val, m2_val, i, j);
         }
     }
+    // printf("\nfilter_sum[%d]\n\n", filter_sum);
     return filter_sum;
 }
 
@@ -472,7 +549,7 @@ Matrix_int32* matrixConvolution(Matrix_uint8* m1, Matrix_int8* m_filter, int bia
 
     for (int i=0; i < result_matrix->rows ; i++) {
         for (int j=0; j < result_matrix->cols ; j++) {
-            result_matrix->data[i*result_matrix->cols + j] = hadamardMullMatrix(m1, m_filter, i, j) + bias;  //TODO ask Udi why I am getting more accurate results without bias                                                                        
+            result_matrix->data[i*result_matrix->cols + j] = hadamardMullMatrix(m1, m_filter, i, j) + bias; 
         }
     }
 
@@ -496,10 +573,8 @@ Matrix_uint8* matrixAddNActivate(Matrix_int32* sum_matrix, Matrix_int32* tmp_mat
 } 
 
 
-
-Matrix_uint8 * matrixActivation(Matrix_int32* m1, int sc) { // TODO : VERIFY CORRECT OVERLAY
+Matrix_uint8 * matrixActivation(Matrix_int32* m1, int sc) { 
     
-
     Matrix_uint8 *m_out = (Matrix_uint8 *) m1 ; // overlay output matrix
     unsigned char * data = (unsigned char *) m1->data ; // output data as uint8 overlay input data int32
     
@@ -510,6 +585,7 @@ Matrix_uint8 * matrixActivation(Matrix_int32* m1, int sc) { // TODO : VERIFY COR
         data[i] = (char) (descaled_data >= MAX_DATA_RANGE) ? MAX_DATA_RANGE : ((descaled_data <= 0) ? 0 : descaled_data) ;
         i++;
     }
+
     return m_out ;
 }
 
@@ -567,11 +643,10 @@ Matrix_uint8* matrixFCNActivate(Matrix_uint8* input_matrix, Matrix_int8* weight_
 
     matrixAddNActivate(tmp_matrix, bias_vector, result_matrix, sc);
 
-    mannixDataFree_int32(al, tmp_matrix->data, tmp_matrix->size);
+    mannixDataFree_int32(al, tmp_matrix->data, tmp_matrix->pad_size);
 
     return result_matrix;
 }
-
 
 
 int maxElement_uint8(Matrix_uint8* result_matrix) {

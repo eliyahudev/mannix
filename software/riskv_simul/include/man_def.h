@@ -61,9 +61,9 @@
 
 //---- environment setups----
 
-// #define VS_MANNIX
+//  #define VS_MANNIX
 
-//#define MEM_DUMP_MODE // Dumps the model parameters loadable data vector , run once per model configuration.
+#define MEM_DUMP_MODE // Dumps the model parameters loadable data vector , run once per model configuration.
 
 #define MEM_LOAD_MODE  // Model parameters and data to be actively loaded , skip CSV read
 #ifdef VS_MANNIX

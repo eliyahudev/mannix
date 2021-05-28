@@ -1,0 +1,2 @@
+C:\Users\user\Desktop\BIU\mannix_local_workspace\VS_int_ref\simul\debug\debug_lib\Release\debug_lib.exe
+C:\Users\eliyahu\Desktop\education\final_project\mannix_git\software\riskv_simul\debug\debug_lib\Release\debug_lib.exe
