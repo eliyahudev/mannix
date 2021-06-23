@@ -24,7 +24,6 @@ int main(int argc, char const *argv[]) {
     
     // import matrices
 
-    char* path_in = { "../../../python/csv_dumps/scaled_int/" };
 
 #ifndef MEM_LOAD_MODE
   #ifdef VS_MANNIX
@@ -32,6 +31,7 @@ int main(int argc, char const *argv[]) {
       FILE* imageFilePointer = fopen("../../test_src/img_3673.csv", "r");
       char file_out[80] ;
       #else
+      char* path_in = { "../../../python/csv_dumps/scaled_int/" };
       FILE* imageFilePointer = fopen("../../test_src/data_set_256_fasion_emnist.csv", "r");
       #endif
       char * path_out = {"../../test_products/"} ;    
@@ -53,7 +53,6 @@ int main(int argc, char const *argv[]) {
 
     // allocate memory for image, conv_weight and bias
     printf("allocating memory\n");
-    create4DTensor_uint8(&image[0], 28, 28, 1, 1,    (Allocator_uint8*)al, (MatAllocator_uint8*)mat_al, (TensorAllocator_uint8*)tens_alloc);  
     create4DTensor_int8(&conv_weight[0], 5, 5, 1, 6, (Allocator_int8*)al, (MatAllocator_int8*)mat_al, (TensorAllocator_int8*)tens_alloc);
     create4DTensor_int8(&conv_weight[1], 5, 5, 6, 12,(Allocator_int8*)al, (MatAllocator_int8*)mat_al, (TensorAllocator_int8*)tens_alloc);
     creatMatrix_int32(6, 1,   &conv_bias[0],   (Allocator_int32*) al);
@@ -64,7 +63,8 @@ int main(int argc, char const *argv[]) {
     creatMatrix_int32(120,1,  &fc_bias[0],     (Allocator_int32*) al);
     creatMatrix_int32(64,1,   &fc_bias[1],     (Allocator_int32*) al);
     creatMatrix_int32(10,1,   &fc_bias[2],     (Allocator_int32*) al);
- 
+    create4DTensor_uint8(&image[0], 28, 28, 1, 1,    (Allocator_uint8*)al, (MatAllocator_uint8*)mat_al, (TensorAllocator_uint8*)tens_alloc);  
+
     // set values from csv table
     printf("setting weights and bais\n");
     setFilter(&conv_weight[0], path_in, 1);
