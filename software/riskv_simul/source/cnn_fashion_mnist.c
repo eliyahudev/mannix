@@ -24,7 +24,9 @@ int main(int argc, char const *argv[]) {
     
     // import matrices
 
-
+#ifdef MEM_LOAD_MODE
+      char* path_in = { "../../../python/csv_dumps/scaled_int/" };
+#endif
 #ifndef MEM_LOAD_MODE
   #ifdef VS_MANNIX
       #ifdef CMP_TEST  
