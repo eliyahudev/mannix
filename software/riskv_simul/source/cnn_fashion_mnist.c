@@ -27,6 +27,7 @@ int main(int argc, char const *argv[]) {
 #ifdef MEM_LOAD_MODE
       char* path_in = { "../../../python/csv_dumps/scaled_int/" };
 #endif
+
 #ifndef MEM_LOAD_MODE
   #ifdef VS_MANNIX
       #ifdef CMP_TEST  
@@ -40,6 +41,7 @@ int main(int argc, char const *argv[]) {
   #else
       char* path_in = { "../../python/csv_dumps/scaled_int/" };
       #ifdef CMP_TEST  
+      char file_out[80];
       FILE* imageFilePointer = fopen("../../../../test_and_delete/mannix_test/inference/img_csv_dumps/img_3673.csv", "r");
       #else
       FILE* imageFilePointer = fopen("../test_src/data_set_256_fasion_emnist.csv", "r");
@@ -103,7 +105,7 @@ int main(int argc, char const *argv[]) {
     printf("=============== starting test (it could take some time...): ================\n");
     printf("============================================================================\n\n");
   #ifdef TEST
-      for (int a = 0; a < 1; a++) {
+      for (int a = 0; a < 4; a++) {
   #else
       #ifdef CMP_TEST
           for (int a = 0; a < 1; a++) {

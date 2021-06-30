@@ -5,6 +5,7 @@ typedef struct Matrix_int32 {
     int rows;
     int cols;
     int size;
+    int pad_size;
     int* data;    
 } Matrix_int32 ;
 
@@ -13,6 +14,7 @@ typedef struct Matrix_int8 {
     int rows;
     int cols;
     int size;
+    int pad_size;
     signed char* data;    
 } Matrix_int8 ;
 
@@ -20,6 +22,7 @@ typedef struct Matrix_uint8 {
     int rows;
     int cols;
     int size;
+    int pad_size;
     unsigned char* data;    
 } Matrix_uint8 ;
 

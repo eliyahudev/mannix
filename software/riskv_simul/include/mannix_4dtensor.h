@@ -2,10 +2,12 @@
 // ============================== SETUP ==============================
 
 void create4DTensor_uint8(Tensor4D_uint8* tens_4d, int rows, int cols, int depth, int dim, Allocator_uint8* al, MatAllocator_uint8* mat_alloc, TensorAllocator_uint8* tens_alloc) {
+
     tens_4d->rows = rows;
     tens_4d->cols = cols;
     tens_4d->depth = depth;
     tens_4d->dim = dim;
+
     tens_4d->tensor = mannixTensorMalloc_uint8(tens_alloc, dim);
 
     for(int i = 0; i < tens_4d->dim; i++)
@@ -91,6 +93,18 @@ void print4DTensor_uint8(Tensor4D_uint8* tens_4d) {
 
 }
 
+void print4DTensor_int8(Tensor4D_int8* tens_4d) {
+
+    printf("tensor{\n");    
+    for(int i = 0; i < tens_4d->dim; i++) {
+        printf("\n[");
+        printTensor_int8(&tens_4d->tensor[i]);
+        printf(" ]\n");
+    }
+    printf("}\n");
+    printf("rows size: %d columns size: %d depth size: %d dim: %d \n\n",tens_4d->rows,tens_4d->cols,tens_4d->depth,tens_4d->dim);
+
+}
 
 void writeTensor4DToCsv_uint8 (Tensor4D_uint8* tens_4d, char* file_path, char* layer_name) {
     
@@ -130,7 +144,7 @@ void writeTensor4DToCsv_int32 (Tensor4D_int32* tens_4d, char* file_path, char* l
 
 // convert matrix to vector
 void tensor4Dflatten(Tensor4D_uint8* tens_4d) {
-    
+    // TODO - FIX FLATTEN TO SUPPORT ALIGNED MOMERY
     tens_4d->rows = tens_4d->rows * tens_4d->cols * tens_4d->depth * tens_4d->dim;
     tens_4d->cols = 1;
     tens_4d->depth = 1;
@@ -177,7 +191,6 @@ Tensor4D_uint8* tensor4DActivation(Tensor4D_int32* tens, int sc) {
     return t_out ;
 }
 
-
 Tensor4D_uint8* tensor4DMaxPool(Tensor4D_uint8* tens_4d, Tensor4D_uint8* tens_4d_result, int p_m, int p_n, int stride, Allocator_uint8* al, MatAllocator_uint8* mat_alloc, TensorAllocator_uint8* tens_alloc) {
     
     int new_rows = (tens_4d->rows - p_m) / stride + 1;
@@ -191,4 +204,3 @@ Tensor4D_uint8* tensor4DMaxPool(Tensor4D_uint8* tens_4d, Tensor4D_uint8* tens_4d
 
     return tens_4d_result;
 }
-
