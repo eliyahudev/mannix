@@ -521,8 +521,8 @@ Matrix_uint8* matrixMaxPool(Matrix_uint8* m1, Matrix_uint8* m2, int p_m, int p_n
     int k = 0;
 
     // set data
-    for (int i=0; i < m2->rows; i = i++) {
-        for (int j=0; j < m2->cols; j = j++) {
+    for (int i=0; i < m2->rows; i++) {
+        for (int j=0; j < m2->cols; j++) {
             m2->data[k++] = getMax(m1, p_m, p_n, i, j, stride);
         }
     }
