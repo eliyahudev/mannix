@@ -279,9 +279,13 @@ void writeMatrixToCsv_uint8 (Matrix_uint8* m1, char* layer_name) {
     if(fptr != NULL) 
     for (int i = 0; i < m1->rows; i++) {
         for (int j = 0; j < m1->cols; j++) {
-            fprintf(fptr,"%6d",m1->data[i*m1->cols+j]);
+            fprintf(fptr,"%2d",m1->data[i*m1->cols+j]);
         if(m1->rows != j + 1)
-            fprintf(fptr,",");            
+        #ifdef CSV
+            fprintf(fptr,",");
+        #else
+            fprintf(fptr," ");
+        #endif
         }
         fprintf(fptr,"\n");
     }
@@ -294,13 +298,17 @@ void writeMatrixToCsv_uint8 (Matrix_uint8* m1, char* layer_name) {
 void writeMatrixToCsv_int32 (Matrix_int32* m1, char* layer_name) {
     printf(layer_name);
     printf("\n");
-    FILE* fptr = fopen(/*"../test_products/test.csv"*/layer_name, "w");
+    FILE* fptr = fopen(layer_name, "w");
     if(fptr != NULL) 
     for (int i = 0; i < m1->rows; i++) {
         for (int j = 0; j < m1->cols; j++) {
-              fprintf(fptr,"%6d",m1->data[i*m1->cols+j]); 
+              fprintf(fptr,"%2d",m1->data[i*m1->cols+j]); 
         if(m1->rows != j + 1)
-            fprintf(fptr,",");            
+        #ifdef CSV
+            fprintf(fptr,",");
+        #else
+            fprintf(fptr," ");
+        #endif            
         }
         fprintf(fptr,"\n");
     }

@@ -97,7 +97,11 @@ void writeTensorToCsv_int32 (Tensor_int32* tens, char* file_path) {
         strcat(path,"_");
         itoa(i, cast_int, 10);
         strcat(path,cast_int);
+        #ifdef CSV        
         strcat(path,".csv");
+        #else
+        strcat(path,".txt");
+        #endif
         writeMatrixToCsv_int32 (&tens->matrix[i], path);
     }
 }
@@ -113,7 +117,11 @@ void writeTensorToCsv_uint8 (Tensor_uint8* tens, char* file_path) {
         strcat(path,"_");
         itoa(i, cast_int, 10);
         strcat(path,cast_int);
+        #ifdef CSV        
         strcat(path,".csv");
+        #else
+        strcat(path,".txt");
+        #endif
         writeMatrixToCsv_uint8 (&tens->matrix[i], path);
     }
 }

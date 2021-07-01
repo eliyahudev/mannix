@@ -1,7 +1,7 @@
 
 //---- dubaging defines ----
 // #define TEST // result example of few pictures
-// #define CMP_TEST //
+#define CMP_TEST //
 //#define DEBUG // debug variable
 
 #ifdef CMP_TEST
@@ -10,6 +10,8 @@
 #define IFDEF_CMP_TEST(dump_call) 
 #endif
 
+
+// #define  CSV
 
 //---- OS ----
 #define WINDOWS_MANNIX

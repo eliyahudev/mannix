@@ -30,22 +30,24 @@ int main(int argc, char const *argv[]) {
 
 #ifndef MEM_LOAD_MODE
   #ifdef VS_MANNIX
-      #ifdef CMP_TEST  
-      FILE* imageFilePointer = fopen("../../test_src/img_3673.csv", "r");
+    //   #ifdef CMP_TEST  
+    //   FILE* imageFilePointer = fopen("../../test_src/img_3673.csv", "r");
       char file_out[80] ;
-      #else
+    //   #else
       char* path_in = { "../../../python/csv_dumps/scaled_int/" };
       FILE* imageFilePointer = fopen("../../test_src/data_set_256_fasion_emnist.csv", "r");
-      #endif
+    //   #endif
       char * path_out = {"../../test_products/"} ;    
   #else
       char* path_in = { "../../python/csv_dumps/scaled_int/" };
-      #ifdef CMP_TEST  
       char file_out[80];
-      FILE* imageFilePointer = fopen("../../../../test_and_delete/mannix_test/inference/img_csv_dumps/img_3673.csv", "r");
-      #else
+
+    //   #ifdef CMP_TEST  
+    //   char file_out[80];
+    //   FILE* imageFilePointer = fopen("../../../../test_and_delete/mannix_test/inference/img_csv_dumps/img_3673.csv", "r");
+    //   #else
       FILE* imageFilePointer = fopen("../test_src/data_set_256_fasion_emnist.csv", "r");
-      #endif
+    //   #endif
       char * path_out = {"../test_products/"} ;
   #endif
 #else
@@ -151,17 +153,23 @@ int main(int argc, char const *argv[]) {
         tensor4Dflatten(maxPoolResult_tensor);
         
         Matrix_uint8 * actResultMatrix  = matrixFCNActivate(maxPoolResult_tensor->tensor->matrix, &fc_weight[0], &fc_bias[0], &result_matrix_uint8[0], (Allocator_int32 *)al, sc);
-
+#ifdef CSV
         IFDEF_CMP_TEST(strcpy(file_out,path_out);writeMatrixToCsv_uint8(actResultMatrix,strcat(file_out,"fc1_relu_out.csv")); ) 
-        
+#else
+        IFDEF_CMP_TEST(strcpy(file_out,path_out);writeMatrixToCsv_uint8(actResultMatrix,strcat(file_out,"fc1_relu_out.txt")); ) 
+#endif        
         actResultMatrix  = matrixFCNActivate(&result_matrix_uint8[0], &fc_weight[1], &fc_bias[1], &result_matrix_uint8[1], (Allocator_int32 *)al, sc);
-
+#ifdef CSV
         IFDEF_CMP_TEST(strcpy(file_out,path_out);writeMatrixToCsv_uint8(actResultMatrix,strcat(file_out,"fc2_relu_out.csv")); ) 
-
+#else
+        IFDEF_CMP_TEST(strcpy(file_out,path_out);writeMatrixToCsv_uint8(actResultMatrix,strcat(file_out,"fc2_relu_out.txt")); )
+#endif   
         actResultMatrix  = matrixFCNActivate(&result_matrix_uint8[1], &fc_weight[2], &fc_bias[2], &result_matrix_uint8[2], (Allocator_int32 *)al, sc);
-        
+#ifdef CSV        
         IFDEF_CMP_TEST(strcpy(file_out,path_out);writeMatrixToCsv_uint8(&result_matrix_uint8[2],strcat(file_out,"fc3_out.csv")); ) 
-
+#else
+        IFDEF_CMP_TEST(strcpy(file_out,path_out);writeMatrixToCsv_uint8(&result_matrix_uint8[2],strcat(file_out,"fc3_out.txt")); )
+#endif   
         int detected_label = maxElement_uint8(&result_matrix_uint8[2]) ;
 #ifdef TEST
         printf("\n ======== result : %d  ==================\n", detected_label);
