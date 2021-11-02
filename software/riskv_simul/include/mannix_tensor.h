@@ -194,7 +194,7 @@ Matrix_uint8* tensorConvNActivate(Tensor_uint8* tens, Tensor_int8* m_filter, int
     int i = 0;
 
     for (; i < tens->depth-1; i++) {
-        matrixConvolution(&tens->matrix[i], &m_filter->matrix[i], bias, tmp_matrix);     
+        matrixConvolution(&tens->matrix[i], &m_filter->matrix[i], 0, tmp_matrix);     
         if (0 == i) {
             asignMatrix_int32(sum_matrix, tmp_matrix);
         }

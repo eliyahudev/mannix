@@ -107,7 +107,7 @@ int main(int argc, char const *argv[]) {
     printf("=============== starting test (it could take some time...): ================\n");
     printf("============================================================================\n\n");
   #ifdef TEST
-      for (int a = 0; a < 4; a++) {
+      for (int a = 0; a < ITER_NUM; a++) {
   #else
       #ifdef CMP_TEST
           for (int a = 0; a < 1; a++) {

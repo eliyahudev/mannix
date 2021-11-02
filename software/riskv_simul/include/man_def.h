@@ -1,7 +1,7 @@
 
 //---- dubaging defines ----
 // #define TEST // result example of few pictures
-#define CMP_TEST //
+// #define CMP_TEST //
 //#define DEBUG // debug variable
 
 #ifdef CMP_TEST
@@ -10,12 +10,16 @@
 #define IFDEF_CMP_TEST(dump_call) 
 #endif
 
+#ifdef TEST
+#define ITER_NUM 8
+#else
+#define ITER_NUM 1
+#endif
 
 // #define  CSV
 
 //---- OS ----
 #define WINDOWS_MANNIX
-// #define DEBIAN
 
 //---- environment setups----
 
@@ -23,7 +27,7 @@
 
 // #define MEM_DUMP_MODE // Dumps the model parameters loadable data vector , run once per model configuration.
 
-#define MEM_LOAD_MODE  // Model parameters and data to be actively loaded , skip CSV read
+// #define MEM_LOAD_MODE  // Model parameters and data to be actively loaded , skip CSV read
 #ifdef VS_MANNIX
 #define MODEL_PARAMS_FILE "../../model_params_db/model_params_mfdb.txt"
 #define DATASET_FILE "../../test_src/fashion_mnist_V1_mfds.txt"
