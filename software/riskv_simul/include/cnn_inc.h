@@ -5,7 +5,7 @@
 #include "stdio.h"
 #include <stdlib.h>
 #include <windows.h>
-#include "man_def.h"
+#include "../config/man_def.h"
 #include "man_struct.h"
 # ifndef MEM_LOAD_MODE
    #include "read_csv.h"
@@ -14,6 +14,6 @@
 #include "mannix_matrix.h"
 #include "mannix_tensor.h"
 #include "mannix_4dtensor.h"
-#include "cnn.h"
+// #include "cnn.h"
 
 #endif

@@ -2,7 +2,7 @@
 
 #include "../include/cnn_inc.h"
 
-int main(int argc, char const *argv[]) {
+int main() {
 
 // like-dynamic memory allocation for the program 
 #include "../include/tensor_allocation_setup.h"

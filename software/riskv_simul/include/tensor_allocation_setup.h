@@ -1,17 +1,17 @@
  #ifndef TENSOR_ALLOCATION_SETUP
  #define TENSOR_ALLOCATION_SETUP
     //tensor_allocation_setup 
-    int N,M;
+    // int N,M;
     //int label;
 
-    if (argc >1)
-        N = atoi(argv[1]);
-    else
-        N = 6;
-    if (argc >2)
-        M = atoi(argv[2]);
-    else
-        M = N;
+    // if (argc >1)
+    //     N = atoi(argv[1]);
+    // else
+    //     N = 6;
+    // if (argc >2)
+    //     M = atoi(argv[2]);
+    // else
+    //     M = N;
     
     //memory allocated
 
