@@ -32,7 +32,8 @@
 #define MODEL_PARAMS_FILE "../../model_params_db/model_params_mfdb.txt"
 #define DATASET_FILE "../../test_src/fashion_mnist_V1_mfds.txt"
 #else
-#define MODEL_PARAMS_FILE "../model_params_db/model_params_mfdb.txt"
+#define MODEL_PARAMS_FILE "../model_params_db/matrix.txt"  // for DUMP example
+// #define MODEL_PARAMS_FILE "../model_params_db/model_params_mfdb.txt"
 #define DATASET_FILE "../test_src/fashion_mnist_V1_mfds.txt"
 #endif
 
